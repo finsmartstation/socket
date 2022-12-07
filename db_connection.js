@@ -1,9 +1,9 @@
 var mysql = require('mysql');
 var con = mysql.createConnection({
-    host: "adminsmart.ckh6xqbfeoiy.us-east-2.rds.amazonaws.com",
-    user: "smart_admin",
-    password: "Smart123",
-    database:"smartstation",
+    host: "localhost",
+    user: "xvpsvilv_smart_admin",
+    password: "Smartcreation@8655!",
+    database:"xvpsvilv_smart_station",
      charset : 'utf8mb4'
   });
  console.log('Db connected') 
