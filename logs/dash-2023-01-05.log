@@ -1,0 +1,5 @@
+{"level":"error","message":"Error : ReferenceError: result is not defined"}
+{"level":"error","message":"Error : SyntaxError: Unexpected token u in JSON at position 0"}
+{"level":"error","message":"Error : ReferenceError: result is not defined"}
+{"level":"error","message":"Error : ReferenceError: result is not defined"}
+{"level":"error","message":"Error : TypeError: io.sockets.adapter.get is not a function"}
