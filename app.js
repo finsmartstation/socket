@@ -43,6 +43,7 @@ const { exit } = require('process');
 const { duration } = require('moment');
 const { resolve } = require('path');
 const e = require('express');
+const { on } = require('events');
 const botName = 'Smart_Station_Bot';
 const port = process.env.PORT || 3001;
 db.sequelize.sync();
@@ -62,6 +63,22 @@ var soc = [];
 
 var sockets=[];
 var online_user_room_data=[];
+  //samples to check data exist in associative array
+  var arr = [{ id: 1, username: 'fred' }, 
+  { id: 2, username: 'bill'}, 
+  { id: 3, username: 'ted' }];
+  function userExists(username,id) {
+    return arr.some(function(el) {
+      return el.username === username && el.id==id;
+    }); 
+  }
+
+  function check_online_user_room_data(sid,rid,room){
+    console.log('online ',online_user_room_data)
+    //return online_user_room_data.some(function(online_user_array))
+  }
+
+  console.log(userExists('fred','1')); // true
   function  get_datetime() {
   var current_date = new Date();
   var date = current_date.toISOString().slice(0, 10);
@@ -145,7 +162,40 @@ io.sockets.on('connection', function (socket) {
         io.sockets.in(socket.room).emit('room_notification', `'joined room-' ${room}`);
         var s_id = room_data.sid;
         soc[room_data.sid] = socket.id;
+        //set online user's room
+        let room_user_data={
+          sid: room_data.sid,
+          rid: room_data.rid,
+          room: room
+        }
         
+        // if(online_user_room_data.includes(room_user_data)){
+        //   console.log('yes')
+        // }else{
+        //   console.log('no')
+        //   //online_user_room_data.push(room_user_data);
+        // }
+
+        if(online_user_room_data.length>0){
+          console.log('online room user count ',online_user_room_data.length)
+          for(var i=0; i<online_user_room_data.length; i++){
+            console.log(online_user_room_data[i].sid+'--'+room_data.sid,online_user_room_data[i].room+'--'+room)
+            if(online_user_room_data[i].sid==room_data.sid && online_user_room_data[i].rid==room_data.rid){
+              console.log('yes user already exist in the room');
+            }else{
+              console.log('user is not already exist in the room');
+              online_user_room_data.push(room_user_data);
+              break;
+            }
+          }
+          let a=check_online_user_room_data(1,1,1)
+        }else{
+          console.log('count is zero')
+          online_user_room_data.push(room_user_data);
+        }
+        
+        //console.log('sockets', soc);
+        console.log('set online users ',online_user_room_data)
         var last_seen = get_datetime();
         //updating online status and lastseen
         const results =  db.sequelize.query("UPDATE user SET online_status = '1', last_seen='" + last_seen + "' WHERE id = '" + room_data.sid + "'");
