@@ -64,38 +64,40 @@ var soc = [];
 var sockets=[];
 var online_user_room_data=[];
   //samples to check data exist in associative array
-  var arr = [{ id: 1, username: 'fred' }, 
-  { id: 2, username: 'bill'}, 
-  { id: 3, username: 'ted' }];
-  function userExists(username,id) {
-    return arr.some(function(el) {
-      return el.username === username && el.id==id;
-    }); 
-  }
+  // var arr = [{ id: 1, username: 'fred' }, 
+  // { id: 2, username: 'bill'}, 
+  // { id: 3, username: 'ted' }];
+  // function userExists(username,id) {
+  //   return arr.some(function(el) {
+  //     return el.username === username && el.id==id;
+  //   }); 
+  // }
 
   function check_online_user_room_data(sid,rid,room){
-    console.log('online ',online_user_room_data)
-    //return online_user_room_data.some(function(online_user_array))
+    //console.log('online ',online_user_room_data)
+    return online_user_room_data.some(function(online_user_array){
+      return online_user_array.sid == sid && online_user_array.rid == rid && online_user_array.room == room;
+    });
   }
 
-  console.log(userExists('fred','1')); // true
+  //console.log(userExists('fred','1')); // true
   function  get_datetime() {
-  var current_date = new Date();
-  var date = current_date.toISOString().slice(0, 10);
-  console.log(date);
-  var hours = current_date.getHours();
-  var minute = current_date.getMinutes();
-  var second = current_date.getSeconds();
-  var hr_str = "" + hours;
-  var min_str = "" + minute;
-  var sec_str = "" + second;
-  var pad = "00"
-  var hr = pad.substring(0, pad.length - hr_str.length) + hr_str;
-  var min = pad.substring(0, pad.length - min_str.length) + min_str;
-  var sec = pad.substring(0, pad.length - sec_str.length) + sec_str;
-  var time = hr + ":" + min + ":" + sec;
-  var datetime = date + " " + time;
-   return datetime;
+    var current_date = new Date();
+    var date = current_date.toISOString().slice(0, 10);
+    //console.log(date);
+    var hours = current_date.getHours();
+    var minute = current_date.getMinutes();
+    var second = current_date.getSeconds();
+    var hr_str = "" + hours;
+    var min_str = "" + minute;
+    var sec_str = "" + second;
+    var pad = "00"
+    var hr = pad.substring(0, pad.length - hr_str.length) + hr_str;
+    var min = pad.substring(0, pad.length - min_str.length) + min_str;
+    var sec = pad.substring(0, pad.length - sec_str.length) + sec_str;
+    var time = hr + ":" + min + ":" + sec;
+    var datetime = date + " " + time;
+    return datetime;
 }
 
 io.sockets.on('connection', function (socket) {
@@ -177,25 +179,30 @@ io.sockets.on('connection', function (socket) {
         // }
 
         if(online_user_room_data.length>0){
-          console.log('online room user count ',online_user_room_data.length)
-          for(var i=0; i<online_user_room_data.length; i++){
-            console.log(online_user_room_data[i].sid+'--'+room_data.sid,online_user_room_data[i].room+'--'+room)
-            if(online_user_room_data[i].sid==room_data.sid && online_user_room_data[i].rid==room_data.rid){
-              console.log('yes user already exist in the room');
-            }else{
-              console.log('user is not already exist in the room');
-              online_user_room_data.push(room_user_data);
-              break;
-            }
+          //console.log('ssss')
+          // console.log('online room user count ',online_user_room_data.length)
+          // for(var i=0; i<online_user_room_data.length; i++){
+          //   console.log(online_user_room_data[i].sid+'--'+room_data.sid,online_user_room_data[i].room+'--'+room)
+          //   if(online_user_room_data[i].sid==room_data.sid && online_user_room_data[i].rid==room_data.rid){
+          //     console.log('yes user already exist in the room');
+          //   }else{
+          //     console.log('user is not already exist in the room');
+          //     online_user_room_data.push(room_user_data);
+          //     break;
+          //   }
+          // }
+          let check_user_room_data=check_online_user_room_data(room_data.sid,room_data.rid,room);
+          console.log('check ',check_user_room_data);
+          if(check_user_room_data==false){
+            online_user_room_data.push(room_user_data);
           }
-          let a=check_online_user_room_data(1,1,1)
+          console.log('available users',online_user_room_data)
         }else{
           console.log('count is zero')
           online_user_room_data.push(room_user_data);
         }
-        
         //console.log('sockets', soc);
-        console.log('set online users ',online_user_room_data)
+        //console.log('set online users ',online_user_room_data)
         var last_seen = get_datetime();
         //updating online status and lastseen
         const results =  db.sequelize.query("UPDATE user SET online_status = '1', last_seen='" + last_seen + "' WHERE id = '" + room_data.sid + "'");
@@ -801,6 +808,7 @@ io.sockets.on('connection', function (socket) {
   })
 
   socket.on('dis', async function (input) {
+    console.log(online_user_room_data);
     console.log('inside disconnect')
     var s_id = input.s_id;
     console.log('[socket]', 'leave room :');
@@ -815,10 +823,46 @@ io.sockets.on('connection', function (socket) {
     //   })
     // })
 
-    //update offline status to db
-    let update_offline_status=await queries.update_online_offline_status(input.s_id,last_seen,0)
+    //update offline status to db 
+    let update_offline_status=await queries.update_user_online_offline_status(input.s_id,last_seen,0)
 
-    //emit to other user's room
+    //emit to other user's in the room when he/she disconnect
+
+    if(online_user_room_data.length>0){
+      console.log('user in the room', online_user_room_data)
+      for(var i=0; i<online_user_room_data.length; i++){
+        console.log('initial loop',i)
+        let flag_status=false;
+        console.log(online_user_room_data[i].sid+'--'+online_user_room_data[i].rid+'--'+online_user_room_data[i].room)
+        if(input.s_id==online_user_room_data[i].rid || input.s_id==online_user_room_data[i].sid){
+          flag_status=true;
+          console.log('user is already in the list', i)
+          //emit user has left or leave message to other room
+          let data_array=[{
+            online_status:0,
+            last_seen: last_seen
+          }]
+          console.log(online_user_room_data[i].room+'_'+online_user_room_data[i].sid)
+          if(input.s_id!=online_user_room_data[i].sid){
+            io.sockets.in(online_user_room_data[i].room+'_'+online_user_room_data[i].sid).emit('online_users',{"status": "true", "statuscode": "200", "message": "success", "data": data_array})
+          }
+          //io.sockets.in(online_user_room_data[i].room+'_'+online_user_room_data[i].sid).emit('online_users',{"status": "true", "statuscode": "200", "message": "success", "data": data_array})
+          // online_user_room_data.splice(i,1);
+          if(input.s_id==online_user_room_data[i].sid){
+            online_user_room_data.splice(i,1);
+          }
+        }else{
+          console.log('user is not in the list')
+        }
+        // if(flag_status){
+        //   online_user_room_data.splice(i,1);
+        //   console.log('balance users',online_user_room_data)
+        // }
+      }
+      console.log(online_user_room_data)
+    }else{
+      console.log('no user in the room')
+    }
     
     soc.splice(input.s_id, 1);
     console.log(soc)
