@@ -105,140 +105,148 @@ io.sockets.on('connection', function (socket) {
   // chat room
   socket.on('room', async function (room_data) {
     console.log('test socket client',io.engine.clientsCount)
+    console.log('check room input data type ',typeof(room_data));
     try{
-      s_id = room_data.sid;
-      r_id = room_data.rid;
-      var room = room_data.room;
-      //checking condition for group chat
-      if (room_data.room) {
-        const user = userJoin(socket.id, room_data.sid, room);
-        socket.join(user.room);
-        //we need to emit different message to each user in the room
-        socket.join(room_data.room+'_'+room_data.userid);
-        console.log('new room ', room_data.room+'_'+room_data.userid)
-        last_seen = get_datetime();
-        const results = db.sequelize.query("UPDATE user SET online_status = '1', last_seen='" + last_seen + "' WHERE id = '" + room_data.userid + "'");
-        // Welcome current user
-        io.emit('w_message', formatMessage(botName, 'Welcome to SmartStation Group Chat'));
-        // Broadcast when a user connects
-        socket.broadcast
-          .to(user.room)
-          .emit(
-            'broadcast_message',
-            formatMessage(botName, `${user.s_id} has joined the chat`)
-          );
-        // Send users and room info
-        io.to(user.room).emit('roomUsers', {
-          room: user.room,
-          users: getRoomUsers(user.room)
-        });
-        
+      if(typeof(room_data)=='object'){
+        //console.log('yes type is object');
+      
+        s_id = room_data.sid;
+        r_id = room_data.rid;
+        var room = room_data.room;
+        //checking condition for group chat
+        if (room_data.room) {
+          const user = userJoin(socket.id, room_data.sid, room);
+          socket.join(user.room);
+          //we need to emit different message to each user in the room
+          socket.join(room_data.room+'_'+room_data.userid);
+          console.log('new room ', room_data.room+'_'+room_data.userid)
+          last_seen = get_datetime();
+          const results = db.sequelize.query("UPDATE user SET online_status = '1', last_seen='" + last_seen + "' WHERE id = '" + room_data.userid + "'");
+          // Welcome current user
+          //io.emit('w_message', formatMessage(botName, 'Welcome to SmartStation Group Chat'));
+          // Broadcast when a user connects
+          // socket.broadcast
+          //   .to(user.room)
+          //   .emit(
+          //     'broadcast_message',
+          //     formatMessage(botName, `${user.s_id} has joined the chat`)
+          //   );
+          // Send users and room info
+          io.to(user.room).emit('roomUsers', {
+            room: user.room,
+            users: getRoomUsers(user.room)
+          });
+          
 
-      } else {
-        //individual chat room joining
-        console.log('sender & receiver', typeof s_id, typeof r_id)
-        // individual chat room creation
-        if (Number(s_id) > Number(r_id)) {
-          console.log('ssss')
-          var temp = s_id;
-          s_id = r_id;
-          r_id = temp;
-          room = '' + s_id + r_id;
-          console.log('room id in if' + room);
         } else {
-          room = '' + s_id + r_id;
-          console.log('room id in else', room);
-        }
-        // socket joining to room
-        console.log("room::", room)
-        socket.join(room);
-        //new method of joining socket user by their id
-        socket.join(room+'_'+room_data.sid);
-        //socket.join(room+'_'+room_data.rid);
-        console.log('joined room', room);
-        socket.room = room;
-        console.log('socket room userid',room_data.sid,socket.id)
-        newRoom = socket.room;
-        sockets.push(socket.id)
-        console.info(socket.id + ' joined room ', room, socket.room);
-        io.sockets.in(socket.room).emit('room_notification', `'joined room-' ${room}`);
-        var s_id = room_data.sid;
-        soc[room_data.sid] = socket.id;
-        //set online user's room
-        let room_user_data={
-          sid: room_data.sid,
-          rid: room_data.rid,
-          room: room
-        }
-        
-        // if(online_user_room_data.includes(room_user_data)){
-        //   console.log('yes')
-        // }else{
-        //   console.log('no')
-        //   //online_user_room_data.push(room_user_data);
-        // }
-
-        if(online_user_room_data.length>0){
-          //console.log('ssss')
-          // console.log('online room user count ',online_user_room_data.length)
-          // for(var i=0; i<online_user_room_data.length; i++){
-          //   console.log(online_user_room_data[i].sid+'--'+room_data.sid,online_user_room_data[i].room+'--'+room)
-          //   if(online_user_room_data[i].sid==room_data.sid && online_user_room_data[i].rid==room_data.rid){
-          //     console.log('yes user already exist in the room');
-          //   }else{
-          //     console.log('user is not already exist in the room');
-          //     online_user_room_data.push(room_user_data);
-          //     break;
-          //   }
+          //individual chat room joining
+          console.log('sender & receiver', typeof s_id, typeof r_id)
+          // individual chat room creation
+          if (Number(s_id) > Number(r_id)) {
+            console.log('ssss')
+            var temp = s_id;
+            s_id = r_id;
+            r_id = temp;
+            room = '' + s_id + r_id;
+            console.log('room id in if' + room);
+          } else {
+            room = '' + s_id + r_id;
+            console.log('room id in else', room);
+          }
+          // socket joining to room
+          console.log("room::", room)
+          socket.join(room);
+          //new method of joining socket user by their id
+          socket.join(room+'_'+room_data.sid);
+          //socket.join(room+'_'+room_data.rid);
+          console.log('joined room', room);
+          socket.room = room;
+          console.log('socket room userid',room_data.sid,socket.id)
+          newRoom = socket.room;
+          sockets.push(socket.id)
+          console.info(socket.id + ' joined room ', room, socket.room);
+          io.sockets.in(socket.room).emit('room_notification', `'joined room-' ${room}`);
+          var s_id = room_data.sid;
+          soc[room_data.sid] = socket.id;
+          //set online user's room
+          let room_user_data={
+            sid: room_data.sid,
+            rid: room_data.rid,
+            room: room
+          }
+          
+          // if(online_user_room_data.includes(room_user_data)){
+          //   console.log('yes')
+          // }else{
+          //   console.log('no')
+          //   //online_user_room_data.push(room_user_data);
           // }
-          let check_user_room_data=check_online_user_room_data(room_data.sid,room_data.rid,room);
-          console.log('check ',check_user_room_data);
-          if(check_user_room_data==false){
+
+          if(online_user_room_data.length>0){
+            //console.log('ssss')
+            // console.log('online room user count ',online_user_room_data.length)
+            // for(var i=0; i<online_user_room_data.length; i++){
+            //   console.log(online_user_room_data[i].sid+'--'+room_data.sid,online_user_room_data[i].room+'--'+room)
+            //   if(online_user_room_data[i].sid==room_data.sid && online_user_room_data[i].rid==room_data.rid){
+            //     console.log('yes user already exist in the room');
+            //   }else{
+            //     console.log('user is not already exist in the room');
+            //     online_user_room_data.push(room_user_data);
+            //     break;
+            //   }
+            // }
+            let check_user_room_data=check_online_user_room_data(room_data.sid,room_data.rid,room);
+            console.log('check ',check_user_room_data);
+            if(check_user_room_data==false){
+              online_user_room_data.push(room_user_data);
+            }
+            console.log('available users',online_user_room_data)
+          }else{
+            console.log('count is zero')
             online_user_room_data.push(room_user_data);
           }
-          console.log('available users',online_user_room_data)
-        }else{
-          console.log('count is zero')
-          online_user_room_data.push(room_user_data);
-        }
-        //console.log('sockets', soc);
-        //console.log('set online users ',online_user_room_data)
-        var last_seen = get_datetime();
-        //updating online status and lastseen
-        const results =  db.sequelize.query("UPDATE user SET online_status = '1', last_seen='" + last_seen + "' WHERE id = '" + room_data.sid + "'");
-        console.log(soc,room_data.rid)
-        if (soc[room_data.rid] != undefined) {
-          console.log('user is online')
-          //const results = db.sequelize.query("UPDATE user SET online_status = '1', last_seen='" + last_seen + "' WHERE id = '" + room_data.sid + "'");
-          // old query var update_query = "update user set online_status='1',last_seen='" + last_seen + "' where id='" + room_data.sid + "'";
-          //get online status to emit
-          var online_s=await queries.select_online_status(room_data.rid);
-          console.log('140 in app.js',online_s)
-         // try{
-            console.log('online user', newRoom)
+          //console.log('sockets', soc);
+          //console.log('set online users ',online_user_room_data)
+          var last_seen = get_datetime();
+          //updating online status and lastseen
+          const results =  db.sequelize.query("UPDATE user SET online_status = '1', last_seen='" + last_seen + "' WHERE id = '" + room_data.sid + "'");
+          console.log(soc,room_data.rid)
+          if (soc[room_data.rid] != undefined) {
+            console.log('user is online')
+            //const results = db.sequelize.query("UPDATE user SET online_status = '1', last_seen='" + last_seen + "' WHERE id = '" + room_data.sid + "'");
+            // old query var update_query = "update user set online_status='1',last_seen='" + last_seen + "' where id='" + room_data.sid + "'";
+            //get online status to emit
+            var online_s=await queries.select_online_status(room_data.rid);
+            console.log('140 in app.js',online_s)
+          // try{
+              console.log('online user', newRoom)
+              let data_array=[{
+                online_status:1,
+                last_seen: online_s[0].last_seen
+              }]
+            //io.sockets.in(newRoom).emit('online_users', { "status": "true", "statuscode": "200", "message": "success", "online_status": online_s[0][0].online_status, "last_seen": online_s[0][0].last_seen });
+            //io.sockets.in(newRoom+'_'+room_data.sid).emit('online_users', { "status": "true", "statuscode": "200", "message": "success", "data": online_s });
+            io.sockets.in(newRoom+'_'+room_data.sid).emit('online_users', { "status": "true", "statuscode": "200", "message": "success", "data": data_array });
+            // }catch(e){
+            //   console.log('online_s ', e)
+            // }
+          } else {
+            console.log('user is offline now');
+            var online_s=await queries.select_online_status(room_data.rid);
             let data_array=[{
-              online_status:1,
+              online_status:0,
               last_seen: online_s[0].last_seen
             }]
-          //io.sockets.in(newRoom).emit('online_users', { "status": "true", "statuscode": "200", "message": "success", "online_status": online_s[0][0].online_status, "last_seen": online_s[0][0].last_seen });
-          //io.sockets.in(newRoom+'_'+room_data.sid).emit('online_users', { "status": "true", "statuscode": "200", "message": "success", "data": online_s });
-          io.sockets.in(newRoom+'_'+room_data.sid).emit('online_users', { "status": "true", "statuscode": "200", "message": "success", "data": data_array });
-          // }catch(e){
-          //   console.log('online_s ', e)
-          // }
-        } else {
-          console.log('user is offline now');
-          var online_s=await queries.select_online_status(room_data.rid);
-          let data_array=[{
-            online_status:0,
-            last_seen: online_s[0].last_seen
-          }]
-          console.log(data_array)
-            io.sockets.in(newRoom+'_'+room_data.sid).emit('online_users', { "status": "true", "statuscode": "200", "message": "success", "data": data_array });
+            console.log(data_array)
+              io.sockets.in(newRoom+'_'+room_data.sid).emit('online_users', { "status": "true", "statuscode": "200", "message": "success", "data": data_array });
+          }
         }
-      }
+    }else{
+      console.log('type not an object');
+    }
     }catch(e){
       //dashLogger.error(`Error : ${e}`);
+      console.log('error occurs', e)
     }
   });
   socket.on('set_online_users', async function (data) {
@@ -731,7 +739,7 @@ io.sockets.on('connection', function (socket) {
     
   }catch(e){
     //dashLogger.error(`Error : ${e}`);
-    console.log(e)
+    console.log('error occured',e)
   }
   });
 
@@ -808,12 +816,12 @@ io.sockets.on('connection', function (socket) {
   })
 
   socket.on('dis', async function (input) {
-    console.log(online_user_room_data);
-    console.log('inside disconnect')
+    // console.log(online_user_room_data);
+    // console.log('inside disconnect')
     var s_id = input.s_id;
-    console.log('[socket]', 'leave room :');
+    //console.log('[socket]', 'leave room :');
     var last_seen = get_datetime();
-    console.log(s_id)
+    //console.log(s_id)
     // var update_query = "update user set online_status='0',last_seen='" + last_seen + "' where id='" + s_id + "'";
     // con.query(update_query, function (err, result) {
     //   console.log(result);
@@ -865,7 +873,7 @@ io.sockets.on('connection', function (socket) {
     }
     
     soc.splice(input.s_id, 1);
-    console.log(soc)
+    console.log('available user list ',soc)
   })
   //individual chat end
   //group chat/////////////////////////////////////////////////////////////////////////////////////////////
