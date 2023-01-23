@@ -24,8 +24,8 @@ const io = require('socket.io')(http, {
 const BASE_URL=process.env.BASE_URL;
 console.log('base ',BASE_URL)
 app.get('/', function (req, res) {
-  //res.sendFile(__dirname + '/index.html');
-  res.send('hello world')
+  res.sendFile(__dirname + '/index.html');
+  //res.send('Welcome to Smart Station')
 });
 
 const con = require('./db_connection');
@@ -45,7 +45,7 @@ const { resolve } = require('path');
 const e = require('express');
 const { on } = require('events');
 const botName = 'Smart_Station_Bot';
-const port = process.env.PORT || 3001;
+const port = process.env.PORT || 3000;
 db.sequelize.sync();
 
 // Results will be an empty array and metadata will contain the number of affected rows.
@@ -280,7 +280,7 @@ io.sockets.on('connection', function (socket) {
   })
   
   socket.on('message', async function (data) {
-    try{
+    //try{
 
     var s_id = data.sid;
     var r_id = data.rid;
@@ -737,10 +737,10 @@ io.sockets.on('connection', function (socket) {
       // })
     }
     
-  }catch(e){
-    //dashLogger.error(`Error : ${e}`);
-    console.log('error occured',e)
-  }
+  // }catch(e){
+  //   //dashLogger.error(`Error : ${e}`);
+  //   console.log('error occured',e)
+  // }
   });
 
   socket.on('chat_list1', function (input) {
@@ -912,53 +912,49 @@ io.sockets.on('connection', function (socket) {
   socket.on('chat_list',async function (input) {
     try{
       console.log(input)
-      // let user_data = {
-      //   user_id: input.user_id,
-      //   accessToken: input.accessToken
-      // }
-      // console.log(user_data)
-      socket.join(input.user_id)
-      // axios({
-      //   method: 'post',
-      //   url: 'http://ec2-3-143-158-60.us-east-2.compute.amazonaws.com/api/getrecent_chat',
-      //   data: user_data,
-      //   headers: {
-      //     'Content-Type': 'application/json',
-      //   }
-      // }).then(res => {
-      //   console.log(res)
-      //   var out = res.data
-      //   console.log('responsedata', out);
-      //   socket.join(input.user_id)
-      //   io.in(input.user_id).emit('chat_list', out);
-      // }).catch((err) => {
-      //   console.log(err)
-      // })
-      //check user is valided or not
-      let check_user_is_valid=await queries.check_user_valid(input.user_id,input.accessToken)
-      if(check_user_is_valid.length>0){
-        //update user online status
-        let datetime=get_datetime();
-        soc[input.user_id] = socket.id;
-        
-        let update_online_offline_status=await queries.update_user_online_offline_status(input.user_id,datetime,1)
-        let get_recent_chat_response=await functions.get_recent_chat_list_response(input.user_id);
-        //console.log('recent',get_recent_chat_response)
-        
-        io.sockets.in(input.user_id).emit('chat_list', get_recent_chat_response);
-        console.log(soc)
-      }else{
-        console.log('no user found')
-        let set_response={
-          status: true,
-          statuscode: 200,
-          message: 'No user data found',
-          data: []
+      if(typeof(input)=='object'){
+        // let user_data = {
+        //   user_id: input.user_id,
+        //   accessToken: input.accessToken
+        // }
+        // console.log(user_data)
+        socket.join(input.userid)
+        //check user is valided or not
+        let check_user_is_valid=await queries.check_user_valid(input.userid,input.accessToken)
+        if(check_user_is_valid.length>0){
+          //update user online status
+          let datetime=get_datetime();
+          soc[input.userid] = socket.id;
+          
+          let update_online_offline_status=await queries.update_user_online_offline_status(input.userid,datetime,1)
+          let get_recent_chat_response=await functions.get_recent_chat_list_response(input.userid);
+          //console.log('recent',get_recent_chat_response)
+          
+          io.sockets.in(input.userid).emit('chat_list', get_recent_chat_response);
+          console.log(soc)
+        }else{
+          console.log('no user found')
+          let set_response={
+            status: true,
+            statuscode: 200,
+            message: 'No user data found',
+            data: []
+          }
+          io.sockets.in(input.userid).emit('chat_list', set_response);
         }
-        io.sockets.in(input.user_id).emit('chat_list', set_response);
+      }else{
+        console.log('Input datatype is text');
+        // let set_response={
+        //   status: true,
+        //   statuscode: 400,
+        //   message: 'Input datatype is text',
+        //   data: []
+        // }
+        // io.sockets.in(input.user_id).emit('chat_list', set_response);
       }
     }catch(e){
       //dashLogger.error(`Error : ${e}`);
+      console.log(e)
       let set_response={
         status: true,
         statuscode: 200,
@@ -979,231 +975,245 @@ io.sockets.on('connection', function (socket) {
     let datetime=get_datetime();
     let send_forward_message_status=false;
     try{
-      if(input.message_ids!=''){
-        let message_ids=input.message_ids.split(',')
-        if(message_ids.length>0){
-          var set_emit_users=0;
-          for(var i=0; i<message_ids.length; i++){
-            let forword_message_id=message_ids[i];
-            //get forward message data
-            let get_forward_message_data=await queries.get_forward_message_data(message_ids[i]);
-            console.log(get_forward_message_data)
-            let forward_message=get_forward_message_data[0].message;
-            let forward_message_type=get_forward_message_data[0].message_type;
-            let forward_duration=get_forward_message_data[0].duration;
-            //console.log('message id ',message_ids[i])
-            let to_users=input.to_users.split(',');
-            for(var j=0;j<to_users.length;j++){
-            //to_users.forEach(async res=>{
-              //console.log(res)
-              //let id=res.split(':');
-              let id=to_users[j].split(':');
-              console.log(id,id[0],id[1]);
-              let receiver_id=id[0];
-              let type=id[1];
-              //type -- p = private, g = group
-              if(type=='p'){
-                //private
-                console.log('private')
-                let room;
-                console.log('users data ',input.sid,receiver_id)
-                if(Number(input.sid)<Number(receiver_id)){
-                  console.log("sender id is less")
-                  room=input.sid+receiver_id;
-                }else{
-                  console.log("receiver id is less")
-                  room=receiver_id+input.sid;
-                }
-                console.log(room)
-                let group_status_data = [{
-                  "user_id": input.sid,
-                  "username": "",
-                  "datetime": datetime,
-                  "message_status": 0,
-                  "message_read_datetime": datetime,
-                  "status": 1
-                }, {
-                  "user_id": receiver_id,
-                  "username": "",
-                  "datetime": datetime,
-                  "message_status": 0,
-                  "message_read_datetime": "",
-                  "status": 1
-                }]
-                var group_status_json_data = JSON.stringify(group_status_data);
-                //console.log(group_status_json_data);
-                //save forward message
-                
-                let save_individual_forward_message=await queries.save_individual_forward_message(message_ids[i],datetime,input.sid,receiver_id,forward_message,forward_message_type,room,forward_duration,group_status_json_data)
-                //console.log(save_individual_forward_message)
-                if(save_individual_forward_message.length>0){
-                  send_forward_message_status=true;
-                  console.log('data saved successfully', room)
-                  //emit data to user
-                  if(set_emit_users==0){
-                    emit_users.push({
-                      sid: input.sid,
-                      rid: receiver_id,
-                      room: room,
-                      type: "private"
-                    })
+      console.log(typeof(input))
+      if(typeof(input)=='object'){
+        if(input.message_ids!=''){
+          let message_ids=input.message_ids.split(',')
+          if(message_ids.length>0){
+            var set_emit_users=0;
+            for(var i=0; i<message_ids.length; i++){
+              let forword_message_id=message_ids[i];
+              //get forward message data
+              let get_forward_message_data=await queries.get_forward_message_data(message_ids[i]);
+              console.log(get_forward_message_data)
+              let forward_message=get_forward_message_data[0].message;
+              let forward_message_type=get_forward_message_data[0].message_type;
+              let forward_duration=get_forward_message_data[0].duration;
+              //console.log('message id ',message_ids[i])
+              let to_users=input.to_users.split(',');
+              for(var j=0;j<to_users.length;j++){
+              //to_users.forEach(async res=>{
+                //console.log(res)
+                //let id=res.split(':');
+                let id=to_users[j].split(':');
+                console.log(id,id[0],id[1]);
+                let receiver_id=id[0];
+                let type=id[1];
+                //type -- p = private, g = group
+                if(type=='p'){
+                  //private
+                  console.log('private')
+                  let room;
+                  console.log('users data ',input.sid,receiver_id)
+                  if(Number(input.sid)<Number(receiver_id)){
+                    console.log("sender id is less")
+                    room=input.sid+receiver_id;
+                  }else{
+                    console.log("receiver id is less")
+                    room=receiver_id+input.sid;
                   }
-                  //  let individual_chat_list_response_sender=await functions.get_individual_chat_list_response(input.sid,receiver_id,room);
-                  //  let individual_chat_list_response_receiver=await functions.get_individual_chat_list_response(receiver_id,input.sid,room);
-  
-                  // io.sockets.in(room+'_'+input.sid).emit('message',individual_chat_list_response_sender);
-                  // io.sockets.in(room+'_'+receiver_id).emit('message',individual_chat_list_response_receiver);
-                  //emit chat list
-                }
-              }else if(type=='g'){
-                //group
-                console.log('group forward msg ',message_ids[i])
-                
-                //get group current users
-                let room=receiver_id;
-                let get_group_current_users=await queries.get_group_current_users(room);
-                let group_current_users=JSON.parse(get_group_current_users[0].current_members);
-                console.log(group_current_users);
-                if(group_current_users.length>0){
-                  let group_status_data = [];
-                  for(var group_user=0; group_user<group_current_users.length; group_user++){
-                    console.log('group user id ',group_current_users[group_user].user_id)
-                    
-                    if(group_current_users[group_user].user_id==input.sid){
-                      group_status_data.push({
-                        "user_id": group_current_users[group_user].user_id,
-                        "username": "",
-                        "datetime": datetime,
-                        "message_status": 0,
-                        "message_read_datetime": datetime,
-                        "status": 1
-                      })
-                      //save forward message for group
-                      //let save_group_forward_message=await queries.save_group_forward_message(message_ids[i],datetime,input.sid,0,forward_message,forward_message_type,room,forward_duration,group_status_json_data);
-                    }else{
-                      group_status_data.push({
-                        "user_id": group_current_users[group_user].user_id,
-                        "username": "",
-                        "datetime": datetime,
-                        "message_status": 0,
-                        "message_read_datetime": "",
-                        "status": 1
-                      })
-                    }
+                  console.log(room)
+                  let group_status_data = [{
+                    "user_id": input.sid,
+                    "username": "",
+                    "datetime": datetime,
+                    "message_status": 0,
+                    "message_read_datetime": datetime,
+                    "status": 1
+                  }, {
+                    "user_id": receiver_id,
+                    "username": "",
+                    "datetime": datetime,
+                    "message_status": 0,
+                    "message_read_datetime": "",
+                    "status": 1
+                  }]
+                  var group_status_json_data = JSON.stringify(group_status_data);
+                  //console.log(group_status_json_data);
+                  //save forward message
+                  
+                  let save_individual_forward_message=await queries.save_individual_forward_message(message_ids[i],datetime,input.sid,receiver_id,forward_message,forward_message_type,room,forward_duration,group_status_json_data)
+                  //console.log(save_individual_forward_message)
+                  if(save_individual_forward_message.length>0){
+                    send_forward_message_status=true;
+                    console.log('data saved successfully', room)
+                    //emit data to user
                     if(set_emit_users==0){
-                      //emit data to user
                       emit_users.push({
                         sid: input.sid,
-                        rid: group_current_users[group_user].user_id,
+                        rid: receiver_id,
                         room: room,
-                        type: "group"
+                        type: "private"
                       })
                     }
-                    
+                    //  let individual_chat_list_response_sender=await functions.get_individual_chat_list_response(input.sid,receiver_id,room);
+                    //  let individual_chat_list_response_receiver=await functions.get_individual_chat_list_response(receiver_id,input.sid,room);
+    
+                    // io.sockets.in(room+'_'+input.sid).emit('message',individual_chat_list_response_sender);
+                    // io.sockets.in(room+'_'+receiver_id).emit('message',individual_chat_list_response_receiver);
+                    //emit chat list
                   }
-                  //console.log(group_status_data)
-                  //save forward message for group
-                  //console.log('group forward msg ',forword_message_id)
-                  let save_group_forward_message=await queries.save_group_forward_message(forword_message_id,datetime,input.sid,0,forward_message,forward_message_type,room,forward_duration,JSON.stringify(group_status_data));
-                  console.log('save_group_forward_message ',save_group_forward_message)
-                  if(save_group_forward_message.length>0){
-                    send_forward_message_status=true;
-                    // let group_chat_response_data_for_sender=await functions.get_group_chat_list_response(input.sid,data.room);
-                    // //io.sockets.in(data.room+'_'+data.sid).emit('message', group_chat_response_data_for_sender);   
-                    // io.in(data.room+'_'+data.sid).emit('message', group_chat_response_data_for_sender);
-                    console.log('success')
-                    
-                  console.log('after success ',emit_users)
-                  }else{
+                }else if(type=='g'){
+                  //group
+                  console.log('group forward msg ',message_ids[i])
+                  
+                  //get group current users
+                  let room=receiver_id;
+                  let get_group_current_users=await queries.get_group_current_users(room);
+                  let group_current_users=JSON.parse(get_group_current_users[0].current_members);
+                  console.log(group_current_users);
+                  if(group_current_users.length>0){
+                    let group_status_data = [];
+                    for(var group_user=0; group_user<group_current_users.length; group_user++){
+                      console.log('group user id ',group_current_users[group_user].user_id)
+                      
+                      if(group_current_users[group_user].user_id==input.sid){
+                        group_status_data.push({
+                          "user_id": group_current_users[group_user].user_id,
+                          "username": "",
+                          "datetime": datetime,
+                          "message_status": 0,
+                          "message_read_datetime": datetime,
+                          "status": 1
+                        })
+                        //save forward message for group
+                        //let save_group_forward_message=await queries.save_group_forward_message(message_ids[i],datetime,input.sid,0,forward_message,forward_message_type,room,forward_duration,group_status_json_data);
+                      }else{
+                        group_status_data.push({
+                          "user_id": group_current_users[group_user].user_id,
+                          "username": "",
+                          "datetime": datetime,
+                          "message_status": 0,
+                          "message_read_datetime": "",
+                          "status": 1
+                        })
+                      }
+                      if(set_emit_users==0){
+                        //emit data to user
+                        emit_users.push({
+                          sid: input.sid,
+                          rid: group_current_users[group_user].user_id,
+                          room: room,
+                          type: "group"
+                        })
+                      }
+                      
+                    }
+                    //console.log(group_status_data)
+                    //save forward message for group
+                    //console.log('group forward msg ',forword_message_id)
+                    let save_group_forward_message=await queries.save_group_forward_message(forword_message_id,datetime,input.sid,0,forward_message,forward_message_type,room,forward_duration,JSON.stringify(group_status_data));
+                    console.log('save_group_forward_message ',save_group_forward_message)
+                    if(save_group_forward_message.length>0){
+                      send_forward_message_status=true;
+                      // let group_chat_response_data_for_sender=await functions.get_group_chat_list_response(input.sid,data.room);
+                      // //io.sockets.in(data.room+'_'+data.sid).emit('message', group_chat_response_data_for_sender);   
+                      // io.in(data.room+'_'+data.sid).emit('message', group_chat_response_data_for_sender);
+                      console.log('success')
+                      
+                    console.log('after success ',emit_users)
+                    }else{
 
+                    }
+                  }else{
+                    console.log('no active members')
                   }
+                }
+    
+              //})
+              }
+              set_emit_users++;
+            }
+            console.log('emit users ',emit_users)
+            //send message list
+            if(emit_users.length>0){
+              //success message for forward_message emit 
+              if(send_forward_message_status){
+                let forward_response={
+                  status: true,
+                  statuscode: 200,
+                  message: "success"
+                }
+                io.sockets.in(input.sid+'_forward_message').emit('forward_message',forward_response);
+              
+              
+              let emit_sender_i=0;
+              let sender_group_emitted_array=[];
+              for(var k=0; k<emit_users.length; k++){
+                //console.log(emit_users[k].room,' - ',emit_users[k].rid,' - ', emit_users[k].type)
+                if(emit_users[k].type=='private'){
+                  //console.log('private ',input.sid,emit_users[k].rid,emit_users[k].room)
+                  //emit to senter 
+                  let individual_chat_list_response_senter=await functions.get_individual_chat_list_response(input.sid,emit_users[k].rid,emit_users[k].room);
+                  io.sockets.in(emit_users[k].room+'_'+input.sid).emit('message',individual_chat_list_response_senter);
+                  //emit to receiver
+                  let individual_chat_list_response_receiver=await functions.get_individual_chat_list_response(emit_users[k].rid,input.sid,emit_users[k].room);
+                  io.sockets.in(emit_users[k].room+'_'+emit_users[k].rid).emit('message',individual_chat_list_response_receiver);
+    
+                  //emit chat list in future
+                  let receiver_chatlist_response=await functions.get_recent_chat_list_response(emit_users[k].rid);
+                  console.log('response data ', receiver_chatlist_response);
+                  //emit to receiver
+                  io.sockets.in(emit_users[k].rid).emit('chat_list',receiver_chatlist_response);
+                  //emit to senter
+                  let senter_chatlist_response=await functions.get_recent_chat_list_response(input.sid);
+                  io.sockets.in(input.sid).emit('chat_list',senter_chatlist_response);
                 }else{
-                  console.log('no active members')
+                  //emit to senter 
+                  // if(!sender_group_emitted_array.includes(emit_users[k].room)){
+                  //   //console.log('ssss ',emit_users[k].room, emit_users[k].room+'_'+input.sid)
+                  //   let group_chat_list_response_senter=await functions.get_group_chat_list_response(input.sid,emit_users[k].room);
+                  //   io.sockets.in(emit_users[k].room+'_'+input.sid).emit('message',group_chat_list_response_senter);
+                  //   sender_group_emitted_array.push(emit_users[k].room);
+                  // }
+                  
+                  //emit to receiver
+                  console.log('group emit',emit_users[k].rid,emit_users[k].room)
+                  let group_chat_list_response_receiver=await functions.get_group_chat_list_response(emit_users[k].rid,emit_users[k].room);
+                  io.sockets.in(emit_users[k].room+'_'+emit_users[k].rid).emit('message',group_chat_list_response_receiver);
+    
+                  //emit chat list in future
+                  let chatlist_response=await functions.get_recent_chat_list_response(emit_users[k].rid);
+                  io.sockets.in(emit_users[k].rid).emit('chat_list',chatlist_response);
                 }
               }
-  
-            //})
-            }
-            set_emit_users++;
-          }
-          console.log('emit users ',emit_users)
-          //send message list
-          if(emit_users.length>0){
-            //success message for forward_message emit 
-            if(send_forward_message_status){
+            }else{
               let forward_response={
                 status: true,
                 statuscode: 200,
-                message: "success"
+                message: "Message not forwarded"
               }
               io.sockets.in(input.sid+'_forward_message').emit('forward_message',forward_response);
-            
-            
-            let emit_sender_i=0;
-            let sender_group_emitted_array=[];
-            for(var k=0; k<emit_users.length; k++){
-              //console.log(emit_users[k].room,' - ',emit_users[k].rid,' - ', emit_users[k].type)
-              if(emit_users[k].type=='private'){
-                //console.log('private ',input.sid,emit_users[k].rid,emit_users[k].room)
-                //emit to senter 
-                let individual_chat_list_response_senter=await functions.get_individual_chat_list_response(input.sid,emit_users[k].rid,emit_users[k].room);
-                io.sockets.in(emit_users[k].room+'_'+input.sid).emit('message',individual_chat_list_response_senter);
-                //emit to receiver
-                let individual_chat_list_response_receiver=await functions.get_individual_chat_list_response(emit_users[k].rid,input.sid,emit_users[k].room);
-                io.sockets.in(emit_users[k].room+'_'+emit_users[k].rid).emit('message',individual_chat_list_response_receiver);
-  
-                //emit chat list in future
-              }else{
-                //emit to senter 
-                // if(!sender_group_emitted_array.includes(emit_users[k].room)){
-                //   //console.log('ssss ',emit_users[k].room, emit_users[k].room+'_'+input.sid)
-                //   let group_chat_list_response_senter=await functions.get_group_chat_list_response(input.sid,emit_users[k].room);
-                //   io.sockets.in(emit_users[k].room+'_'+input.sid).emit('message',group_chat_list_response_senter);
-                //   sender_group_emitted_array.push(emit_users[k].room);
-                // }
-                
-                //emit to receiver
-                console.log('group emit',emit_users[k].rid,emit_users[k].room)
-                let group_chat_list_response_receiver=await functions.get_group_chat_list_response(emit_users[k].rid,emit_users[k].room);
-                io.sockets.in(emit_users[k].room+'_'+emit_users[k].rid).emit('message',group_chat_list_response_receiver);
-  
-                //emit chat list in future
-              }
             }
+            }else{
+              let forward_response={
+                status: false,
+                statuscode: 400,
+                message: "Message not forwarded"
+              }
+              io.sockets.in(input.sid+'_forward_message').emit('forward_message',forward_response);
+            }
+            
           }else{
-            let forward_response={
+            console.log('no forward message id found')
+            let forward_message_response={
               status: true,
               statuscode: 200,
-              message: "Message not forwarded"
+              message: "No forward message id found"
             }
-            io.sockets.in(input.sid+'_forward_message').emit('forward_message',forward_response);
+            io.sockets.in(input.sid+'_forward_message').emit('forward_message',forward_message_response);
           }
-          }else{
-            let forward_response={
-              status: false,
-              statuscode: 400,
-              message: "Message not forwarded"
-            }
-            io.sockets.in(input.sid+'_forward_message').emit('forward_message',forward_response);
-          }
-          
         }else{
-          console.log('no forward message id found')
+          console.log('no forward message id found and empty data')
           let forward_message_response={
             status: true,
             statuscode: 200,
-            message: "No forward message id found"
+            message: "Forward message id is empty"
           }
           io.sockets.in(input.sid+'_forward_message').emit('forward_message',forward_message_response);
         }
       }else{
-        console.log('no forward message id found and empty data')
-        let forward_message_response={
-          status: true,
-          statuscode: 200,
-          message: "Forward message id is empty"
-        }
-        io.sockets.in(input.sid+'_forward_message').emit('forward_message',forward_message_response);
+        console.log('Input data is string')
       }
     }catch(e){
       console.log(e)

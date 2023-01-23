@@ -17,7 +17,9 @@ module.exports = {
   
   PASSWORD: "",
   
-  DB: "smart_station_new",
+  DB: "server_smart_station",
+  
+  //DB: "smart_station_new",
   // HOST: "103.191.208.50",
   
   // USER: "xvpsvilv_smart_admin",
