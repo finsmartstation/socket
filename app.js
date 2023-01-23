@@ -918,19 +918,19 @@ io.sockets.on('connection', function (socket) {
         //   accessToken: input.accessToken
         // }
         // console.log(user_data)
-        socket.join(input.userid)
+        socket.join(input.user_id)
         //check user is valided or not
-        let check_user_is_valid=await queries.check_user_valid(input.userid,input.accessToken)
+        let check_user_is_valid=await queries.check_user_valid(input.user_id,input.accessToken)
         if(check_user_is_valid.length>0){
           //update user online status
           let datetime=get_datetime();
-          soc[input.userid] = socket.id;
+          soc[input.user_id] = socket.id;
           
-          let update_online_offline_status=await queries.update_user_online_offline_status(input.userid,datetime,1)
-          let get_recent_chat_response=await functions.get_recent_chat_list_response(input.userid);
+          let update_online_offline_status=await queries.update_user_online_offline_status(input.user_id,datetime,1)
+          let get_recent_chat_response=await functions.get_recent_chat_list_response(input.user_id);
           //console.log('recent',get_recent_chat_response)
           
-          io.sockets.in(input.userid).emit('chat_list', get_recent_chat_response);
+          io.sockets.in(input.user_id).emit('chat_list', get_recent_chat_response);
           console.log(soc)
         }else{
           console.log('no user found')
@@ -940,10 +940,10 @@ io.sockets.on('connection', function (socket) {
             message: 'No user data found',
             data: []
           }
-          io.sockets.in(input.userid).emit('chat_list', set_response);
+          io.sockets.in(input.user_id).emit('chat_list', set_response);
         }
       }else{
-        console.log('Input datatype is text');
+        console.log('Input datatype is string');
         // let set_response={
         //   status: true,
         //   statuscode: 400,
@@ -1242,6 +1242,9 @@ io.sockets.on('connection', function (socket) {
     let private_group;
     let first_receiver_id;
     try{
+      if(typeof(data)=='object'){
+
+      
       let check_user_valid=await queries.check_user_valid(data.user_id, data.accessToken);
       if(check_user_valid.length>0){
         //split message id's
@@ -1412,7 +1415,9 @@ io.sockets.on('connection', function (socket) {
         //io.sockets.in(sender_room+'_'+data.user_id).emit('delete_message',delete_message_response);
         io.sockets.in(data.user_id+'_delete_message').emit('delete_message',delete_message_response);
       }
-      
+    }else{
+        console.log('Input datatype is string');
+    }  
       
   }catch(e){
     console.log(e)
