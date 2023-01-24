@@ -226,7 +226,7 @@ io.sockets.on('connection', function (socket) {
               }]
             //io.sockets.in(newRoom).emit('online_users', { "status": "true", "statuscode": "200", "message": "success", "online_status": online_s[0][0].online_status, "last_seen": online_s[0][0].last_seen });
             //io.sockets.in(newRoom+'_'+room_data.sid).emit('online_users', { "status": "true", "statuscode": "200", "message": "success", "data": online_s });
-            io.sockets.in(newRoom+'_'+room_data.sid).emit('online_users', { "status": "true", "statuscode": "200", "message": "success", "data": data_array });
+            io.sockets.in(newRoom+'_'+room_data.sid).emit('online_users', { "status": "true", "statuscode": "200", "message": "success", "online_status": "1", "last_seen": online_s[0].last_seen});
             // }catch(e){
             //   console.log('online_s ', e)
             // }
@@ -238,7 +238,7 @@ io.sockets.on('connection', function (socket) {
               last_seen: online_s[0].last_seen
             }]
             console.log(data_array)
-              io.sockets.in(newRoom+'_'+room_data.sid).emit('online_users', { "status": "true", "statuscode": "200", "message": "success", "data": data_array });
+              io.sockets.in(newRoom+'_'+room_data.sid).emit('online_users', { "status": "true", "statuscode": "200", "message": "success", "online_status": "0", "last_seen": online_s[0].last_seen});
           }
         }
     }else{
@@ -852,7 +852,7 @@ io.sockets.on('connection', function (socket) {
           }]
           console.log(online_user_room_data[i].room+'_'+online_user_room_data[i].sid)
           if(input.s_id!=online_user_room_data[i].sid){
-            io.sockets.in(online_user_room_data[i].room+'_'+online_user_room_data[i].sid).emit('online_users',{"status": "true", "statuscode": "200", "message": "success", "data": data_array})
+            io.sockets.in(online_user_room_data[i].room+'_'+online_user_room_data[i].sid).emit('online_users',{"status": "true", "statuscode": "200", "message": "success", "online_status": "0", "last_seen": last_seen})
           }
           //io.sockets.in(online_user_room_data[i].room+'_'+online_user_room_data[i].sid).emit('online_users',{"status": "true", "statuscode": "200", "message": "success", "data": data_array})
           // online_user_room_data.splice(i,1);
@@ -932,6 +932,22 @@ io.sockets.on('connection', function (socket) {
           
           io.sockets.in(input.user_id).emit('chat_list', get_recent_chat_response);
           console.log(soc)
+          
+          
+          //emit online_users -- to show user is online
+          console.log(`online user's room `,online_user_room_data)
+          if(online_user_room_data.length>0){
+            //console.log('sssss')
+            for(var i=0; i<online_user_room_data.length; i++){
+              if(input.user_id==online_user_room_data[i].sid || input.user_id==online_user_room_data[i].rid){
+                //console.log('yes')
+                if(input.user_id!=online_user_room_data[i].sid){
+                  //console.log('emit online user ',online_user_room_data[i].room+'_'+online_user_room_data[i].sid)
+                  io.sockets.in(online_user_room_data[i].room+'_'+online_user_room_data[i].sid).emit('online_users',{"status": "true", "statuscode": "200", "message": "success", "online_status": "1", "last_seen": datetime})
+                }
+              }
+            }
+          }
         }else{
           console.log('no user found')
           let set_response={
@@ -1243,8 +1259,6 @@ io.sockets.on('connection', function (socket) {
     let first_receiver_id;
     try{
       if(typeof(data)=='object'){
-
-      
       let check_user_valid=await queries.check_user_valid(data.user_id, data.accessToken);
       if(check_user_valid.length>0){
         //split message id's
@@ -1351,28 +1365,40 @@ io.sockets.on('connection', function (socket) {
                 let message_response_for_sender=await functions.get_individual_chat_list_response(data.user_id,first_receiver_id,sender_room);
                 io.sockets.in(data.user_id+'_delete_message').emit('message', message_response_for_sender); 
                 //emit chat list
+                let sender_chat_list_response=await functions.get_recent_chat_list_response(data.user_id);
+                io.sockets.in(data.user_id).emit('chat_list', sender_chat_list_response);
               }else{
                 //group message
                 //send emit message to sender -- who deleted the message
                 let message_response_for_sender_group=await functions.get_group_chat_list_response(data.user_id,sender_room);
                 io.sockets.in(data.user_id+'_delete_message').emit('message', message_response_for_sender_group); 
                 //emit chat list
+                let sender_chat_list_response=await functions.get_recent_chat_list_response(data.user_id);
+                io.sockets.in(data.user_id).emit('chat_list', sender_chat_list_response);
               }
               //send emit message to receiver
+              console.log('emit_user ',emit_user)
               for(var emit_user_i=0; emit_user_i<emit_user.length;emit_user_i++){
                 console.log(emit_user[emit_user_i])
                 if(emit_user[emit_user_i].type==0){
                   //private
                   let message_response_for_receiver=await functions.get_individual_chat_list_response(emit_user[emit_user_i].rid,data.user_id,sender_room);
                   //emit to normal room
-                  io.sockets.in(data.user_id,sender_room).emit('message', message_response_for_receiver); 
+                  console.log('delete emit test ',data.user_id,sender_room)
+                  console.log('emit to receiver ', emit_user[emit_user_i].room+'_'+emit_user[emit_user_i].rid)
+                  io.sockets.in(emit_user[emit_user_i].room).emit('message', message_response_for_receiver); 
                   //emit chat list
+                  let receiver_chat_list_response=await functions.get_recent_chat_list_response(emit_user[emit_user_i].rid);
+                  console.log('receiver chat list', receiver_chat_list_response);
+                  io.sockets.in(emit_user[emit_user_i].rid).emit('chat_list',receiver_chat_list_response);
                 }else{
                   //group
                   let message_response_for_receiver=await functions.get_group_chat_list_response(emit_user[emit_user_i].rid,sender_room);
                   //emit to normal room
-                  io.sockets.in(data.user_id,sender_room).emit('message', message_response_for_receiver); 
+                  io.sockets.in(emit_user[emit_user_i].room).emit('message', message_response_for_receiver); 
                   //emit chat list
+                  let receiver_chat_list_response=await functions.get_recent_chat_list_response(emit_user[emit_user_i].rid);
+                  io.sockets.in(emit_user[emit_user_i].rid).emit('chat_list',receiver_chat_list_response);
                 }
               }
             }else{
