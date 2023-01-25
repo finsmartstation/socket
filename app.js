@@ -104,8 +104,8 @@ io.sockets.on('connection', function (socket) {
   console.log("socket::");
   // chat room
   socket.on('room', async function (room_data) {
-    console.log('test socket client',io.engine.clientsCount)
-    console.log('check room input data type ',typeof(room_data));
+    // console.log('test socket client',io.engine.clientsCount)
+    // console.log('check room input data type ',typeof(room_data));
     try{
       if(typeof(room_data)=='object'){
         //console.log('yes type is object');
@@ -241,9 +241,9 @@ io.sockets.on('connection', function (socket) {
               io.sockets.in(newRoom+'_'+room_data.sid).emit('online_users', { "status": "true", "statuscode": "200", "message": "success", "online_status": "0", "last_seen": online_s[0].last_seen});
           }
         }
-    }else{
-      console.log('type not an object');
-    }
+      }else{
+        console.log('type not an object');
+      }
     }catch(e){
       //dashLogger.error(`Error : ${e}`);
       console.log('error occurs', e)
@@ -280,7 +280,7 @@ io.sockets.on('connection', function (socket) {
   })
   
   socket.on('message', async function (data) {
-    //try{
+    try{
 
     var s_id = data.sid;
     var r_id = data.rid;
@@ -737,10 +737,10 @@ io.sockets.on('connection', function (socket) {
       // })
     }
     
-  // }catch(e){
-  //   //dashLogger.error(`Error : ${e}`);
-  //   console.log('error occured',e)
-  // }
+  }catch(e){
+    //dashLogger.error(`Error : ${e}`);
+    console.log('error occured',e)
+  }
   });
 
   socket.on('chat_list1', function (input) {
@@ -789,91 +789,99 @@ io.sockets.on('connection', function (socket) {
   })
 
   socket.on('typing_individual', function (data) {
-    var r_id = data.rid;
-    var s_id = data.sid;
-    var status = data.status;
-    console.log('r_id', r_id);
-    console.log('status', status);
-    if (Number(s_id) > Number(r_id)) {
-      console.log('ssss')
-      var temp = s_id;
-      s_id = r_id;
-      r_id = temp;
-      newRoom = '' + s_id + r_id;
-      console.log('room id in if' + newRoom);
-    } else {
-      newRoom = '' + s_id + r_id;
-      console.log('room id in else', newRoom);
-    }
+    try{
+      var r_id = data.rid;
+      var s_id = data.sid;
+      var status = data.status;
+      console.log('r_id', r_id);
+      console.log('status', status);
+      if (Number(s_id) > Number(r_id)) {
+        console.log('ssss')
+        var temp = s_id;
+        s_id = r_id;
+        r_id = temp;
+        newRoom = '' + s_id + r_id;
+        console.log('room id in if' + newRoom);
+      } else {
+        newRoom = '' + s_id + r_id;
+        console.log('room id in else', newRoom);
+      }
 
-    if (status == 1) {
-      io.sockets.in(newRoom).emit('typing_individual_room', { "status": "true", "statuscode": "200", "message": "success", "typing": "1", "user_id": data.sid });
-      io.sockets.in(data.rid).emit('typing_individual_chatlist', { "status": "true", "statuscode": "200", "message": "success", "typing": "1", "user_id": data.sid });
-    } else {
-      io.sockets.in(newRoom).emit('typing_individual_room', { "status": "true", "statuscode": "200", "message": "success", "typing": "0", "user_id": data.sid });
-      io.sockets.in(data.rid).emit('typing_individual_chatlist', { "status": "true", "statuscode": "200", "message": "success", "typing": "0", "user_id": data.sid });
+      if (status == 1) {
+        io.sockets.in(newRoom).emit('typing_individual_room', { "status": "true", "statuscode": "200", "message": "success", "typing": "1", "user_id": data.sid });
+        io.sockets.in(data.rid).emit('typing_individual_chatlist', { "status": "true", "statuscode": "200", "message": "success", "typing": "1", "user_id": data.sid });
+      } else {
+        io.sockets.in(newRoom).emit('typing_individual_room', { "status": "true", "statuscode": "200", "message": "success", "typing": "0", "user_id": data.sid });
+        io.sockets.in(data.rid).emit('typing_individual_chatlist', { "status": "true", "statuscode": "200", "message": "success", "typing": "0", "user_id": data.sid });
+      }
+    }catch(e){
+      console.log(e)
     }
   })
 
   socket.on('dis', async function (input) {
-    // console.log(online_user_room_data);
-    // console.log('inside disconnect')
-    var s_id = input.s_id;
-    //console.log('[socket]', 'leave room :');
-    var last_seen = get_datetime();
-    //console.log(s_id)
-    // var update_query = "update user set online_status='0',last_seen='" + last_seen + "' where id='" + s_id + "'";
-    // con.query(update_query, function (err, result) {
-    //   console.log(result);
-    //   var select = "select online_status,last_seen from user where id='" + s_id + "'";
-    //   con.query(select, function (err, result) {
-    //     io.sockets.in(s_id).emit('online_users', { "status": "true", "statuscode": "200", "message": "success", "data": result });
-    //   })
-    // })
+    try{
+      // console.log(online_user_room_data);
+      // console.log('inside disconnect')
+      var s_id = input.s_id;
+      //console.log('[socket]', 'leave room :');
+      var last_seen = get_datetime();
+      //console.log(s_id)
+      // var update_query = "update user set online_status='0',last_seen='" + last_seen + "' where id='" + s_id + "'";
+      // con.query(update_query, function (err, result) {
+      //   console.log(result);
+      //   var select = "select online_status,last_seen from user where id='" + s_id + "'";
+      //   con.query(select, function (err, result) {
+      //     io.sockets.in(s_id).emit('online_users', { "status": "true", "statuscode": "200", "message": "success", "data": result });
+      //   })
+      // })
 
-    //update offline status to db 
-    let update_offline_status=await queries.update_user_online_offline_status(input.s_id,last_seen,0)
+      //update offline status to db 
+      let update_offline_status=await queries.update_user_online_offline_status(input.s_id,last_seen,0)
 
-    //emit to other user's in the room when he/she disconnect
+      //emit to other user's in the room when he/she disconnect
 
-    if(online_user_room_data.length>0){
-      console.log('user in the room', online_user_room_data)
-      for(var i=0; i<online_user_room_data.length; i++){
-        console.log('initial loop',i)
-        let flag_status=false;
-        console.log(online_user_room_data[i].sid+'--'+online_user_room_data[i].rid+'--'+online_user_room_data[i].room)
-        if(input.s_id==online_user_room_data[i].rid || input.s_id==online_user_room_data[i].sid){
-          flag_status=true;
-          console.log('user is already in the list', i)
-          //emit user has left or leave message to other room
-          let data_array=[{
-            online_status:0,
-            last_seen: last_seen
-          }]
-          console.log(online_user_room_data[i].room+'_'+online_user_room_data[i].sid)
-          if(input.s_id!=online_user_room_data[i].sid){
-            io.sockets.in(online_user_room_data[i].room+'_'+online_user_room_data[i].sid).emit('online_users',{"status": "true", "statuscode": "200", "message": "success", "online_status": "0", "last_seen": last_seen})
+      if(online_user_room_data.length>0){
+        console.log('user in the room', online_user_room_data)
+        for(var i=0; i<online_user_room_data.length; i++){
+          console.log('initial loop',i)
+          let flag_status=false;
+          console.log(online_user_room_data[i].sid+'--'+online_user_room_data[i].rid+'--'+online_user_room_data[i].room)
+          if(input.s_id==online_user_room_data[i].rid || input.s_id==online_user_room_data[i].sid){
+            flag_status=true;
+            console.log('user is already in the list', i)
+            //emit user has left or leave message to other room
+            let data_array=[{
+              online_status:0,
+              last_seen: last_seen
+            }]
+            console.log(online_user_room_data[i].room+'_'+online_user_room_data[i].sid)
+            if(input.s_id!=online_user_room_data[i].sid){
+              io.sockets.in(online_user_room_data[i].room+'_'+online_user_room_data[i].sid).emit('online_users',{"status": "true", "statuscode": "200", "message": "success", "online_status": "0", "last_seen": last_seen})
+            }
+            //io.sockets.in(online_user_room_data[i].room+'_'+online_user_room_data[i].sid).emit('online_users',{"status": "true", "statuscode": "200", "message": "success", "data": data_array})
+            // online_user_room_data.splice(i,1);
+            if(input.s_id==online_user_room_data[i].sid){
+              online_user_room_data.splice(i,1);
+            }
+          }else{
+            console.log('user is not in the list')
           }
-          //io.sockets.in(online_user_room_data[i].room+'_'+online_user_room_data[i].sid).emit('online_users',{"status": "true", "statuscode": "200", "message": "success", "data": data_array})
-          // online_user_room_data.splice(i,1);
-          if(input.s_id==online_user_room_data[i].sid){
-            online_user_room_data.splice(i,1);
-          }
-        }else{
-          console.log('user is not in the list')
+          // if(flag_status){
+          //   online_user_room_data.splice(i,1);
+          //   console.log('balance users',online_user_room_data)
+          // }
         }
-        // if(flag_status){
-        //   online_user_room_data.splice(i,1);
-        //   console.log('balance users',online_user_room_data)
-        // }
+        console.log(online_user_room_data)
+      }else{
+        console.log('no user in the room')
       }
-      console.log(online_user_room_data)
-    }else{
-      console.log('no user in the room')
+      
+      soc.splice(input.s_id, 1);
+      console.log('available user list ',soc)
+    }catch(e){
+      console.log(e)
     }
-    
-    soc.splice(input.s_id, 1);
-    console.log('available user list ',soc)
   })
   //individual chat end
   //group chat/////////////////////////////////////////////////////////////////////////////////////////////
@@ -968,6 +976,7 @@ io.sockets.on('connection', function (socket) {
         // }
         // io.sockets.in(input.user_id).emit('chat_list', set_response);
       }
+      
     }catch(e){
       //dashLogger.error(`Error : ${e}`);
       console.log(e)
@@ -979,6 +988,7 @@ io.sockets.on('connection', function (socket) {
       }
       io.sockets.in(input.user_id).emit('chat_list', set_response);
     }
+    //console.log('process end')
   })
 
   //forward message
@@ -1659,7 +1669,16 @@ io.sockets.on('connection', function (socket) {
    
   })
   //group chat
+  // socket.on('disconnect',function(data){
+  //   console.log(data)
+  //   //Socket.socket.reconnect();
+  // })
+  // socket.on('reconnect',function(data){
+  //   console.log(data)
+  // })
 });
+
+
 
 http.listen(port, () => {
   console.log(`Socket.IO server running at http://localhost:${port}/`);
