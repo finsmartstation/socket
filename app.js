@@ -100,10 +100,24 @@ var online_user_room_data=[];
     return datetime;
 }
 
-io.sockets.on('connection', function (socket) {
+// async function get_all_temporary_socket_data(){
+//   let temporary_socket_data=await queries.get_temporary_socket_data();
+//   console.log('temporary socket data',temporary_socket_data);
+//   soc=temporary_socket_data[0].socket_users;
+//   online_user_room_data=temporary_socket_data[0].online_user_room_data;
+// }
+
+// get_all_temporary_socket_data();
+//console.log(soc,online_user_room_data)
+io.sockets.on('connection',async function (socket) {
   try{
     console.log("socket::");
     // chat room
+    // let temporary_socket_data=await queries.get_temporary_socket_data();
+    // //console.log('temporary socket data',temporary_socket_data);
+    // soc=temporary_socket_data[0].socket_users;
+    // online_user_room_data=temporary_socket_data[0].online_user_room_data;
+    // console.log('temporary',soc,online_user_room_data);
     socket.on('room', async function (room_data) {
       // console.log('test socket client',io.engine.clientsCount)
       // console.log('check room input data type ',typeof(room_data));
@@ -1696,7 +1710,106 @@ io.sockets.on('connection', function (socket) {
     //   console.log(data)
     // })
 
-    
+    socket.on('block',async function(data){
+      console.log('block',data)
+      
+      //input-- {"user_id":"","receiver_id":"","accessToken":""}
+      try{
+        if(typeof(data)=='object'){
+          console.log('obj');
+          if(data.user_id!='' && data.receiver_id!='' && data.accessToken!=''){
+            socket.join(data.user_id+'_block');
+            //check user_id and accessToken is valid
+            let check_user_data=await queries.check_user_valid(data.user_id,data.accessToken);
+            if(check_user_data.length>0){
+              //check user already blocked or not
+              let check_user_already_blocked=await queries.check_user_already_blocked(data.user_id,data.receiver_id);
+              if(check_user_already_blocked.length>0){
+                io.sockets.in(data.user_id+'_block').emit('block', { status: true, statuscode: 200, message: "User is blocked already"});
+              }else{
+                //block user 
+                let datetime=get_datetime();
+                let room;
+                //set room
+                if (Number(data.user_id) > Number(data.receiver_id)) {
+                  room = '' + data.receiver_id + data.user_id;
+                  console.log('user')
+                } else {
+                  room = '' + data.user_id + data.receiver_id;
+                  console.log('receiver')
+                }
+                console.log(room)
+                //save block data to the block_chat table
+                let save_block_data=await queries.block_user_chat(data.user_id,data.receiver_id,room,datetime);
+                console.log(save_block_data)
+                if(save_block_data>0){
+                  console.log('data saved to block table');
+                  //also save the block message to chat_list table
+                  let message='block';
+                  let message_type='notification';
+                  let message_status=0;
+                  let status=1;
+                  let online_status=0;
+                  let private_group=0;
+                  //set group status
+                  let group_status=[];
+                  group_status.push({
+                    user_id: data.user_id,
+                    username: await queries.get_username(data.user_id),
+                    datetime: datetime,
+                    message_status: 0,
+                    message_read_status: datetime,
+                    status: 1
+                  })
+                  group_status.push({
+                    user_id: data.receiver_id,
+                    username: await queries.get_username(data.receiver_id),
+                    datetime: datetime,
+                    message_status: 0,
+                    message_read_status: datetime,
+                    status: 1
+                  })
+                  //save block message in chat_list
+                  let save_block_message=await queries.save_block_message(datetime,data.user_id,data.receiver_id,message,message_type,room,message_status,status,online_status,private_group,JSON.stringify(group_status));
+                  console.log(save_block_message)
+                  if(save_block_message>0){
+                    console.log('Data saved to chat list')
+                    io.sockets.in(data.user_id+'_block').emit('block', { status: true, statuscode: 200, message: "success"});
+                    //emit to message
+                    let sender_individual_chat_response=await functions.get_individual_chat_list_response(data.user_id,data.receiver_id,room);
+                    io.sockets.in(room+'_'+data.user_id).emit('message',sender_individual_chat_response);
+                    let receiver_individual_chat_response=await functions.get_individual_chat_list_response(data.receiver_id,data.user_id,room);
+                    io.sockets.in(room+'_'+data.receiver_id).emit('message',receiver_individual_chat_response);
+                    //emit to chat_list
+                    let receiver_chat_list_response=await functions.get_recent_chat_list_response(data.receiver_id);
+                    io.sockets.in(data.receiver_id).emit('chat_list',receiver_chat_list_response);
+                    let senter_chat_list_response=await functions.get_recent_chat_list_response(data.user_id);
+                    io.sockets.in(data.user_id).emit('chat_list',senter_chat_list_response);
+                  }else{
+                    console.error('Data not saved to chat list')
+                    io.sockets.in(data.user_id+'_block').emit('block', { status: false, statuscode: 400, message: "Data not saved to chat list"});
+                  }
+                }else{
+                  console.log('data not saved to block table');
+                  io.sockets.in(data.user_id+'_block').emit('block', { status: false, statuscode: 400, message: "Data not saved to block table"});
+                }
+              }
+            }else{
+              io.sockets.in(data.user_id+'_block').emit('block', { status: false, statuscode: 200, message: "No user data found"});
+            }
+            console.log(check_user_data);
+          }else{
+            socket.join(data.user_id+'_block');
+            io.sockets.in(data.user_id+'_block').emit('block', { status: false, statuscode: 200, message: "No data found"});
+            socket.leave(data.user_id+'_block');
+          }
+        }else{
+          console.error('Input type is string');
+        }
+      }catch(e){
+        console.error('error occurs ', e);
+      }
+    })
   }catch(error){
       console.log(error)
       console.error('error occurs ', error);
@@ -1704,7 +1817,7 @@ io.sockets.on('connection', function (socket) {
 
 });
 
-//socket.on('')
+
 
 
 

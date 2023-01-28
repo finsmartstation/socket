@@ -272,6 +272,27 @@ async function check_individual_mute_notification(user_id,room){
     return results[0];
 }
 
+async function check_user_already_blocked(user_id,receiver_id){
+    const results=await db.sequelize.query("select * from block_chat where user_id='"+user_id+"' and receiver_id='"+receiver_id+"'");
+    return results[0];
+}
+
+async function block_user_chat(user_id,receive_id,room,datetime){
+    const results=await db.sequelize.query("INSERT INTO `block_chat`(`user_id`, `datetime`, `room`, `receiver_id`) VALUES ('"+user_id+"','"+datetime+"','"+room+"','"+receive_id+"')");
+    return results[1];
+}
+
+async function save_block_message(datetime,user_id,receiver_id,message,message_type,room,message_status,status,online_status,private_group,group_status){
+    const results=await db.sequelize.query("INSERT INTO `chat_list`(`date`, `senter_id`, `receiver_id`, `message`, `message_type`, `room`, `message_status`, `status`, `online_status`, `private_group`, `group_status`) VALUES ('"+datetime+"','"+user_id+"','"+receiver_id+"','"+message+"','"+message_type+"','"+room+"','"+message_status+"','"+status+"','"+online_status+"','"+private_group+"','"+group_status+"')");
+    return results[1];
+}
+
+async function get_temporary_socket_data(){
+    const results=await db.sequelize.query("select * from temporary_socket_data");
+    return results[0];
+
+}
+
 
 module.exports = {
     update_online_status,
@@ -329,5 +350,9 @@ module.exports = {
     get_access_token,
     get_device_token,
     receiver_mute_status,
-    check_individual_mute_notification
+    check_individual_mute_notification,
+    check_user_already_blocked,
+    block_user_chat,
+    save_block_message,
+    get_temporary_socket_data
 }
