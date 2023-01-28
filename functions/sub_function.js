@@ -88,7 +88,7 @@ async function get_last_private_message(room_id,message_id,user_id,opponent_prof
                         console.log('message is not deleted');
                         if(last_message_data[i].message_type=='notification'){
                             if(last_message_data[i].message=='block'){
-                                if(user_id=last_message_data[i].senter_id){
+                                if(user_id==last_message_data[i].senter_id){
                                     last_message_data[i].message='You blocked this contact.';
                                     last_message_array=[{
                                         id: last_message_data[i].id,
@@ -123,7 +123,7 @@ async function get_last_private_message(room_id,message_id,user_id,opponent_prof
                                 
                                 }
                             }else if(last_message_data[i].message=='unblock'){
-                                if(user_id=last_message_data[i].senter_id){
+                                if(user_id==last_message_data[i].senter_id){
                                     last_message_data[i].message='You unblocked this contact.';
                                     last_message_array=[{
                                         id: last_message_data[i].id,

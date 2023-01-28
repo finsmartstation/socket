@@ -1698,20 +1698,19 @@ io.sockets.on('connection',async function (socket) {
         //dashLogger.error(`Error : ${e}`);
         console.error('error occurs ', e);
       }
-        
-    
     })
     //group chat
     // socket.on('disconnect',function(data){
     //   console.log(data)
-    //   //Socket.socket.reconnect();
+    //   //socket.broadcast.emit('disconnect',{status:true,statuscode:200,message:'socket is disconnected'});
+     
     // })
     // socket.on('reconnect',function(data){
     //   console.log(data)
     // })
 
     socket.on('block',async function(data){
-      console.log('block',data)
+      //console.log('block',data)
       
       //input-- {"user_id":"","receiver_id":"","accessToken":""}
       try{
@@ -1725,7 +1724,7 @@ io.sockets.on('connection',async function (socket) {
               //check user already blocked or not
               let check_user_already_blocked=await queries.check_user_already_blocked(data.user_id,data.receiver_id);
               if(check_user_already_blocked.length>0){
-                io.sockets.in(data.user_id+'_block').emit('block', { status: true, statuscode: 200, message: "User is blocked already"});
+                io.sockets.in(data.user_id+'_block').emit('block', { status: false, statuscode: 200, message: "User is blocked already"});
               }else{
                 //block user 
                 let datetime=get_datetime();
@@ -1797,6 +1796,7 @@ io.sockets.on('connection',async function (socket) {
             }else{
               io.sockets.in(data.user_id+'_block').emit('block', { status: false, statuscode: 200, message: "No user data found"});
             }
+            socket.leave(data.user_id+'_block');
             console.log(check_user_data);
           }else{
             socket.join(data.user_id+'_block');
@@ -1810,6 +1810,170 @@ io.sockets.on('connection',async function (socket) {
         console.error('error occurs ', e);
       }
     })
+    socket.on('unblock',async function(data){
+      //input -- {"user_id":"50","accessToken":"7520ff1679b65593200acf473d159e5f","receiver_id":"53"}
+      try{
+        if(typeof(data)){
+          if(data.user_id!='' && data.accessToken!='' && data.receiver_id!=''){
+            socket.join(data.user_id+'_unblock');
+            //check if user exist or not
+            let check_user_data=await queries.check_user_valid(data.user_id,data.accessToken);
+            if(check_user_data.length>0){
+              console.log('user data is valid');
+              //check block_chat table - already user and receiver is blocked
+              let check_user_block=await queries.check_user_already_blocked(data.user_id,data.receiver_id);
+              if(check_user_block.length>0){
+                //unblock the user
+                console.log('user blocked', check_user_block);
+                console.log('block entry id ', check_user_block[0].id);
+                //delete the block entry from block_chat table
+                let delete_block_entry=await queries.delete_block_entry(check_user_block[0].id);
+                console.log(delete_block_entry.affectedRows)
+                if(delete_block_entry.affectedRows>0){
+                  //set unblock message
+                  let date_time=get_datetime();
+                  let room;
+                  //set room
+                  if (Number(data.user_id) > Number(data.receiver_id)) {
+                    room = '' + data.receiver_id + data.user_id;
+                    console.log('user')
+                  } else {
+                    room = '' + data.user_id + data.receiver_id;
+                    console.log('receiver')
+                  }
+                  let message='unblock';
+                  let message_type='notification';
+                  let message_status=0;
+                  let status=1;
+                  let online_status=0;
+                  let private_group=0;
+                  //set group status
+                  let group_status=[];
+                  group_status.push({
+                    user_id: data.user_id,
+                    username: await queries.get_username(data.user_id),
+                    datetime: date_time,
+                    message_status: 0,
+                    message_read_status: date_time,
+                    status: 1
+                  })
+                  group_status.push({
+                    user_id: data.receiver_id,
+                    username: await queries.get_username(data.receiver_id),
+                    datetime: date_time,
+                    message_status: 0,
+                    message_read_status: date_time,
+                    status: 1
+                  })
+                  //save unblock message in chat_list
+                  let save_unblock_message=await queries.save_block_message(date_time,data.user_id,data.receiver_id,message,message_type,room,message_status,status,online_status,private_group,JSON.stringify(group_status));
+                  console.log(save_unblock_message);
+                  if(save_unblock_message>0){
+                    console.log('Data saved to chat list')
+                    io.sockets.in(data.user_id+'_unblock').emit('unblock', { status: true, statuscode: 200, message: "success"});
+                    //emit to message
+                    let sender_individual_chat_response=await functions.get_individual_chat_list_response(data.user_id,data.receiver_id,room);
+                    io.sockets.in(room+'_'+data.user_id).emit('message',sender_individual_chat_response);
+                    let receiver_individual_chat_response=await functions.get_individual_chat_list_response(data.receiver_id,data.user_id,room);
+                    io.sockets.in(room+'_'+data.receiver_id).emit('message',receiver_individual_chat_response);
+                    //emit to chat_list
+                    let receiver_chat_list_response=await functions.get_recent_chat_list_response(data.receiver_id);
+                    io.sockets.in(data.receiver_id).emit('chat_list',receiver_chat_list_response);
+                    let senter_chat_list_response=await functions.get_recent_chat_list_response(data.user_id);
+                    io.sockets.in(data.user_id).emit('chat_list',senter_chat_list_response);
+                  }else{
+                    console.error('Data not saved to chat list')
+                    io.sockets.in(data.user_id+'_unblock').emit('unblock', { status: false, statuscode: 400, message: "Data not saved to chat list"});
+                  }
+                }else{
+                  io.sockets.in(data.user_id+'_unblock').emit('unblock', { status: false, statuscode: 400, message: "Not deleted from table"});
+                }
+              }else{
+                io.sockets.in(data.user_id+'_unblock').emit('unblock', { status: false, statuscode: 200, message: "User is not blocked"});
+              }
+            }else{
+              io.sockets.in(data.user_id+'_unblock').emit('unblock', { status: false, statuscode: 200, message: "No user data found"});
+            }
+            socket.leave(data.user_id+'_unblock');
+          }else{
+            socket.join(data.user_id+'_unblock');
+            io.sockets.in(data.user_id+'_unblock').emit('unblock',{ status: false, statuscode: 200, message: "No data found"});
+            socket.leave(data.user_id+'_unblock');
+          }
+        }else{
+          console.error('Input type is string');
+        }
+      }catch(e){
+        console.error('error occurs ', e)
+      }
+    });
+
+    socket.on('exit_group_member', async function(data){
+      //input -- {"user_id":"50","accessToken":"2a0c12a980ecfea89d91de250a1074fb","group_id":"group_20221003110216"}
+      try{
+        console.log('exit group member', data);
+        if(typeof(data)=='object'){
+          socket.join(data.group_id+'_'+data.user_id+'_left');
+          //check user_id and accessToken are valided
+          if(data.user_id!='' && data.accessToken!='' && data.receiver_id!=''){
+            let check_user_data=await queries.check_user_valid(data.user_id,data.accessToken);
+            if(check_user_data.length>0){
+              //check group is valid
+              let check_group_data=await queries.check_group_data(data.group_id);
+              //console.log(check_group_data)
+              if(check_group_data.length>0){
+                let group_current_members=JSON.parse(check_group_data[0].current_members);
+                let admin_user_check=false;
+                let user_member_check=false;
+                let check_user_in_group=false;
+                if(group_current_members.length>0){
+                  for(var i=0; i<group_current_members.length; i++){
+                    console.log(group_current_members[i].user_id)
+                    if(group_current_members[i].user_id==data.user_id){
+                      check_user_in_group=true;
+                    }
+                    if(group_current_members[i].user_id==data.user_id && group_current_members[i].type=='user'){
+                      user_member_check=true;
+                    }
+                    if(group_current_members[i].user_id==data.user_id && group_current_members[i].type=='admin'){
+                      admin_user_check=true;
+                    }
+                  }
+                }
+                if(check_user_in_group){
+                  if(user_member_check){
+                    let left_members=check_group_data[0].left_members;
+                    if(left_members!=''){
+                      console.log('left user is not empty',left_members)
+                      left_members=JSON.parse(check_group_data[0].left_members);
+                      console.log(left_members)
+                    }else{
+                      console.log('left user is empty')
+                    }
+                  }
+                  if(admin_user_check){
+
+                  }
+                }else{
+                  io.sockets.in(data.group_id+'_'+data.user_id+'_left').emit('exit_group_member',{ status: false, statuscode: 200, message: "You are not in this group"})
+                }
+              }else{
+                io.sockets.in(data.group_id+'_'+data.user_id+'_left').emit('exit_group_member',{ status: false, statuscode: 200, message: "No group data found"})
+              }
+            }else{
+              io.sockets.in(data.group_id+'_'+data.user_id+'_left').emit('exit_group_member',{ status: false, statuscode: 200, message: "No user data found"})
+            }
+          }else{
+            io.sockets.in(data.group_id+'_'+data.user_id+'_left').emit('exit_group_member',{ status: false, statuscode: 200, message: "No data found"})
+          }
+          socket.leave(data.group_id+'_'+data.user_id+'_left');
+        }else{
+          console.error('Input type is string');
+        }
+      }catch(e){
+        console.error(e)
+      }
+    });
   }catch(error){
       console.log(error)
       console.error('error occurs ', error);

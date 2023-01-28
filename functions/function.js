@@ -1312,8 +1312,9 @@ async function get_recent_chat_list_response(user_id){
             //check message type
             if(get_recent_chat[i].message_type=='notification'){
               if(get_recent_chat[i].message=='block'){
-                if(user_id=get_recent_chat[i].senter_id){
+                if(user_id==get_recent_chat[i].senter_id){
                   get_recent_chat[i].message='You blocked this contact.';
+                  //console.log('yes blocked',user_id,get_recent_chat[i].senter_id)
                 }else{
                   //get last private message
                   //let get_last_private_message=get_last_private_message(get_recent_chat[i].room,get_recent_chat[i].id,user_id,opponent_profile,opponent_phone);
@@ -1360,7 +1361,7 @@ async function get_recent_chat_list_response(user_id){
                   }
                 }
               }else if(get_recent_chat[i].message=='unblock'){
-                if(user_id=get_recent_chat[i].senter_id){
+                if(user_id==get_recent_chat[i].senter_id){
                   get_recent_chat[i].message='You unblocked this contact.';
                 }else{
                   //get last private message

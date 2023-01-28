@@ -287,10 +287,20 @@ async function save_block_message(datetime,user_id,receiver_id,message,message_t
     return results[1];
 }
 
-async function get_temporary_socket_data(){
-    const results=await db.sequelize.query("select * from temporary_socket_data");
-    return results[0];
 
+// async function get_temporary_socket_data(){
+//     const results=await db.sequelize.query("select * from temporary_socket_data");
+//     return results[0];
+// }
+
+async function delete_block_entry(id){
+    const results=await db.sequelize.query("DELETE FROM `block_chat` WHERE id='"+id+"'");
+    return results[0];
+}
+
+async function check_group_data(group_id){
+    const results=await db.sequelize.query("select *, DATE_FORMAT(created_datetime, '%Y-%m-%d %H:%i:%s') as created_datetime,DATE_FORMAT(description_updated_datetime,'%Y-%m-%d %H:%i:%s') as description_updated_datetime from group_list where group_id='"+group_id+"'");
+    return results[0];
 }
 
 
@@ -354,5 +364,6 @@ module.exports = {
     check_user_already_blocked,
     block_user_chat,
     save_block_message,
-    get_temporary_socket_data
+    delete_block_entry,
+    check_group_data
 }
