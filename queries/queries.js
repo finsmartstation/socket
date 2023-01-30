@@ -128,7 +128,11 @@ async function reply_message_details(reply_id){
 
 async function get_username(user_id){
     const results=await db.sequelize.query("select * from `user` where id='"+user_id+"'");
-    return results[0][0].name;
+    if(results[0].length>0){
+        return results[0][0].name;
+    }else{
+        return '';
+    }
 }
 
 async function get_forward_message_details(forward_message_id){
@@ -303,6 +307,26 @@ async function check_group_data(group_id){
     return results[0];
 }
 
+async function update_group_user_left_data(left_members,new_members,group_id){
+    const results=await db.sequelize.query("update group_list set left_members='"+left_members+"',current_members='"+new_members+"' where group_id='"+group_id+"'");
+    return results[0];
+}
+
+async function save_left_message(datetime,user_id,message,message_type,room,message_status,status,online_status,private_group,group_status){
+    const results=await db.sequelize.query("INSERT INTO `chat_list`(`date`, `senter_id`, `receiver_id`, `message`, `message_type`, `room`, `message_status`, `status`, `online_status`, `private_group`, `group_status`) VALUES ('"+datetime+"','"+user_id+"','0','"+message+"','"+message_type+"','"+room+"','"+message_status+"','"+status+"','"+online_status+"','"+private_group+"','"+group_status+"')");
+    return results[1];
+}
+
+async function save_group_admin_data(current_member,overall_member,group_id){
+    const results=await db.sequelize.query("update group_list set members='"+overall_member+"',current_members='"+current_member+"' where group_id='"+group_id+"'");
+    return results[0];
+}
+
+async function save_admin_message(datetime,user_id,message,message_type,room,message_status,status,online_status,private_group,group_status){
+    const results=await db.sequelize.query("INSERT INTO `chat_list`(`date`, `senter_id`, `receiver_id`, `message`, `message_type`, `room`, `message_status`, `status`, `online_status`, `private_group`, `group_status`) VALUES ('"+datetime+"','"+user_id+"','0','"+message+"','"+message_type+"','"+room+"','"+message_status+"','"+status+"','"+online_status+"','"+private_group+"','"+group_status+"')");
+    return results[1];
+}
+
 
 module.exports = {
     update_online_status,
@@ -365,5 +389,9 @@ module.exports = {
     block_user_chat,
     save_block_message,
     delete_block_entry,
-    check_group_data
+    check_group_data,
+    update_group_user_left_data,
+    save_left_message,
+    save_group_admin_data,
+    save_admin_message
 }

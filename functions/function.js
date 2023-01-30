@@ -886,7 +886,8 @@ async function get_group_chat_list_response(user_id,group_id){
                 if(group_left_members.length>0){
                   for(var left_user_i=0;left_user_i<group_left_members.length;left_user_i++){
                     if(get_all_group_messages[i].date==group_left_members[left_user_i].datetime){
-                      if(user_id==group_left_members[left_user_i]){
+                      console.log('user id s',user_id,group_left_members[left_user_i])
+                      if(user_id==group_left_members[left_user_i].user_id){
                         left_user_msg='You left';
                       }else{
                         left_user_msg=await queries.get_username(group_left_members[left_user_i].user_id)+' left';

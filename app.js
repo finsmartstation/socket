@@ -1910,7 +1910,7 @@ io.sockets.on('connection',async function (socket) {
 
     socket.on('exit_group_member', async function(data){
       //input -- {"user_id":"50","accessToken":"2a0c12a980ecfea89d91de250a1074fb","group_id":"group_20221003110216"}
-      try{
+      //try{
         console.log('exit group member', data);
         if(typeof(data)=='object'){
           socket.join(data.group_id+'_'+data.user_id+'_left');
@@ -1922,10 +1922,13 @@ io.sockets.on('connection',async function (socket) {
               let check_group_data=await queries.check_group_data(data.group_id);
               //console.log(check_group_data)
               if(check_group_data.length>0){
+                let date_time=get_datetime();
+                let new_group_members=[];
                 let group_current_members=JSON.parse(check_group_data[0].current_members);
                 let admin_user_check=false;
                 let user_member_check=false;
                 let check_user_in_group=false;
+                let left_admin_update_status=false;
                 if(group_current_members.length>0){
                   for(var i=0; i<group_current_members.length; i++){
                     console.log(group_current_members[i].user_id)
@@ -1939,19 +1942,282 @@ io.sockets.on('connection',async function (socket) {
                       admin_user_check=true;
                     }
                   }
+
+                  
                 }
+                
                 if(check_user_in_group){
+                  console.log(check_user_in_group,user_member_check,admin_user_check);
                   if(user_member_check){
+                    let left_members=check_group_data[0].left_members;
+                    console.log(left_members)
+                    if(left_members!=''){
+                      console.log('left user is not empty',left_members)
+                      left_members=JSON.parse(check_group_data[0].left_members);
+                      console.log(left_members)
+                      //add user to left members array
+                      left_members.push({
+                        user_id: data.user_id,
+                        datetime: date_time
+                      })
+                    }else{
+                      console.log('left user is empty')
+                      left_members=[{
+                        user_id: data.user_id,
+                        datetime: date_time
+                      }]
+                    }
+                    if(group_current_members.length>0){
+                      for(var j=0; j<group_current_members.length; j++){
+                        //new_group_members
+                        //console.log(group_current_members[j])
+                        if(data.user_id==group_current_members[j].user_id){
+                          //not needed to add in the new_group_members array
+                          console.log('left user index')
+                        }else{
+                          //console.log('other user index')
+                          new_group_members.push({
+                            user_id: group_current_members[j].user_id,
+                            username: group_current_members[j].username,
+                            type: group_current_members[j].type,
+                            datetime: group_current_members[j].datetime ? group_current_members[j].datetime : '',
+                            added_by: group_current_members[j].added_by
+                          })
+                        }
+                      }
+                    }
+                    console.log('new group users ',new_group_members)
+                    //update to group list db
+                    let left_members_json_data=JSON.stringify(left_members);
+                    let new_group_members_json_data=JSON.stringify(new_group_members);
+                    //update group left users
+                    let update_group_user_left_data=await queries.update_group_user_left_data(left_members_json_data,new_group_members_json_data,data.group_id);
+                    console.log(update_group_user_left_data);
+                    if(update_group_user_left_data.affectedRows>0){
+                      console.log('updated to db')
+                      //save new entry to chat_list table
+                      let senter_id=data.user_id;
+                      let message='left';
+                      let message_type='notification';
+                      let room=data.group_id;
+                      let message_status=1;
+                      let status=1;
+                      let online_status=0;
+                      let private_status=1;
+                      let group_status=[];
+                      for(var k=0; k<group_current_members.length; k++){
+                        let message_status;
+                        let message_read_datetime;
+                        if(data.user_id==group_current_members[k].user_id){
+                          message_status=0;
+                          message_read_datetime=date_time;
+                        }else{
+                          message_status=1;
+                          message_read_datetime='';
+                        }
+                        group_status.push({
+                          user_id: group_current_members[k].user_id,
+                          username: await queries.get_username(group_current_members[k].user_id),
+                          datetime: date_time,
+                          message_status: message_status,
+                          message_read_status: message_read_datetime,
+                          status: 1
+                        })
+                      }
+                      let save_left_message=await queries.save_left_message(date_time,senter_id,message,message_type,room,message_status,status,online_status,private_status,JSON.stringify(group_status));
+                      console.log(save_left_message)
+                      if(save_left_message>0){
+                        left_admin_update_status=true;
+                        io.sockets.in(data.group_id+'_'+data.user_id+'_left').emit('exit_group_member',{ status: true, statuscode: 200, message: "success"});
+                      }else{
+                        io.sockets.in(data.group_id+'_'+data.user_id+'_left').emit('exit_group_member',{ status: false, statuscode: 400, message: "Not saved to db"});
+                      }
+                    }else{
+                      io.sockets.in(data.group_id+'_'+data.user_id+'_left').emit('exit_group_member',{ status: false, statuscode: 400, message: "Not updated in db"});
+                    }
+                  }
+                  if(admin_user_check){
+                    console.log('user type is admin')
                     let left_members=check_group_data[0].left_members;
                     if(left_members!=''){
                       console.log('left user is not empty',left_members)
                       left_members=JSON.parse(check_group_data[0].left_members);
                       console.log(left_members)
+                      //add user to left members array
+                      left_members.push({
+                        user_id: data.user_id,
+                        datetime: date_time
+                      })
                     }else{
                       console.log('left user is empty')
+                      left_members=[{
+                        user_id: data.user_id,
+                        datetime: date_time
+                      }]
+                    }
+
+                    if(group_current_members.length>0){
+                      for(var j=0; j<group_current_members.length; j++){
+                        //new_group_members
+                        if(data.user_id==group_current_members[j].user_id){
+                          //not needed to add in the new_group_members array
+                          console.log('left user index')
+                        }else{
+                          //console.log('other user index')
+                          new_group_members.push({
+                            user_id: group_current_members[j].user_id,
+                            username: group_current_members[j].username,
+                            type: group_current_members[j].type,
+                            datetime: group_current_members[j].datetime ? group_current_members[j].datetime : '',
+                            added_by: group_current_members[j].added_by
+                          })
+                        }
+
+                      }
+                    }
+                    console.log('new group users ',new_group_members)
+                    //update to group list db
+                    let left_members_json_data=JSON.stringify(left_members);
+                    let new_group_members_json_data=JSON.stringify(new_group_members);
+                    //update group left users
+                    let update_group_user_left_data=await queries.update_group_user_left_data(left_members_json_data,new_group_members_json_data,data.group_id);
+                    console.log(update_group_user_left_data);
+                    if(update_group_user_left_data.affectedRows>0){
+                      console.log('updated to db')
+                      //save new entry to chat_list table
+                      let senter_id=data.user_id;
+                      let message='left';
+                      let message_type='notification';
+                      let room=data.group_id;
+                      let message_status=1;
+                      let status=1;
+                      let online_status=0;
+                      let private_status=1;
+                      let group_status=[];
+                      for(var k=0; k<group_current_members.length; k++){
+                        let message_status;
+                        let message_read_datetime;
+                        if(data.user_id==group_current_members[k].user_id){
+                          message_status=0;
+                          message_read_datetime=date_time;
+                        }else{
+                          message_status=1;
+                          message_read_datetime='';
+                        }
+                        group_status.push({
+                          user_id: group_current_members[k].user_id,
+                          username: await queries.get_username(group_current_members[k].user_id),
+                          datetime: date_time,
+                          message_status: message_status,
+                          message_read_status: message_read_datetime,
+                          status: 1
+                        })
+                      }
+                      let save_left_message=await queries.save_left_message(date_time,senter_id,message,message_type,room,message_status,status,online_status,private_status,JSON.stringify(group_status));
+                      console.log(save_left_message)
+                      if(save_left_message>0){
+                        console.log('saved');
+                        //io.sockets.in(data.group_id+'_'+data.user_id+'_left').emit('exit_group_member',{ status: true, statuscode: 200, message: "success"});
+                        //check group has any other admin user
+                        let overall_group_members=JSON.parse(check_group_data[0].members);
+                        if(new_group_members.length>0){
+                          console.log('new group users',new_group_members);
+                          let group_admin_count=0;
+                          let new_admin_user='';
+                          let new_admin_user_member=[];
+                          for(var m=0; m<new_group_members.length; m++){
+                            if(new_group_members[m].type=='admin'){
+                              group_admin_count=group_admin_count+1;
+                            }else if(new_group_members[m].type=='user'){
+                              new_admin_user=new_group_members[m].user_id;
+                            }
+                          }
+                          console.log('group admin ', group_admin_count,'new admin user ', new_admin_user);
+                          if(group_admin_count==0){
+                            if(new_admin_user!=''){
+                              for(var n=0; n<new_group_members.length; n++){
+                                //add to over group members array 
+                                console.log(new_admin_user,new_group_members[n].user_id)
+                                if(new_admin_user==new_group_members[n].user_id){
+                                  new_admin_user_member.push({
+                                    user_id: new_group_members[n].user_id,
+                                    username: new_group_members[n].username,
+                                    type: 'admin',
+                                    datetime: new_group_members[n].datetime,
+                                    added_by: new_group_members[n].added_by
+                                  });
+                                  overall_group_members.push({
+                                    user_id: new_group_members[n].user_id,
+                                    username: new_group_members[n].username,
+                                    type: 'admin',
+                                    datetime: date_time,
+                                    added_by: new_group_members[n].added_by
+                                  });
+                                }else{
+                                  new_admin_user_member.push({
+                                    user_id: new_group_members[n].user_id,
+                                    username: new_group_members[n].username,
+                                    type: new_group_members[n].type,
+                                    datetime: new_group_members[n].datetime,
+                                    added_by: new_group_members[n].added_by
+                                  });
+                                }
+                              }
+                              console.log(new_admin_user_member, overall_group_members)
+                              //save admin data
+                              let group_current_member=JSON.stringify(new_admin_user_member);
+                              let group_overall_members=JSON.stringify(overall_group_members);
+                              //update to group table
+                              let save_group_admin_data=await queries.save_group_admin_data(group_current_member,group_overall_members,data.group_id);
+                              console.log('save data ',save_group_admin_data);
+                              if(save_group_admin_data.affectedRows>0){
+                                //save admin notification message in chat_list
+                                let group_status=[];
+                                for(var o=0; o<new_admin_user_member.length; o++){
+                                  group_status.push({
+                                    user_id: new_admin_user_member[o].user_id,
+                                    username: new_admin_user_member[o].username,
+                                    datetime: date_time,
+                                    message_status: 1,
+                                    message_read_status: '',
+                                    status: 1
+                                  })
+                                }
+                                let senter_id=data.user_id;
+                                let message='admin';
+                                let message_type='notification';
+                                let room=data.group_id;
+                                let message_status=1;
+                                let status=1;
+                                let online_status=0;
+                                let private_status=1;
+                                let save_admin_message=await queries.save_admin_message(date_time,senter_id,message,message_type,room,message_status,status,online_status,private_status,JSON.stringify(group_status));
+                                if(save_admin_message>0){
+                                  console.log('admin message saved')
+                                  left_admin_update_status=true;
+                                  io.sockets.in(data.group_id+'_'+data.user_id+'_left').emit('exit_group_member',{ status: true, statuscode: 200, message: "success"});
+                                }else{
+                                  io.sockets.in(data.group_id+'_'+data.user_id+'_left').emit('exit_group_member',{ status: false, statuscode: 400, message: "Admin message not saved to db"});
+                                }
+                              }else{
+                                io.sockets.in(data.group_id+'_'+data.user_id+'_left').emit('exit_group_member',{ status: false, statuscode: 400, message: "Group admin not saved to db"});
+                              }
+                            }
+                          }
+                        }
+                      }else{
+                        io.sockets.in(data.group_id+'_'+data.user_id+'_left').emit('exit_group_member',{ status: false, statuscode: 400, message: "Not saved to db"});
+                      }
+                    }else{
+                      io.sockets.in(data.group_id+'_'+data.user_id+'_left').emit('exit_group_member',{ status: false, statuscode: 400, message: "Not updated in db"});
                     }
                   }
-                  if(admin_user_check){
+                  console.log('left admin update status ', left_admin_update_status)
+                  if(left_admin_update_status){
+                    //emit message to the user
+                    let sender_group_chat_response=await functions.get_group_chat_list_response(data.user_id,data.group_id);
+                    io.sockets.in(data.group_id+'_'+data.user_id).emit('message',sender_group_chat_response);
+                  }else{
 
                   }
                 }else{
@@ -1970,9 +2236,9 @@ io.sockets.on('connection',async function (socket) {
         }else{
           console.error('Input type is string');
         }
-      }catch(e){
-        console.error(e)
-      }
+      // }catch(e){
+      //   console.error(e)
+      // }
     });
   }catch(error){
       console.log(error)
