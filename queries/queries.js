@@ -317,6 +317,11 @@ async function save_left_message(datetime,user_id,message,message_type,room,mess
     return results[1];
 }
 
+async function save_group_user_add_message(datetime,user_id,message,message_type,room,message_status,status,online_status,private_group,group_status){
+    const results=await db.sequelize.query("INSERT INTO `chat_list`(`date`, `senter_id`, `receiver_id`, `message`, `message_type`, `room`, `message_status`, `status`, `online_status`, `private_group`, `group_status`) VALUES ('"+datetime+"','"+user_id+"','0','"+message+"','"+message_type+"','"+room+"','"+message_status+"','"+status+"','"+online_status+"','"+private_group+"','"+group_status+"')");
+    return results[1];
+}
+
 async function save_group_admin_data(current_member,overall_member,group_id){
     const results=await db.sequelize.query("update group_list set members='"+overall_member+"',current_members='"+current_member+"' where group_id='"+group_id+"'");
     return results[0];
@@ -325,6 +330,22 @@ async function save_group_admin_data(current_member,overall_member,group_id){
 async function save_admin_message(datetime,user_id,message,message_type,room,message_status,status,online_status,private_group,group_status){
     const results=await db.sequelize.query("INSERT INTO `chat_list`(`date`, `senter_id`, `receiver_id`, `message`, `message_type`, `room`, `message_status`, `status`, `online_status`, `private_group`, `group_status`) VALUES ('"+datetime+"','"+user_id+"','0','"+message+"','"+message_type+"','"+room+"','"+message_status+"','"+status+"','"+online_status+"','"+private_group+"','"+group_status+"')");
     return results[1];
+}
+
+async function save_and_create_group(created_by,created_datetime,group_id,group_name,group_profile,members,current_members){
+    const results=await db.sequelize.query("INSERT INTO `group_list`(`created_by`, `created_datetime`, `group_id`, `group_name`, `group_profile`, `members`, `current_members`, `status`) VALUES ('"+created_by+"','"+created_datetime+"','"+group_id+"','"+group_name+"','"+group_profile+"','"+members+"','"+current_members+"','1')");
+    //console.log(results);
+    if(results[1]>0){
+        //console.log('group creted ', results[1])
+        //const 
+        let inserted_id=results[0];
+        const get_created_group_data=await db.sequelize.query("select group_id from group_list where id='"+inserted_id+"'");
+        //console.log('new group data ',get_created_group_data[0][0].group_id);
+        return get_created_group_data[0][0].group_id;
+    }else{
+        //console.log('group not created')
+        return '';
+    }
 }
 
 
@@ -393,5 +414,7 @@ module.exports = {
     update_group_user_left_data,
     save_left_message,
     save_group_admin_data,
-    save_admin_message
+    save_admin_message,
+    save_and_create_group,
+    save_group_user_add_message
 }

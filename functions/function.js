@@ -639,7 +639,8 @@ async function get_individual_chat_list_response(sid,rid,room){
 }
 
 async function get_group_chat_list_response(user_id,group_id){
-  //console.log(`group details ${user_id} ${group_id}`)
+  console.log(`group details ${user_id} ${group_id}`)
+  
   let group_messages=[];
   let set_user_id='"'+user_id+'"';
   let date_array=[];
@@ -758,10 +759,11 @@ async function get_group_chat_list_response(user_id,group_id){
 
     let get_all_group_messages=await queries.group_chat_response(user_id,set_user_id,group_id) || [];
 
-    //console.log(get_all_group_messages);
+    console.log(get_all_group_messages);
+    //exit();
     if(get_all_group_messages.length>0){
       for(var i=0; i<get_all_group_messages.length;i++){
-        //console.log('message data ',get_all_group_messages[i]);
+        console.log('message data ',get_all_group_messages[i]);
         let replay_id;
         let replay_message;
         let replay_message_type;
@@ -826,14 +828,14 @@ async function get_group_chat_list_response(user_id,group_id){
                       if(get_all_group_messages[i].date==group_members[group_members_i].datetime){
                         //check which user added
                         if(user_id==group_members[group_members_i].added_by){
-                          added_by_msg=added_by_msg+'You added ';
+                          added_by_msg='You added ';
                         }else{
-                          added_by_msg=added_by_msg+await queries.get_username(group_members[group_members_i].added_by)+' added ';
+                          added_by_msg=await queries.get_username(group_members[group_members_i].added_by)+' added ';
                         }
                         if(group_members[group_members_i].user_id==user_id){
-                          added_user_msg=added_user_msg+'You';
+                          added_user_msg='You';
                         }else{
-                          added_user_msg=added_user_msg+group_members[group_members_i].username;
+                          added_user_msg=group_members[group_members_i].username;
                         }
                         added_users=added_users+added_user_msg+', ';
                       }
@@ -875,6 +877,7 @@ async function get_group_chat_list_response(user_id,group_id){
                   //remove the array index from array
                   get_all_group_messages.splice(i, 1);
                   console.log('balance ',get_all_group_messages)
+                  //break;
                 }else{
                   get_all_group_messages[i].message=admin_notification_msg;
                   get_all_group_messages[i].message_type='';
@@ -933,6 +936,8 @@ async function get_group_chat_list_response(user_id,group_id){
             }
 
         //get group_status
+        //console.log('error testing ',get_all_group_messages[i])
+        if(get_all_group_messages[i]!=undefined){
         let split_date=get_all_group_messages[i].date.split(" ");
         let group_status_json=JSON.parse(get_all_group_messages[i]['group_status']) || [];
         //console.log('groiup status ',group_status_json)
@@ -1106,6 +1111,7 @@ async function get_group_chat_list_response(user_id,group_id){
             }
           }
         }
+      }
         
       }
 
@@ -1597,30 +1603,45 @@ async function get_recent_chat_list_response(user_id){
               //set message based on message_type
               if(get_recent_chat[i].message_type=='notification'){
                 if(get_recent_chat[i].message=='added'){
-                  console.log('group_members',group_members)
+                  //console.log('group_members',group_members)
                   let added_by_msg='';
                   let added_user_msg='';
                   let added_users='';
                   for(var k=0; k<group_members.length;k++){
                     //not need to check first index of the array
+                    //console.log(group_members[k].user_id,'length ',group_members.length)
                     if(k!=0){
+                      //console.log(k)
+                      //console.log(group_members[k].user_id,'length ',group_members.length)
                       if(get_recent_chat[i].date==group_members[k].datetime){
                         //check which user added
+                        //console.log('sss');
+                        
+                        //console.log(k,user_id, group_members[k].added_by)
+                        
                         if(user_id==group_members[k].added_by){
-                          added_by_msg=added_by_msg+'You added ';
+                          added_by_msg='You added ';
                         }else{
-                          added_by_msg=added_by_msg+await queries.get_username(group_members[k].added_by)+' added ';
+                          added_by_msg=await queries.get_username(group_members[k].added_by)+' added ';
                         }
+                        // console.log(added_by_msg)
+                        // console.log(k,user_id, group_members[k].user_id)
                         if(group_members[k].user_id==user_id){
-                          added_user_msg=added_user_msg+'You';
+                          added_user_msg='You';
                         }else{
-                          added_user_msg=added_user_msg+group_members[k].username;
+                          //console.log('entered in loop')
+                          added_user_msg=group_members[k].username;
                         }
+                        
                         added_users=added_users+added_user_msg+', ';
+                        //console.log('added user',added_users)
                       }
                     }
                     
                   }
+
+                  //console.log(added_user_msg)
+                       
 
                   let remove_comma=added_users.replace(/,(?=[^,]*$)/, '');
                   let added_msg=added_by_msg+remove_comma;
@@ -1932,11 +1953,24 @@ async function group_chat_push_notification(user_id='',room='',group_current_mem
   }
 }
 
+function check_group_user_is_admin(user_id, group_members){
+  return group_members.some(function(member){
+    return member.user_id == user_id && member.type == 'admin';
+  });
+}
+function check_user_already_member_in_group(user_id, group_members){
+  return group_members.some(function(member){
+    return member.user_id == user_id;
+  });
+}
+
 
 module.exports={
     get_individual_chat_list_response,
     get_group_chat_list_response,
     get_recent_chat_list_response,
     individual_chat_push_notification,
-    group_chat_push_notification
+    group_chat_push_notification,
+    check_user_already_member_in_group,
+    check_group_user_is_admin
 }
