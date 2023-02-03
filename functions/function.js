@@ -639,7 +639,7 @@ async function get_individual_chat_list_response(sid,rid,room){
 }
 
 async function get_group_chat_list_response(user_id,group_id){
-  console.log(`group details ${user_id} ${group_id}`)
+  //console.log(`group details ${user_id} ${group_id}`)
   
   let group_messages=[];
   let set_user_id='"'+user_id+'"';
@@ -763,7 +763,7 @@ async function get_group_chat_list_response(user_id,group_id){
     //exit();
     if(get_all_group_messages.length>0){
       for(var i=0; i<get_all_group_messages.length;i++){
-        console.log('message data ',get_all_group_messages[i]);
+        //console.log('message data ',get_all_group_messages[i]);
         let replay_id;
         let replay_message;
         let replay_message_type;
@@ -776,7 +776,7 @@ async function get_group_chat_list_response(user_id,group_id){
         if(get_all_group_messages[i].replay_id!=0 && get_all_group_messages[i].replay_id!=''){
           //get replay message details
           let get_replay_message_details=await queries.reply_message_details(get_all_group_messages[i].replay_id);
-          console.log(get_replay_message_details[0][0]);
+          //console.log(get_replay_message_details[0][0]);
          // get_replay_message_details[0][0]=
          replay_id=get_replay_message_details[0][0].id;
          replay_message=get_replay_message_details[0][0].message;
@@ -835,7 +835,8 @@ async function get_group_chat_list_response(user_id,group_id){
                         if(group_members[group_members_i].user_id==user_id){
                           added_user_msg='You';
                         }else{
-                          added_user_msg=group_members[group_members_i].username;
+                          //added_user_msg=group_members[group_members_i].username;
+                          added_user_msg=await queries.get_username(group_members[group_members_i].user_id);
                         }
                         added_users=added_users+added_user_msg+', ';
                       }
@@ -851,45 +852,53 @@ async function get_group_chat_list_response(user_id,group_id){
                   get_all_group_messages[i].message_type='';
                   get_all_group_messages[i].type='notification';
               }else if(get_all_group_messages[i].message=='admin'){
-                console.log('admin')
+                //console.log('admin')
+                
                 let admin_notification_msg='';
                 let admin_notification_msg_status=false;
-                console.log('admin message');
+                //console.log('admin message');
                 if(group_members.length>0){
+                  //console.log('entered into loop',get_all_group_messages[i].date, group_members)
                   for(var group_members_admin=0; group_members_admin<group_members.length; group_members_admin++){
                     if(get_all_group_messages[i].date==group_members[group_members_admin].datetime){
                       //show message only to admin
+                      //console.log('yes condition true')
                       if(user_id==group_members[group_members_admin].user_id){
                         admin_notification_msg="You're now an admin";
-                        console.log('ssss',group_members_admin)
+                        //console.log('ssss',group_members_admin)
                         break;
                       }else{
                         admin_notification_msg_status=true;
                       }
                     }else{
                       admin_notification_msg_status=true;
+                     // console.log('else')
                     }
-                    console.log('for loop ssss',group_members_admin)
+                    //console.log('for loop ssss',group_members_admin)
                   }
+                  //exit ();
                 }
                 console.log('admin notification data ',admin_notification_msg,admin_notification_msg_status)
-                if(admin_notification_msg_status){
-                  //remove the array index from array
-                  get_all_group_messages.splice(i, 1);
-                  console.log('balance ',get_all_group_messages)
-                  //break;
-                }else{
+                //exit 
+                if(admin_notification_msg!=''){
                   get_all_group_messages[i].message=admin_notification_msg;
                   get_all_group_messages[i].message_type='';
                   get_all_group_messages[i].type='notification';
+                }else{
+                  if(admin_notification_msg_status){
+                    //remove the array index from array
+                    get_all_group_messages.splice(i, 1);
+                    i--;
+                    //console.log('balance ',get_all_group_messages)
+                    //break;
+                  }
                 }
               }else if(get_all_group_messages[i].message=='left'){
-                console.log('left message');
                 let left_user_msg='';
                 if(group_left_members.length>0){
                   for(var left_user_i=0;left_user_i<group_left_members.length;left_user_i++){
                     if(get_all_group_messages[i].date==group_left_members[left_user_i].datetime){
-                      console.log('user id s',user_id,group_left_members[left_user_i])
+                      //console.log('user id s',user_id,group_left_members[left_user_i])
                       if(user_id==group_left_members[left_user_i].user_id){
                         left_user_msg='You left';
                       }else{
@@ -898,7 +907,7 @@ async function get_group_chat_list_response(user_id,group_id){
                     }
                   }
                 }
-                console.log('left msg ',left_user_msg)
+                
                 get_all_group_messages[i].message=left_user_msg;
                 get_all_group_messages[i].message_type='';
                 get_all_group_messages[i].type='notification';
@@ -1630,7 +1639,8 @@ async function get_recent_chat_list_response(user_id){
                           added_user_msg='You';
                         }else{
                           //console.log('entered in loop')
-                          added_user_msg=group_members[k].username;
+                          //added_user_msg=group_members[k].username;
+                          added_user_msg=await queries.get_username(group_members[k].user_id);
                         }
                         
                         added_users=added_users+added_user_msg+', ';
@@ -1953,6 +1963,30 @@ async function group_chat_push_notification(user_id='',room='',group_current_mem
   }
 }
 
+function create_group_id(){
+  var current_date = new Date();
+    var date = current_date.toISOString().slice(0, 10);
+    //console.log(date);
+    var split_date=date.split('-');
+    var year=split_date[0];
+    var month=split_date[1];
+    var day=split_date[2];
+    var hours = current_date.getHours();
+    var minute = current_date.getMinutes();
+    var second = current_date.getSeconds();
+    var hr_str = "" + hours;
+    var min_str = "" + minute;
+    var sec_str = "" + second;
+    var pad = "00"
+    var hr = pad.substring(0, pad.length - hr_str.length) + hr_str;
+    var min = pad.substring(0, pad.length - min_str.length) + min_str;
+    var sec = pad.substring(0, pad.length - sec_str.length) + sec_str;
+    var time = hr + min + sec;
+    //console.log('date', year,month,day)
+    var group_id='group_' + year + month + day+ time
+    return group_id;
+}
+
 function check_group_user_is_admin(user_id, group_members){
   return group_members.some(function(member){
     return member.user_id == user_id && member.type == 'admin';
@@ -1972,5 +2006,6 @@ module.exports={
     individual_chat_push_notification,
     group_chat_push_notification,
     check_user_already_member_in_group,
-    check_group_user_is_admin
+    check_group_user_is_admin,
+    create_group_id
 }

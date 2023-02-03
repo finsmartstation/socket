@@ -254,14 +254,14 @@ async function get_last_private_message(room_id,message_id,user_id,opponent_prof
                                         if(last_message_data[i].date==group_members[k].datetime){
                                             //check which user added
                                             if(user_id==group_members[k].added_by){
-                                                added_by_msg=added_by_msg+'You added ';
+                                                added_by_msg='You added ';
                                             }else{
-                                                added_by_msg=added_by_msg+await queries.get_username(group_members[k].added_by)+' added ';
+                                                added_by_msg=await queries.get_username(group_members[k].added_by)+' added ';
                                             }
                                             if(group_members[k].user_id==user_id){
-                                                added_user_msg=added_user_msg+'You';
+                                                added_user_msg='You';
                                             }else{
-                                                added_user_msg=added_user_msg+group_members[k].username;
+                                                added_user_msg=group_members[k].username;
                                             }
                                             added_users=added_users+added_user_msg+', ';
                                         }
