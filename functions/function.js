@@ -1713,12 +1713,13 @@ async function get_recent_chat_list_response(user_id){
                   let removed_user='';
                   if(group_removed_members.length>0){
                     for(var n=0; n<group_removed_members.length;n++){
-                      if(get_all_group_messages[i].date==group_removed_members[n].datetime){
+                      console.log(get_recent_chat[i].date)
+                      if(get_recent_chat[i].date==group_removed_members[n].datetime){
                         //check which user removed
-                        if(get_all_group_messages[i].senter_id==user_id){
+                        if(get_recent_chat[i].senter_id==user_id){
                           removed_by='You removed ';
                         }else{
-                          removed_by=await queries.get_username(get_all_group_messages[i].senter_id)+' removed ';
+                          removed_by=await queries.get_username(get_recent_chat[i].senter_id)+' removed ';
                         }
                         //check which user has left
                         if(user_id==group_removed_members[n].user_id){

@@ -348,6 +348,38 @@ async function save_and_create_group(created_by,created_datetime,group_id,group_
     }
 }
 
+async function update_removed_group_member_data(current_group_members,removed_group_members,group_id){
+    const results=await db.sequelize.query("update group_list set removed_members='"+removed_group_members+"',current_members='"+current_group_members+"' where group_id='"+group_id+"'");
+    return results[0];
+}
+
+async function save_removed_message(datetime,user_id,message,message_type,room,message_status,status,online_status,private_group,group_status){
+    const results=await db.sequelize.query("INSERT INTO `chat_list`(`date`, `senter_id`, `receiver_id`, `message`, `message_type`, `room`, `message_status`, `status`, `online_status`, `private_group`, `group_status`) VALUES ('"+datetime+"','"+user_id+"','0','"+message+"','"+message_type+"','"+room+"','"+message_status+"','"+status+"','"+online_status+"','"+private_group+"','"+group_status+"')");
+    return results[1];
+}
+
+async function update_group_profile_pic(profile_pic,group_id){
+    const results=await db.sequelize.query("update group_list set group_profile='"+profile_pic+"' where group_id='"+group_id+"'");
+    return results[0];
+}
+
+async function update_group_profile_details(group_name,profile_pic,group_id){
+    if(group_name!='' && profile_pic!=''){
+        const results=await db.sequelize.query("update group_list set group_name='"+group_name+"',group_profile='"+profile_pic+"' where group_id='"+group_id+"'");
+        return results[0];
+    }else{
+        if(group_name!=''){
+            const results=await db.sequelize.query("update group_list set group_name='"+group_name+"' where group_id='"+group_id+"'");
+            return results[0];
+        }
+
+        if(profile_pic!=''){
+            const results=await db.sequelize.query("update group_list set group_profile='"+profile_pic+"' where group_id='"+group_id+"'");
+            return results[0];
+        }
+    }
+    
+}
 
 module.exports = {
     update_online_status,
@@ -416,5 +448,9 @@ module.exports = {
     save_group_admin_data,
     save_admin_message,
     save_and_create_group,
-    save_group_user_add_message
+    save_group_user_add_message,
+    update_removed_group_member_data,
+    save_removed_message,
+    update_group_profile_pic,
+    update_group_profile_details
 }
