@@ -381,6 +381,28 @@ async function update_group_profile_details(group_name,profile_pic,group_id){
     
 }
 
+async function room_chat_list(room){
+    const results=await db.sequelize.query("select * from chat_list where room='"+room+"'");
+    return results[0];
+}
+
+async function update_clear_chat(id,group_status){
+    const results=await db.sequelize.query("update chat_list set group_status='"+group_status+"' where id='"+id+"'");
+    return results[0];
+}
+
+async function group_chat_list(user_id,room){
+    let set_user_id='"'+user_id+'"';
+    //SELECT t1.id,t1.date,t1.senter_id,t1.message,t1.message_type,t1.room,t1.message_status, t2.name,if(t1.senter_id='50','sent','receive') as type,t1.group_status FROM `chat_list` t1 join `user` t2 on t1.Senter_id=t2.id where t1.room='group_20221003075515' and t1.status='1' and t1.private_group='1' and JSON_CONTAINS(JSON_EXTRACT(t1.group_status, '$[*].user_id'), '"50"', '$') order by id asc;
+    const results=await db.sequelize.query("SELECT t1.id,t1.date,t1.senter_id,t1.message,t1.message_type,t1.room,t1.message_status, t2.name,if(t1.senter_id='"+user_id+"','sent','receive') as type,t1.group_status FROM `chat_list` t1 join `user` t2 on t1.Senter_id=t2.id where t1.room='"+room+"' and t1.status='1' and t1.private_group='1' and JSON_CONTAINS(JSON_EXTRACT(t1.group_status, '$[*].user_id'), '"+set_user_id+"', '$') order by id asc");
+    return results[0];
+}
+
+async function save_report_chat(user_id,datetime,receiver_id,room,type){
+    const results=await db.sequelize.query("INSERT INTO `report_chat`(`user_id`, `datetime`, `receiver_id`, `room`, `type`) VALUES ('"+user_id+"','"+datetime+"','"+receiver_id+"','"+room+"','"+type+"')");
+    return results[1];
+}
+
 module.exports = {
     update_online_status,
     select_online_status,
@@ -452,5 +474,9 @@ module.exports = {
     update_removed_group_member_data,
     save_removed_message,
     update_group_profile_pic,
-    update_group_profile_details
+    update_group_profile_details,
+    room_chat_list,
+    update_clear_chat,
+    group_chat_list,
+    save_report_chat
 }
