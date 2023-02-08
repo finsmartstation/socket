@@ -403,6 +403,10 @@ async function save_report_chat(user_id,datetime,receiver_id,room,type){
     return results[1];
 }
 
+// async function multiple_entry(){
+//     const results=await db.sequelize.query("INSERT INTO `report_chat` (`user_id`, `receiver_id`, `room`, `type`) VALUES ('1','0','0',''); INSERT INTO `report_chat`(`user_id`, `receiver_id`, `room`, `type`) VALUES ('1','0','0','')")
+// }
+
 module.exports = {
     update_online_status,
     select_online_status,
