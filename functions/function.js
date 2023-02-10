@@ -725,6 +725,9 @@ async function get_group_chat_list_response(user_id,group_id){
       delete_status:''
     }
     group_messages.push(group_started_data);
+    //split group created_date
+    let split_created_date=group_created_date.split(" ");
+    date_array.push(split_created_date[0]);
     //set group created by data
     //created message
     let created_message='';

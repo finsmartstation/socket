@@ -403,6 +403,16 @@ async function save_report_chat(user_id,datetime,receiver_id,room,type){
     return results[1];
 }
 
+async function update_clear_chat_with_single_query(query){
+    //UPDATE chat_list SET status = (case when id = '1' then '622057' when id = '2' then '2913659' when id = '3' then '6160230' end) WHERE id in ('1', '2', '3');
+    //UPDATE chat_list SET group_status= ("+query_case_data+") where id in ("+removed_comma+")
+    // let set_query="UPDATE chat_list SET group_status= ('"+group_status_data+"') where id in ('"+id_data+"')";
+    // console.log(set_query);
+    const results=await db.sequelize.query(query);
+    //const results=await db.sequelize.query("UPDATE chat_list SET status = (case when id = '1' then '622057' when id = '2' then '2913659' when id = '3' then '6160230' end) WHERE id in ('1', '2', '3')");
+    return results[0];
+}
+
 // async function multiple_entry(){
 //     const results=await db.sequelize.query("INSERT INTO `report_chat` (`user_id`, `receiver_id`, `room`, `type`) VALUES ('1','0','0',''); INSERT INTO `report_chat`(`user_id`, `receiver_id`, `room`, `type`) VALUES ('1','0','0','')")
 // }
@@ -482,5 +492,6 @@ module.exports = {
     room_chat_list,
     update_clear_chat,
     group_chat_list,
-    save_report_chat
+    save_report_chat,
+    update_clear_chat_with_single_query
 }
