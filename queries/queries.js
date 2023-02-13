@@ -332,8 +332,8 @@ async function save_admin_message(datetime,user_id,message,message_type,room,mes
     return results[1];
 }
 
-async function save_and_create_group(created_by,created_datetime,group_id,group_name,group_profile,members,current_members){
-    const results=await db.sequelize.query("INSERT INTO `group_list`(`created_by`, `created_datetime`, `group_id`, `group_name`, `group_profile`, `members`, `current_members`, `status`) VALUES ('"+created_by+"','"+created_datetime+"','"+group_id+"','"+group_name+"','"+group_profile+"','"+members+"','"+current_members+"','1')");
+async function save_and_create_group(created_by,created_datetime,group_id,group_name,group_profile,members,current_members,profile_pic_history){
+    const results=await db.sequelize.query("INSERT INTO `group_list`(`created_by`, `created_datetime`, `group_id`, `group_name`, `group_profile`, `members`, `current_members`, `profile_pic_history`, `status`) VALUES ('"+created_by+"','"+created_datetime+"','"+group_id+"','"+group_name+"','"+group_profile+"','"+members+"','"+current_members+"','"+profile_pic_history+"','1')");
     //console.log(results);
     if(results[1]>0){
         //console.log('group creted ', results[1])
@@ -358,8 +358,8 @@ async function save_removed_message(datetime,user_id,message,message_type,room,m
     return results[1];
 }
 
-async function update_group_profile_pic(profile_pic,group_id){
-    const results=await db.sequelize.query("update group_list set group_profile='"+profile_pic+"' where group_id='"+group_id+"'");
+async function update_group_profile_pic(profile_pic,profile_pic_history,group_id){
+    const results=await db.sequelize.query("update group_list set group_profile='"+profile_pic+"',profile_pic_history='"+profile_pic_history+"' where group_id='"+group_id+"'");
     return results[0];
 }
 
@@ -416,6 +416,11 @@ async function update_clear_chat_with_single_query(query){
 // async function multiple_entry(){
 //     const results=await db.sequelize.query("INSERT INTO `report_chat` (`user_id`, `receiver_id`, `room`, `type`) VALUES ('1','0','0',''); INSERT INTO `report_chat`(`user_id`, `receiver_id`, `room`, `type`) VALUES ('1','0','0','')")
 // }
+
+async function save_group_description(group_id,description,updated_datetime,description_history){
+    const results=await db.sequelize.query("update group_list set group_description='"+description+"',description_updated_datetime='"+updated_datetime+"',description_history='"+description_history+"' where group_id='"+group_id+"'");
+    return results[0];
+}
 
 module.exports = {
     update_online_status,
@@ -493,5 +498,6 @@ module.exports = {
     update_clear_chat,
     group_chat_list,
     save_report_chat,
-    update_clear_chat_with_single_query
+    update_clear_chat_with_single_query,
+    save_group_description
 }

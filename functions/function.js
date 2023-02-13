@@ -5,7 +5,8 @@ const sub_function=require('./sub_function');
 const BASE_URL=process.env.BASE_URL;
 async function get_individual_chat_list_response(sid,rid,room){
     var result= await queries.send_indv_message(rid,room);
-            //console.log('testing response', result[0])
+            console.log('testing response', result[0])
+            
             let message_length=result[0].length
             let message_list_response=[];
             let date_array=[];
@@ -121,7 +122,7 @@ async function get_individual_chat_list_response(sid,rid,room){
                           //date already exist
                           //add block message data entry
                           message_list_response.push({
-                            id: result[0][i].id,
+                            id: result[0][i].id.toString(),
                             date: result[0][i].date,
                             senter_id: result[0][i].senter_id,
                             receiver_id: result[0][i].receiver_id,
@@ -131,7 +132,7 @@ async function get_individual_chat_list_response(sid,rid,room){
                             message_status:result[0][i].message_status,
                             room:result[0][i].room,
                             type:"notification",
-                            status:result[0][i].status,
+                            status:group_status_json[j].status.toString(),
                             replay_id:(result[0][i].replay_id ? result[0][i].replay_id : ''),
                             replay_message:(result[0][i].reply_message ? result[0][i].reply_message : ''),
                             replay_message_type:(result[0][i].reply_message_type ? result[0][i].reply_message_type : ''),
@@ -169,7 +170,7 @@ async function get_individual_chat_list_response(sid,rid,room){
                           })
                           //add block message data entry
                           message_list_response.push({
-                            id: result[0][i].id,
+                            id: result[0][i].id.toString(),
                             date: result[0][i].date,
                             senter_id: result[0][i].senter_id,
                             receiver_id: result[0][i].receiver_id,
@@ -179,7 +180,7 @@ async function get_individual_chat_list_response(sid,rid,room){
                             message_status:result[0][i].message_status,
                             room:result[0][i].room,
                             type:"notification",
-                            status:result[0][i].status,
+                            status:group_status_json[j].status.toString(),
                             replay_id:(result[0][i].replay_id ? result[0][i].replay_id : ''),
                             replay_message:(result[0][i].reply_message ? result[0][i].reply_message : ''),
                             replay_message_type:(result[0][i].reply_message_type ? result[0][i].reply_message_type : ''),
@@ -200,7 +201,7 @@ async function get_individual_chat_list_response(sid,rid,room){
                           //date already exist
                           //add block message data entry
                           message_list_response.push({
-                            id: result[0][i].id,
+                            id: result[0][i].id.toString(),
                             date: result[0][i].date,
                             senter_id: result[0][i].senter_id,
                             receiver_id: result[0][i].receiver_id,
@@ -210,7 +211,7 @@ async function get_individual_chat_list_response(sid,rid,room){
                             message_status:result[0][i].message_status,
                             room:result[0][i].room,
                             type:"notification",
-                            status:result[0][i].status,
+                            status:group_status_json[j].status.toString(),
                             replay_id:(result[0][i].replay_id ? result[0][i].replay_id : ''),
                             replay_message:(result[0][i].reply_message ? result[0][i].reply_message : ''),
                             replay_message_type:(result[0][i].reply_message_type ? result[0][i].reply_message_type : ''),
@@ -248,7 +249,7 @@ async function get_individual_chat_list_response(sid,rid,room){
                           })
                           //add block message data entry
                           message_list_response.push({
-                            id: result[0][i].id,
+                            id: result[0][i].id.toString(),
                             date: result[0][i].date,
                             senter_id: result[0][i].senter_id,
                             receiver_id: result[0][i].receiver_id,
@@ -258,7 +259,7 @@ async function get_individual_chat_list_response(sid,rid,room){
                             message_status:result[0][i].message_status,
                             room:result[0][i].room,
                             type:"notification",
-                            status:result[0][i].status,
+                            status:group_status_json[j].status.toString(),
                             replay_id:(result[0][i].replay_id ? result[0][i].replay_id : ''),
                             replay_message:(result[0][i].reply_message ? result[0][i].reply_message : ''),
                             replay_message_type:(result[0][i].reply_message_type ? result[0][i].reply_message_type : ''),
@@ -281,7 +282,7 @@ async function get_individual_chat_list_response(sid,rid,room){
                       //date already exist
                       //add block message data entry
                       message_list_response.push({
-                        id: result[0][i].id,
+                        id: result[0][i].id.toString(),
                         date: result[0][i].date,
                         senter_id: result[0][i].senter_id,
                         receiver_id: result[0][i].receiver_id,
@@ -291,7 +292,7 @@ async function get_individual_chat_list_response(sid,rid,room){
                         message_status:result[0][i].message_status,
                         room:result[0][i].room,
                         type:result[0][i].type,
-                        status:result[0][i].status,
+                        status:group_status_json[j].status.toString(),
                         replay_id:(result[0][i].replay_id ? result[0][i].replay_id : ''),
                             replay_message:(result[0][i].reply_message ? result[0][i].reply_message : ''),
                             replay_message_type:(result[0][i].reply_message_type ? result[0][i].reply_message_type : ''),
@@ -329,7 +330,7 @@ async function get_individual_chat_list_response(sid,rid,room){
                       })
                       //add block message data entry
                       message_list_response.push({
-                        id: result[0][i].id,
+                        id: result[0][i].id.toString(),
                         date: result[0][i].date,
                         senter_id: result[0][i].senter_id,
                         receiver_id: result[0][i].receiver_id,
@@ -339,7 +340,7 @@ async function get_individual_chat_list_response(sid,rid,room){
                         message_status:result[0][i].message_status,
                         room:result[0][i].room,
                         type:result[0][i].type,
-                        status:result[0][i].status,
+                        status:group_status_json[j].status.toString(),
                         replay_id:(result[0][i].replay_id ? result[0][i].replay_id : ''),
                             replay_message:(result[0][i].reply_message ? result[0][i].reply_message : ''),
                             replay_message_type:(result[0][i].reply_message_type ? result[0][i].reply_message_type : ''),
@@ -379,7 +380,7 @@ async function get_individual_chat_list_response(sid,rid,room){
                             message_status:result[0][i].message_status,
                             room:result[0][i].room,
                             type:"notification",
-                            status:result[0][i].status,
+                            status:group_status_json[j].status.toString(),
                             replay_id:(result[0][i].replay_id ? result[0][i].replay_id : ''),
                             replay_message:(result[0][i].reply_message ? result[0][i].reply_message : ''),
                             replay_message_type:(result[0][i].reply_message_type ? result[0][i].reply_message_type : ''),
@@ -417,7 +418,7 @@ async function get_individual_chat_list_response(sid,rid,room){
                           })
                           //add block message data entry
                           message_list_response.push({
-                            id: result[0][i].id,
+                            id: result[0][i].id.toString(),
                             date: result[0][i].date,
                             senter_id: result[0][i].senter_id,
                             receiver_id: result[0][i].receiver_id,
@@ -427,7 +428,7 @@ async function get_individual_chat_list_response(sid,rid,room){
                             message_status:result[0][i].message_status,
                             room:result[0][i].room,
                             type:"notification",
-                            status:result[0][i].status,
+                            status:group_status_json[j].status.toString(),
                             replay_id:(result[0][i].replay_id ? result[0][i].replay_id : ''),
                             replay_message:(result[0][i].reply_message ? result[0][i].reply_message : ''),
                             replay_message_type:(result[0][i].reply_message_type ? result[0][i].reply_message_type : ''),
@@ -448,7 +449,7 @@ async function get_individual_chat_list_response(sid,rid,room){
                           //date already exist
                           //add block message data entry
                           message_list_response.push({
-                            id: result[0][i].id,
+                            id: result[0][i].id.toString(),
                             date: result[0][i].date,
                             senter_id: result[0][i].senter_id,
                             receiver_id: result[0][i].receiver_id,
@@ -458,7 +459,7 @@ async function get_individual_chat_list_response(sid,rid,room){
                             message_status:result[0][i].message_status,
                             room:result[0][i].room,
                             type:"notification",
-                            status:result[0][i].status,
+                            status:group_status_json[j].status.toString(),
                             replay_id:(result[0][i].replay_id ? result[0][i].replay_id : ''),
                             replay_message:(result[0][i].reply_message ? result[0][i].reply_message : ''),
                             replay_message_type:(result[0][i].reply_message_type ? result[0][i].reply_message_type : ''),
@@ -496,7 +497,7 @@ async function get_individual_chat_list_response(sid,rid,room){
                           })
                           //add block message data entry
                           message_list_response.push({
-                            id: result[0][i].id,
+                            id: result[0][i].id.toString(),
                             date: result[0][i].date,
                             senter_id: result[0][i].senter_id,
                             receiver_id: result[0][i].receiver_id,
@@ -506,7 +507,7 @@ async function get_individual_chat_list_response(sid,rid,room){
                             message_status:result[0][i].message_status,
                             room:result[0][i].room,
                             type:"notification",
-                            status:result[0][i].status,
+                            status:group_status_json[j].status.toString(),
                             replay_id:(result[0][i].replay_id ? result[0][i].replay_id : ''),
                             replay_message:(result[0][i].reply_message ? result[0][i].reply_message : ''),
                             replay_message_type:(result[0][i].reply_message_type ? result[0][i].reply_message_type : ''),
@@ -529,7 +530,7 @@ async function get_individual_chat_list_response(sid,rid,room){
                       //date already exist
                       //add block message data entry
                       message_list_response.push({
-                        id: result[0][i].id,
+                        id: result[0][i].id.toString(),
                         date: result[0][i].date,
                         senter_id: result[0][i].senter_id,
                         receiver_id: result[0][i].receiver_id,
@@ -539,7 +540,7 @@ async function get_individual_chat_list_response(sid,rid,room){
                         message_status:result[0][i].message_status,
                         room:result[0][i].room,
                         type:result[0][i].type,
-                        status:result[0][i].status,
+                        status:group_status_json[j].status.toString(),
                         replay_id:(result[0][i].replay_id ? result[0][i].replay_id : ''),
                             replay_message:(result[0][i].reply_message ? result[0][i].reply_message : ''),
                             replay_message_type:(result[0][i].reply_message_type ? result[0][i].reply_message_type : ''),
@@ -577,7 +578,7 @@ async function get_individual_chat_list_response(sid,rid,room){
                       })
                       //add block message data entry
                       message_list_response.push({
-                        id: result[0][i].id,
+                        id: result[0][i].id.toString(),
                         date: result[0][i].date,
                         senter_id: result[0][i].senter_id,
                         receiver_id: result[0][i].receiver_id,
@@ -587,7 +588,7 @@ async function get_individual_chat_list_response(sid,rid,room){
                         message_status:result[0][i].message_status,
                         room:result[0][i].room,
                         type:result[0][i].type,
-                        status:result[0][i].status,
+                        status:group_status_json[j].status.toString(),
                         replay_id:(result[0][i].replay_id ? result[0][i].replay_id : ''),
                             replay_message:(result[0][i].reply_message ? result[0][i].reply_message : ''),
                             replay_message_type:(result[0][i].reply_message_type ? result[0][i].reply_message_type : ''),
@@ -657,6 +658,7 @@ async function get_group_chat_list_response(user_id,group_id){
     let group_current_members;
     let group_removed_members;
     let group_left_members;
+    let profile_pic_history;
     if(check_user_in_group[0].members!=''){
       group_members=JSON.parse(check_user_in_group[0].members);
     }else{
@@ -680,6 +682,12 @@ async function get_group_chat_list_response(user_id,group_id){
       group_left_members=JSON.parse(check_user_in_group[0].left_members);
     }else{
       group_left_members=[];
+    }
+
+    if(check_user_in_group[0].profile_pic_history!=''){
+      profile_pic_history=JSON.parse(check_user_in_group[0].profile_pic_history);
+    }else{
+      profile_pic_history=[];
     }
     
     if(group_profile!=''){
@@ -734,7 +742,7 @@ async function get_group_chat_list_response(user_id,group_id){
     if(created_by==user_id){
       created_message=created_message+'You created group '+group_name;
     }else{
-      let username=await queries.get_username(user_id);
+      let username=await queries.get_username(created_by);
       created_message=created_message+username+' created group '+group_name;
     }
     let group_created_by_data={
@@ -771,7 +779,7 @@ async function get_group_chat_list_response(user_id,group_id){
         let replay_message;
         let replay_message_type;
         let replay_senter_id;
-        let senter;
+        let replay_senter;
         let forward_id;
         let forward_message_count;
         let forward_message_status;
@@ -786,9 +794,9 @@ async function get_group_chat_list_response(user_id,group_id){
          replay_message_type=get_replay_message_details[0][0].message_type;
          replay_senter_id=get_replay_message_details[0][0].senter_id;
          if(replay_senter_id==user_id){
-            senter='You';
+          replay_senter='You';
          }else{
-            senter=await queries.get_username(replay_senter_id);
+          replay_senter=await queries.get_username(replay_senter_id);
          }
         }else{
           replay_id="0";
@@ -941,6 +949,61 @@ async function get_group_chat_list_response(user_id,group_id){
                 get_all_group_messages[i].message=removed_user_msg;
                 get_all_group_messages[i].message_type='';
                 get_all_group_messages[i].type='notification';
+              }else if(get_all_group_messages[i].message=='changed_group_icon'){
+                console.log('changed_group_icon',get_all_group_messages[i].senter_id,get_all_group_messages[i].date,profile_pic_history)
+                let previous_profile_pic='';
+                let new_profile_pic='';
+                let icon_change_message='';
+                let content="changed this group's icon";
+                if(profile_pic_history.length>0){
+                  for(var group_icon_i=0; group_icon_i<profile_pic_history.length; group_icon_i++){
+                    console.log('loop running index', group_icon_i)
+                    if(get_all_group_messages[i].date==profile_pic_history[group_icon_i].datetime){
+                      //check the index of the array
+                      if(group_icon_i==0){
+                        console.log('yes first index')
+                        if(user_id==profile_pic_history[group_icon_i].user_id){
+                          console.log('you');
+                          icon_change_message='You '+content;
+                        }else{
+                          console.log('others')
+                          icon_change_message=await queries.get_username(profile_pic_history[group_icon_i].user_id)+' '+content;
+                        }
+                      }else{
+                        console.log('else index')
+                        if(user_id==profile_pic_history[group_icon_i].user_id){
+                          console.log('you');
+                          icon_change_message='You '+content;
+                        }else{
+                          console.log('others')
+                          icon_change_message=await queries.get_username(profile_pic_history[group_icon_i].user_id)+' '+content;
+                        }
+                        new_profile_pic=BASE_URL+profile_pic_history[group_icon_i].profile_pic;
+                        let previous_index=group_icon_i-1;
+                        previous_profile_pic=BASE_URL+profile_pic_history[previous_index].profile_pic;
+                        console.log('testing ',previous_profile_pic,new_profile_pic)
+                        
+                      }
+                      
+                    }
+                  }
+                }
+                
+                console.log(`new_profile_pic ${new_profile_pic} previous_profile_pic ${previous_profile_pic} icon change message ${icon_change_message}`);
+                
+                console.log('data ',previous_profile_pic)
+                if(new_profile_pic!='' && previous_profile_pic!=''){
+                  //console.log('loop executed')
+                  get_all_group_messages[i].previous_profile_pic=previous_profile_pic;
+                  get_all_group_messages[i].new_profile_pic=new_profile_pic;
+                }
+                get_all_group_messages[i].message=icon_change_message;
+                get_all_group_messages[i].message_type='';
+                get_all_group_messages[i].type='notification';
+                // if(get_all_group_messages[i].id==970){
+                //   console.log(get_all_group_messages[i])
+                //   exit () 
+                // }
               }
             }else if(get_all_group_messages[i].message_type=='text'){
               //console.log('message')
@@ -950,179 +1013,198 @@ async function get_group_chat_list_response(user_id,group_id){
         //get group_status
         //console.log('error testing ',get_all_group_messages[i])
         if(get_all_group_messages[i]!=undefined){
-        let split_date=get_all_group_messages[i].date.split(" ");
-        let group_status_json=JSON.parse(get_all_group_messages[i]['group_status']) || [];
-        //console.log('groiup status ',group_status_json)
-        //console.log('msg id',get_all_group_messages[i].id);
-        if(group_status_json.length>0){
-          for(var j=0; j<group_status_json.length; j++){
-            
-            //console.log(group_status_json[j].status)
-            console.log('msg id',get_all_group_messages[i].id);
-            if(group_status_json[j].status==0 && group_status_json[j].user_id==user_id){
-              console.log('deleted')
-              if(group_status_json[j].deleted_by){
-                if(group_status_json[j].deleted_by==user_id){
-                  get_all_group_messages[i].message='You deleted this message';
+          let split_date=get_all_group_messages[i].date.split(" ");
+          let group_status_json=JSON.parse(get_all_group_messages[i]['group_status']) || [];
+          //console.log('groiup status ',group_status_json)
+          //console.log('msg id',get_all_group_messages[i].id);
+          if(group_status_json.length>0){
+            for(var j=0; j<group_status_json.length; j++){
+              
+              //console.log(group_status_json[j].status)
+              console.log('msg id',get_all_group_messages[i].id);
+              if(group_status_json[j].status==0 && group_status_json[j].user_id==user_id){
+                console.log('deleted')
+                if(group_status_json[j].deleted_by){
+                  if(group_status_json[j].deleted_by==user_id){
+                    get_all_group_messages[i].message='You deleted this message';
+                  }else{
+                    get_all_group_messages[i].message='This message was deleted';
+                  }
                 }else{
                   get_all_group_messages[i].message='This message was deleted';
                 }
-              }else{
-                get_all_group_messages[i].message='This message was deleted';
+                get_all_group_messages[i].message_type='text';
+                //check date already exist in array
+                if(date_array.includes(split_date[0])){
+                  console.log('date is already exist')
+                  group_messages.push({
+                    id:get_all_group_messages[i].id.toString(),
+                    date:get_all_group_messages[i].date,
+                    senter_id:get_all_group_messages[i].senter_id.toString(),
+                    message:get_all_group_messages[i].message,
+                    message_type:get_all_group_messages[i].message_type,
+                    duration: get_all_group_messages[i].duration.toString(),
+                    room:get_all_group_messages[i].room,
+                    message_status:get_all_group_messages[i].message_status,
+                    name:get_all_group_messages[i].name,
+                    type:get_all_group_messages[i].type,
+                    status:group_status_json[j].status,
+                    replay_id:replay_id,
+                    replay_message:replay_message,
+                    replay_message_type:replay_message_type,
+                    replay_senter:replay_senter,
+                    forward_id:forward_id.toString(),
+                    forward_count:forward_message_count,
+                    forward_message_status:forward_message_status,
+                    delete_status:'' 
+                  });
+                }else{
+                  date_array.push(split_date[0]);
+                  //add date array date
+                  group_messages.push({
+                    id:'',
+                    date:get_all_group_messages[i].date,
+                    senter_id:'',
+                    message:'',
+                    message_type:'',
+                    duration: '',
+                    room:'',
+                    message_status:0,
+                    name:'',
+                    type:'date',
+                    status:'',
+                    replay_id:'',
+                    replay_message:'',
+                    replay_message_type:'',
+                    replay_senter:'',
+                    forward_id:'',
+                    forward_count:'',
+                    forward_message_status:'',
+                    delete_status:''
+                  });
+                  //add message data
+                  group_messages.push({
+                    id:get_all_group_messages[i].id.toString(),
+                    date:get_all_group_messages[i].date,
+                    senter_id:get_all_group_messages[i].senter_id.toString(),
+                    message:get_all_group_messages[i].message,
+                    message_type:get_all_group_messages[i].message_type,
+                    duration: get_all_group_messages[i].duration.toString(),
+                    room:get_all_group_messages[i].room,
+                    message_status:get_all_group_messages[i].message_status,
+                    name:get_all_group_messages[i].name,
+                    type:get_all_group_messages[i].type,
+                    status:group_status_json[j].status,
+                    replay_id:replay_id,
+                    replay_message:replay_message,
+                    replay_message_type:replay_message_type,
+                    replay_senter:replay_senter,
+                    forward_id:forward_id.toString(),
+                    forward_count:forward_message_count,
+                    forward_message_status:forward_message_status,
+                    delete_status:'0' 
+                  });
+                  console.log('date is not exist')
+                }
+                
+              }else if(group_status_json[j].status==1 && group_status_json[j].user_id==user_id){
+                console.log('not deleted')
+                if(date_array.includes(split_date[0])){
+                  console.log('date is already exist')
+                  group_messages.push({
+                    id:get_all_group_messages[i].id.toString(),
+                    date:get_all_group_messages[i].date,
+                    senter_id:get_all_group_messages[i].senter_id.toString(),
+                    message:get_all_group_messages[i].message,
+                    message_type:get_all_group_messages[i].message_type,
+                    duration: get_all_group_messages[i].duration.toString(),
+                    room:get_all_group_messages[i].room,
+                    message_status:get_all_group_messages[i].message_status,
+                    name:get_all_group_messages[i].name,
+                    type:get_all_group_messages[i].type,
+                    status:group_status_json[j].status,
+                    replay_id:replay_id,
+                    replay_message:replay_message,
+                    replay_message_type:replay_message_type,
+                    replay_senter:replay_senter,
+                    forward_id:forward_id.toString(),
+                    forward_count:forward_message_count,
+                    forward_message_status:forward_message_status,
+                    delete_status:'1' 
+                  });
+                }else{
+                  date_array.push(split_date[0]);
+                  //add date array date
+                  group_messages.push({
+                    id:'',
+                    date:get_all_group_messages[i].date,
+                    senter_id:'',
+                    message:'',
+                    message_type:'',
+                    duration: '',
+                    room:'',
+                    message_status:0,
+                    name:'',
+                    type:'date',
+                    status:'',
+                    replay_id:'',
+                    replay_message:'',
+                    replay_message_type:'',
+                    replay_senter:'',
+                    forward_id:'',
+                    forward_count:'',
+                    forward_message_status:'',
+                    delete_status:''
+                  });
+                  //add message data
+                  group_messages.push({
+                    id:get_all_group_messages[i].id.toString(),
+                    date:get_all_group_messages[i].date,
+                    senter_id:get_all_group_messages[i].senter_id.toString(),
+                    message:get_all_group_messages[i].message,
+                    message_type:get_all_group_messages[i].message_type,
+                    duration: get_all_group_messages[i].duration.toString(),
+                    room:get_all_group_messages[i].room,
+                    message_status:get_all_group_messages[i].message_status,
+                    name:get_all_group_messages[i].name,
+                    type:get_all_group_messages[i].type,
+                    status:'1',
+                    replay_id:replay_id,
+                    replay_message:replay_message,
+                    replay_message_type:replay_message_type,
+                    replay_senter:replay_senter,
+                    forward_id:forward_id.toString(),
+                    forward_count:forward_message_count,
+                    forward_message_status:forward_message_status,
+                    delete_status:'1' 
+                  });
+                  console.log('date is not exist')
+                }
+
+                
+                if(get_all_group_messages[i].new_profile_pic!='' && get_all_group_messages[i].previous_profile_pic!=''){
+                  //let last_index=group_messages.length;
+                  console.log(i)
+                  console.log(group_messages[i].id)
+                  // exit ()
+                  //add two index for group_created_date and group_name
+                  let index_i=i+2;
+                  group_messages[index_i].new_profile_pic=get_all_group_messages[i].new_profile_pic;
+                  group_messages[index_i].previous_profile_pic=get_all_group_messages[i].previous_profile_pic;
+                }
+
+                //console.log('previous pic',get_all_group_messages[i].previous_profile_pic)
+                // if(get_all_group_messages[i].id==970){
+                //   let index_i=i+2;
+                //   console.log(get_all_group_messages[i],group_messages[index_i])
+                //   exit () 
+                // }
+              }else if(group_status_json[j].status==2 && group_status_json[j].user_id==user_id){
+                //console.log('cleared')
+                //clear chat message -- Don't need to show
               }
-              get_all_group_messages[i].message_type='text';
-              //check date already exist in array
-              if(date_array.includes(split_date[0])){
-                console.log('date is already exist')
-                group_messages.push({
-                  id:get_all_group_messages[i].id,
-                  date:get_all_group_messages[i].date,
-                  senter_id:get_all_group_messages[i].senter_id.toString(),
-                  message:get_all_group_messages[i].message,
-                  message_type:get_all_group_messages[i].message_type,
-                  duration: get_all_group_messages[i].duration.toString(),
-                  room:get_all_group_messages[i].room,
-                  message_status:get_all_group_messages[i].message_status,
-                  name:get_all_group_messages[i].name,
-                  type:get_all_group_messages[i].type,
-                  status:group_status_json[j].status,
-                  replay_id:replay_id,
-                  replay_message:replay_message,
-                  replay_message_type:replay_message_type,
-                  replay_senter:replay_senter,
-                  forward_id:forward_id.toString(),
-                  forward_count:forward_message_count,
-                  forward_message_status:forward_message_status,
-                  delete_status:'' 
-                });
-              }else{
-                date_array.push(split_date[0]);
-                //add date array date
-                group_messages.push({
-                  id:'',
-                  date:get_all_group_messages[i].date,
-                  senter_id:'',
-                  message:'',
-                  message_type:'',
-                  duration: '',
-                  room:'',
-                  message_status:0,
-                  name:'',
-                  type:'date',
-                  status:'',
-                  replay_id:'',
-                  replay_message:'',
-                  replay_message_type:'',
-                  replay_senter:'',
-                  forward_id:'',
-                  forward_count:'',
-                  forward_message_status:'',
-                  delete_status:''
-                });
-                //add message data
-                group_messages.push({
-                  id:get_all_group_messages[i].id,
-                  date:get_all_group_messages[i].date,
-                  senter_id:get_all_group_messages[i].senter_id.toString(),
-                  message:get_all_group_messages[i].message,
-                  message_type:get_all_group_messages[i].message_type,
-                  duration: get_all_group_messages[i].duration.toString(),
-                  room:get_all_group_messages[i].room,
-                  message_status:get_all_group_messages[i].message_status,
-                  name:get_all_group_messages[i].name,
-                  type:get_all_group_messages[i].type,
-                  status:group_status_json[j].status,
-                  replay_id:replay_id,
-                  replay_message:replay_message,
-                  replay_message_type:replay_message_type,
-                  replay_senter:replay_senter,
-                  forward_id:forward_id.toString(),
-                  forward_count:forward_message_count,
-                  forward_message_status:forward_message_status,
-                  delete_status:'0' 
-                });
-                console.log('date is not exist')
-              }
-            }else if(group_status_json[j].status==1 && group_status_json[j].user_id==user_id){
-              console.log('not deleted')
-              
-              if(date_array.includes(split_date[0])){
-                console.log('date is already exist')
-                group_messages.push({
-                  id:get_all_group_messages[i].id,
-                  date:get_all_group_messages[i].date,
-                  senter_id:get_all_group_messages[i].senter_id.toString(),
-                  message:get_all_group_messages[i].message,
-                  message_type:get_all_group_messages[i].message_type,
-                  duration: get_all_group_messages[i].duration.toString(),
-                  room:get_all_group_messages[i].room,
-                  message_status:get_all_group_messages[i].message_status,
-                  name:get_all_group_messages[i].name,
-                  type:get_all_group_messages[i].type,
-                  status:group_status_json[j].status,
-                  replay_id:replay_id,
-                  replay_message:replay_message,
-                  replay_message_type:replay_message_type,
-                  replay_senter:replay_senter,
-                  forward_id:forward_id.toString(),
-                  forward_count:forward_message_count,
-                  forward_message_status:forward_message_status,
-                  delete_status:'1' 
-                });
-              }else{
-                date_array.push(split_date[0]);
-                //add date array date
-                group_messages.push({
-                  id:'',
-                  date:get_all_group_messages[i].date,
-                  senter_id:'',
-                  message:'',
-                  message_type:'',
-                  duration: '',
-                  room:'',
-                  message_status:0,
-                  name:'',
-                  type:'date',
-                  status:'',
-                  replay_id:'',
-                  replay_message:'',
-                  replay_message_type:'',
-                  replay_senter:'',
-                  forward_id:'',
-                  forward_count:'',
-                  forward_message_status:'',
-                  delete_status:''
-                });
-                //add message data
-                group_messages.push({
-                  id:get_all_group_messages[i].id,
-                  date:get_all_group_messages[i].date,
-                  senter_id:get_all_group_messages[i].senter_id.toString(),
-                  message:get_all_group_messages[i].message,
-                  message_type:get_all_group_messages[i].message_type,
-                  duration: get_all_group_messages[i].duration.toString(),
-                  room:get_all_group_messages[i].room,
-                  message_status:get_all_group_messages[i].message_status,
-                  name:get_all_group_messages[i].name,
-                  type:get_all_group_messages[i].type,
-                  status:'1',
-                  replay_id:replay_id,
-                  replay_message:replay_message,
-                  replay_message_type:replay_message_type,
-                  replay_senter:replay_senter,
-                  forward_id:forward_id.toString(),
-                  forward_count:forward_message_count,
-                  forward_message_status:forward_message_status,
-                  delete_status:'1' 
-                });
-                console.log('date is not exist')
-              }
-            }else if(group_status_json[j].status==2 && group_status_json[j].user_id==user_id){
-              //console.log('cleared')
-              //clear chat message -- Don't need to show
             }
           }
-        }
       }
         
       }
@@ -1932,6 +2014,8 @@ async function group_chat_push_notification(user_id='',room='',group_current_mem
                     let send_notification=await sub_function.send_firebase_notification(device_token,title,'Audio');
                   }else if(message_type=='video'){
                     let send_notification=await sub_function.send_firebase_notification(device_token,title,'File');
+                  }else if(message_type=='changed_group_icon'){
+                    let send_notification=await sub_function.send_firebase_notification(device_token,title,message);
                   }
                 }else{
                   console.log('device token is empty')
@@ -1956,6 +2040,8 @@ async function group_chat_push_notification(user_id='',room='',group_current_mem
                 let send_notification=await sub_function.send_firebase_notification(device_token,title,'Audio');
               }else if(message_type=='video'){
                 let send_notification=await sub_function.send_firebase_notification(device_token,title,'File');
+              }else if(message_type=='changed_group_icon'){
+                let send_notification=await sub_function.send_firebase_notification(device_token,title,message);
               }
             }else{
               console.log('device token is empty')
@@ -2001,6 +2087,11 @@ function check_user_already_member_in_group(user_id, group_members){
     return member.user_id == user_id;
   });
 }
+
+// function added_user_push_notification(user_id,new_user_id){
+//   //get_user_access_token
+
+// }
 
 
 module.exports={
