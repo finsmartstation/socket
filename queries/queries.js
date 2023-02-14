@@ -217,7 +217,7 @@ async function check_group_mute_notification(user_id, room){
 }
 
 async function get_group_basic_details(group_id){
-    const results=await db.sequelize.query("select group_name,group_profile,members,left_members,removed_members,current_members from group_list where group_id='"+group_id+"'");
+    const results=await db.sequelize.query("select group_name,group_profile,members,left_members,removed_members,current_members,subject_history from group_list where group_id='"+group_id+"'");
     return results[0];
 }
 
@@ -332,8 +332,8 @@ async function save_admin_message(datetime,user_id,message,message_type,room,mes
     return results[1];
 }
 
-async function save_and_create_group(created_by,created_datetime,group_id,group_name,group_profile,members,current_members,profile_pic_history){
-    const results=await db.sequelize.query("INSERT INTO `group_list`(`created_by`, `created_datetime`, `group_id`, `group_name`, `group_profile`, `members`, `current_members`, `profile_pic_history`, `status`) VALUES ('"+created_by+"','"+created_datetime+"','"+group_id+"','"+group_name+"','"+group_profile+"','"+members+"','"+current_members+"','"+profile_pic_history+"','1')");
+async function save_and_create_group(created_by,created_datetime,group_id,group_name,group_profile,members,current_members,profile_pic_history,subject_history){
+    const results=await db.sequelize.query("INSERT INTO `group_list`(`created_by`, `created_datetime`, `group_id`, `group_name`, `group_profile`, `members`, `current_members`, `profile_pic_history`, `subject_history`,`status`) VALUES ('"+created_by+"','"+created_datetime+"','"+group_id+"','"+group_name+"','"+group_profile+"','"+members+"','"+current_members+"','"+profile_pic_history+"','"+subject_history+"','1')");
     //console.log(results);
     if(results[1]>0){
         //console.log('group creted ', results[1])
@@ -422,6 +422,11 @@ async function save_group_description(group_id,description,updated_datetime,desc
     return results[0];
 }
 
+async function save_group_name(group_id,subject_history_array){
+    const results=await db.sequelize.query("update group_list set subject_history='"+subject_history_array+"' where group_id='"+group_id+"'");
+    return results[0];
+}
+
 module.exports = {
     update_online_status,
     select_online_status,
@@ -499,5 +504,6 @@ module.exports = {
     group_chat_list,
     save_report_chat,
     update_clear_chat_with_single_query,
-    save_group_description
+    save_group_description,
+    save_group_name
 }

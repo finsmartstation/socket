@@ -206,7 +206,7 @@ async function get_last_private_message(room_id,message_id,user_id,opponent_prof
     return last_message_array;
   }
 
-  async function get_last_group_message(room_id,message_id,user_id,group_members,group_current_members,group_left_members,group_removed_members){
+  async function get_last_group_message(room_id,message_id,user_id,group_members,group_current_members,group_left_members,group_removed_members,subject_history){
     console.log('parameter ',room_id,message_id,user_id,group_members,group_current_members,group_left_members,group_removed_members)
     let set_user_id='"'+user_id+'"';
     let last_message_array=[];
@@ -359,6 +359,79 @@ async function get_last_private_message(room_id,message_id,user_id,opponent_prof
                                 }
                                 removed_user_msg=removed_by+removed_user;
                                 last_message_data[i].message=removed_user_msg;
+                                last_message_array=[{
+                                    id: last_message_data[i].id,
+                                    date: last_message_data[i].date,
+                                    message: last_message_data[i].message,
+                                    room: last_message_data[i].room,
+                                    message_type:last_message_data[i].message_type,
+                                    chat_type: 'group'
+                                  }];
+                                last_message_available=true;
+                            }else if(last_message_data[i].message=='changed_group_icon'){
+                                let icon_change_message='';
+                                let content="changed this group's icon";
+                                // console.log('sss',last_message_data[i].id)
+                                // exit ()
+                                if(last_message_data[i].senter_id==user_id){
+                                    icon_change_message='You '+content;
+                                }else{
+                                    icon_change_message=await queries.get_username(last_message_data[i].senter_id)+' '+content;
+                                }
+                                console.log(last_message_data[i].message)
+                                last_message_data[i].message=icon_change_message;
+                                last_message_array=[{
+                                    id: last_message_data[i].id,
+                                    date: last_message_data[i].date,
+                                    message: last_message_data[i].message,
+                                    room: last_message_data[i].room,
+                                    message_type:last_message_data[i].message_type,
+                                    chat_type: 'group'
+                                  }];
+                                last_message_available=true;
+                            }else if(last_message_data[i].message=='changed_group_description'){
+                                let description_message='';
+                                if(last_message_data[i].senter_id==user_id){
+                                    description_message='You changed the group description. Tap to view.';
+                                }else{
+                                    description_message=await queries.get_username(last_message_data[i].senter_id)+' changed the group description. Tap to view.';
+                                }
+                                last_message_data[i].message=description_message;
+                                last_message_array=[{
+                                    id: last_message_data[i].id,
+                                    date: last_message_data[i].date,
+                                    message: last_message_data[i].message,
+                                    room: last_message_data[i].room,
+                                    message_type:last_message_data[i].message_type,
+                                    chat_type: 'group'
+                                  }];
+                                last_message_available=true;
+                            }else if(last_message_data[i].message=='changed_group_name'){
+                                let subject_message='';
+                                let subject_content='changed the subject from';
+                                
+                                for(var subject_i=0; subject_i<subject_history.length; subject_i++){
+                                    if(last_message_data[i].date==subject_history[subject_i].datetime){
+                                        if(subject_history[subject_i].user_id==user_id){
+                                            let subject_index=subject_i-1;
+                                            if(subject_index>=0){
+                                                let old_subject=subject_history[subject_i].subject ? subject_history[subject_i].subject : ''
+                                                let new_subject=subject_history[subject_i].subject;
+                                                subject_message='You '+subject_content+' "'+old_subject+'" to "'+new_subject+'"';
+                                            }
+                                        }else{
+                                            let subject_index=subject_i-1;
+                                            if(subject_index>=0){
+                                                let old_subject=subject_history[subject_i].subject ? subject_history[subject_i].subject : ''
+                                                let new_subject=subject_history[subject_i].subject;
+                                                subject_message=await queries.get_username(subject_history[subject_i].user_id)+' '+subject_content+' "'+old_subject+'" to "'+new_subject+'"';
+                                            }
+                                            
+                                        }
+                                    }
+                                }
+
+                                last_message_data[i].message=subject_message;
                                 last_message_array=[{
                                     id: last_message_data[i].id,
                                     date: last_message_data[i].date,

@@ -2381,8 +2381,14 @@ io.sockets.on('connection',async function (socket) {
                   profile_pic: data.group_profile
                 });
               }
+              let group_subject=[];
+              group_subject.push({
+                user_id: user_id,
+                datetime: datetime,
+                subject: group_name
+              })
               
-              let save_group_data=await queries.save_and_create_group(user_id,datetime,group_id,group_name,group_profile,JSON.stringify(group_users),JSON.stringify(group_users),JSON.stringify(profile_pic_history));
+              let save_group_data=await queries.save_and_create_group(user_id,datetime,group_id,group_name,group_profile,JSON.stringify(group_users),JSON.stringify(group_users),JSON.stringify(profile_pic_history),JSON.stringify(group_subject));
               console.log('save group data', save_group_data)
 
               //console.log('group users ',group_users)
@@ -3162,9 +3168,23 @@ io.sockets.on('connection',async function (socket) {
                         status: 1
                       })
                     }
-                    let save_group_icon_mesage=await queries.save_group_user_add_message(datetime,user_id,'changed_group_description','notification',group_id,1,1,0,1,JSON.stringify(group_status));
-                    if(save_group_icon_mesage>0){
+                    let save_group_description_mesage=await queries.save_group_user_add_message(datetime,user_id,'changed_group_description','notification',group_id,1,1,0,1,JSON.stringify(group_status));
+                    if(save_group_description_mesage>0){
                       io.sockets.in(user_id+'_group_description').emit('update_group_description',{ status: true, statuscode: 200, message: "success"});
+                      //emit to all the user in the group
+                      let sender_group_chat_list_response=await functions.get_group_chat_list_response(user_id,group_id);
+                      io.sockets.in(group_id+'_'+user_id).emit('message',sender_group_chat_list_response);
+                      //emit to receiver 
+                      for(var j=0; j<group_members.length; j++){
+                        if(group_members[j].user_id!=user_id){
+                          let receiver_group_chat_list_response=await functions.get_group_chat_list_response(group_members[j].user_id,group_id);
+                          io.sockets.in(group_id+'_'+group_members[j].user_id).emit('message',receiver_group_chat_list_response);
+                          let receiver_recent_chat_list_response=await functions.get_recent_chat_list_response(group_members[j].user_id);
+                          io.sockets.in(group_members[j].user_id).emit('chat_list',receiver_recent_chat_list_response);
+                        }
+                      }
+                      let sender_recent_chat_list_response=await functions.get_recent_chat_list_response(user_id);
+                      io.sockets.in(user_id).emit('chat_list',sender_recent_chat_list_response);
                     }else{
                       io.sockets.in(user_id+'_group_description').emit('update_group_description',{ status: false, statuscode: 400, message: "Not saved to chat list"});
                     }
@@ -3198,15 +3218,15 @@ io.sockets.on('connection',async function (socket) {
     });
     socket.on('update_group_name',async function(data){
       try{
-        //input -- {"user_id":"5","accessToken":"5","description":"hello","group_id":"group_20230212123759"}
-        console.log('group description')
+        //input -- {"user_id":"5","accessToken":"5","description":"hello","group_name":"group_20230212123759"}
+        console.log('group name')
         if(typeof(data)=='object'){
           let user_id=data.user_id ? data.user_id : '';
           let accessToken=data.accessToken ? data.accessToken : '';
           let group_id=data.group_id ? data.group_id : '';
           let name=data.name ? data.name : '';
           let datetime=get_datetime();
-          if(user_id!='' && accessToken!='' && group_id!='' && description!=''){
+          if(user_id!='' && accessToken!='' && group_id!='' && name!=''){
             socket.join(user_id+'_group_name');
             //check user id and accesstoken is valid
             let check_user_data=await queries.check_user_valid(user_id,accessToken);
@@ -3215,65 +3235,81 @@ io.sockets.on('connection',async function (socket) {
               //check group data
               let check_group_data=await queries.check_group_data(group_id);
               if(check_group_data.length>0){
-                // let current_group_members=check_group_data[0].current_members;
-                // let description_history=check_group_data[0].description_history;
-                // if(current_group_members!=''){
-                //   let group_members=JSON.parse(current_group_members);
-                //   //check group member
-                //   console.log(group_members)
-                //   let check_user_exist_in_group=await functions.check_user_already_member_in_group(user_id,group_members);
-                //   if(check_user_exist_in_group){
-                //     //save description to db
-                //     let description_history_array=[];
-                //     if(description_history!=''){
-                //       description_history_array=JSON.parse(description_history);
-                //     }else{
-                //       description_history_array=[];
-                //     }
-                //     description_history_array.push({
-                //       user_id: user_id,
-                //       datetime: datetime,
-                //       description: description
-                //     });
-                //     let save_description=await queries.save_group_description(group_id,description,datetime,JSON.stringify(description_history_array));
-                //     if(save_description.affectedRows>0){
-                //       //save message to db
-                //       console.log('saved to db')
-                //       let group_status=[];
-                //     for(var i=0; i<group_members.length; i++){
-                //       let message_status;
-                //       let message_read_datetime;
-                //       if(group_members[i].user_id==user_id){
-                //         message_status=0;
-                //         message_read_datetime=datetime;
-                //       }else{
-                //         message_status=1;
-                //         message_read_datetime=''
-                //       }
-                //       group_status.push({
-                //         user_id: group_members[i].user_id,
-                //         username: await queries.get_username(group_members[i].user_id),
-                //         datetime: datetime,
-                //         message_status: message_status,
-                //         message_read_datetime: message_read_datetime,
-                //         status: 1
-                //       })
-                //     }
-                //     let save_group_icon_mesage=await queries.save_group_user_add_message(datetime,user_id,'changed_group_name','notification',group_id,1,1,0,1,JSON.stringify(group_status));
-                //     if(save_group_icon_mesage>0){
-                //       io.sockets.in(user_id+'_group_name').emit('update_group_name',{ status: true, statuscode: 200, message: "success"});
-                //     }else{
-                //       io.sockets.in(user_id+'_group_name').emit('update_group_name',{ status: false, statuscode: 400, message: "Not saved to chat list"});
-                //     }
-                //     }else{
-                //       io.sockets.in(user_id+'_group_name').emit('update_group_name',{ status: false, statuscode: 400, message: "Not saved to group list"});
-                //     }
-                //   }else{
-                //     io.sockets.in(user_id+'_group_name').emit('update_group_name',{ status: false, statuscode: 200, message: "You are not this group"});
-                //   }
-                // }else{
-                //   io.sockets.in(user_id+'_group_name').emit('update_group_name',{ status: false, statuscode: 200, message: "No user data found"});
-                // }
+                let current_group_members=check_group_data[0].current_members;
+                let subject_history=check_group_data[0].subject_history;
+                if(current_group_members!=''){
+                  let group_members=JSON.parse(current_group_members);
+                  //check group member
+                  console.log(group_members)
+                  let check_user_exist_in_group=await functions.check_user_already_member_in_group(user_id,group_members);
+                  if(check_user_exist_in_group){
+                    //save description to db
+                    let subject_history_array=[];
+                    if(subject_history!=''){
+                      subject_history_array=JSON.parse(subject_history);
+                    }else{
+                      subject_history_array=[];
+                    }
+                    subject_history_array.push({
+                      user_id: user_id,
+                      datetime: datetime,
+                      subject: name
+                    });
+                    let save_subject=await queries.save_group_name(group_id,JSON.stringify(subject_history_array));
+                    if(save_subject.affectedRows>0){
+                      //save message to db
+                      console.log('saved to db')
+                      let group_status=[];
+                      for(var i=0; i<group_members.length; i++){
+                        let message_status;
+                        let message_read_datetime;
+                        if(group_members[i].user_id==user_id){
+                          message_status=0;
+                          message_read_datetime=datetime;
+                        }else{
+                          message_status=1;
+                          message_read_datetime=''
+                        }
+                        group_status.push({
+                          user_id: group_members[i].user_id,
+                          username: await queries.get_username(group_members[i].user_id),
+                          datetime: datetime,
+                          message_status: message_status,
+                          message_read_datetime: message_read_datetime,
+                          status: 1
+                        })
+                      }
+                      let save_group_name_mesage=await queries.save_group_user_add_message(datetime,user_id,'changed_group_name','notification',group_id,1,1,0,1,JSON.stringify(group_status));
+                      if(save_group_name_mesage>0){
+                        io.sockets.in(user_id+'_group_name').emit('update_group_name',{ status: true, statuscode: 200, message: "success"});
+
+                        //emit to all the user in the group
+                        let sender_group_chat_list_response=await functions.get_group_chat_list_response(user_id,group_id);
+                        io.sockets.in(group_id+'_'+user_id).emit('message',sender_group_chat_list_response);
+                        //emit to receiver 
+                        for(var j=0; j<group_members.length; j++){
+                          if(group_members[j].user_id!=user_id){
+                            let receiver_group_chat_list_response=await functions.get_group_chat_list_response(group_members[j].user_id,group_id);
+                            io.sockets.in(group_id+'_'+group_members[j].user_id).emit('message',receiver_group_chat_list_response);
+                            let receiver_recent_chat_list_response=await functions.get_recent_chat_list_response(group_members[j].user_id);
+                            io.sockets.in(group_members[j].user_id).emit('chat_list',receiver_recent_chat_list_response);
+                          }
+                        }
+                        let sender_recent_chat_list_response=await functions.get_recent_chat_list_response(user_id);
+                        io.sockets.in(user_id).emit('chat_list',sender_recent_chat_list_response);
+                        
+                      }else{
+                        io.sockets.in(user_id+'_group_name').emit('update_group_name',{ status: false, statuscode: 400, message: "Not saved to chat list"});
+                      }
+                    }else{
+                      io.sockets.in(user_id+'_group_name').emit('update_group_name',{ status: false, statuscode: 400, message: "Not saved to group list"});
+                    }
+                  }else{
+                    io.sockets.in(user_id+'_group_name').emit('update_group_name',{ status: false, statuscode: 200, message: "You are not this group"});
+                  }
+                }else{
+                  io.sockets.in(user_id+'_group_name').emit('update_group_name',{ status: false, statuscode: 200, message: "No user data found"});
+                }
               }else{
                 io.sockets.in(user_id+'_group_name').emit('update_group_name',{ status: false, statuscode: 200, message: "No group data found"});
               }

@@ -659,6 +659,7 @@ async function get_group_chat_list_response(user_id,group_id){
     let group_removed_members;
     let group_left_members;
     let profile_pic_history;
+    let group_subject_history=[];
     if(check_user_in_group[0].members!=''){
       group_members=JSON.parse(check_user_in_group[0].members);
     }else{
@@ -688,6 +689,12 @@ async function get_group_chat_list_response(user_id,group_id){
       profile_pic_history=JSON.parse(check_user_in_group[0].profile_pic_history);
     }else{
       profile_pic_history=[];
+    }
+
+    if(check_user_in_group[0].group_subject_history!=''){
+      group_subject_history=JSON.parse(check_user_in_group[0].subject_history);
+    }else{
+      group_subject_history=[];
     }
     
     if(group_profile!=''){
@@ -950,7 +957,7 @@ async function get_group_chat_list_response(user_id,group_id){
                 get_all_group_messages[i].message_type='';
                 get_all_group_messages[i].type='notification';
               }else if(get_all_group_messages[i].message=='changed_group_icon'){
-                console.log('changed_group_icon',get_all_group_messages[i].senter_id,get_all_group_messages[i].date,profile_pic_history)
+                //console.log('changed_group_icon',get_all_group_messages[i].senter_id,get_all_group_messages[i].date,profile_pic_history)
                 let previous_profile_pic='';
                 let new_profile_pic='';
                 let icon_change_message='';
@@ -989,9 +996,9 @@ async function get_group_chat_list_response(user_id,group_id){
                   }
                 }
                 
-                console.log(`new_profile_pic ${new_profile_pic} previous_profile_pic ${previous_profile_pic} icon change message ${icon_change_message}`);
+                //console.log(`new_profile_pic ${new_profile_pic} previous_profile_pic ${previous_profile_pic} icon change message ${icon_change_message}`);
                 
-                console.log('data ',previous_profile_pic)
+                //console.log('data ',previous_profile_pic)
                 if(new_profile_pic!='' && previous_profile_pic!=''){
                   //console.log('loop executed')
                   get_all_group_messages[i].previous_profile_pic=previous_profile_pic;
@@ -1004,6 +1011,59 @@ async function get_group_chat_list_response(user_id,group_id){
                 //   console.log(get_all_group_messages[i])
                 //   exit () 
                 // }
+              }else if(get_all_group_messages[i].message=='changed_group_description'){
+                //console.log(get_all_group_messages[i].senter_id)
+                let description_message='';
+                if(get_all_group_messages[i].senter_id==user_id){
+                  description_message='You changed the group description. Tap to view.';
+                }else{
+                  description_message=await queries.get_username(get_all_group_messages[i].senter_id)+' changed the group description. Tap to view.';
+                }
+                get_all_group_messages[i].message=description_message;
+                get_all_group_messages[i].message_type='';
+                get_all_group_messages[i].type='notification';
+              }else if(get_all_group_messages[i].message=='changed_group_name'){
+                let subject_message='';
+                let subject_content='changed the subject from';
+                // if(get_all_group_messages[i].senter_id==user_id){
+                  
+                // }else{
+
+                // }
+                for(var subject_i=0; subject_i<group_subject_history.length; subject_i++){
+                  if(get_all_group_messages[i].date==group_subject_history[subject_i].datetime){
+                    
+                    if(group_subject_history[subject_i].user_id==user_id){
+                      //you
+                      
+                      let subject_index=subject_i-1;
+                      if(subject_index>=0){
+                        let old_subject=group_subject_history[subject_index].subject ? group_subject_history[subject_index].subject : '';
+                        let new_subject=group_subject_history[subject_i].subject;
+                        subject_message='You '+subject_content+' "'+old_subject+'" to "'+new_subject+'"';
+                      }
+                    }else{
+                      //get other user name
+                      let subject_index=subject_i-1;
+                      //console.log(group_subject_history[subject_i],subject_index)
+                      if(subject_index>=0){
+                        //console.log('date time loop',group_subject_history[subject_i].datetime,group_subject_history[subject_i].user_id,user_id)
+                        let old_subject=group_subject_history[subject_index].subject ? group_subject_history[subject_index].subject : '';
+                        let new_subject=group_subject_history[subject_i].subject;
+                        subject_message=await queries.get_username(group_subject_history[subject_i].user_id)+' '+subject_content+' "'+old_subject+'" to "'+new_subject+'"';
+                      }
+                      
+                    }
+                  }
+                }
+                // console.log('yess',subject_message)
+                // if(get_all_group_messages[i].id==1053){
+                //   exit ()
+                // }
+                //console.log(subject_message);
+                get_all_group_messages[i].message=subject_message;
+                get_all_group_messages[i].message_type='';
+                get_all_group_messages[i].type='notification';
               }
             }else if(get_all_group_messages[i].message_type=='text'){
               //console.log('message')
@@ -1292,7 +1352,6 @@ async function get_recent_chat_list_response(user_id){
   //get current datetime
   let current_datetime=get_datetime();
   if(get_recent_chat.length>0){
-    
     for(var i=0; i<get_recent_chat.length; i++){
       let group_status=JSON.parse(get_recent_chat[i].group_status);
       let mute_status=0;
@@ -1317,7 +1376,7 @@ async function get_recent_chat_list_response(user_id){
           //console.log('ss')
           if(get_mute_notification[0].type!='always' && get_mute_notification[0].end_datetime!='0000-00-00 00:00:00'){
             
-            console.log('sss inner loop',current_datetime,get_mute_notification[0].end_datetime)
+            //console.log('sss inner loop',current_datetime,get_mute_notification[0].end_datetime)
             if(current_datetime<=get_mute_notification[0].end_datetime){
               //console.log('mute');
               mute_status=1;
@@ -1377,7 +1436,7 @@ async function get_recent_chat_list_response(user_id){
         }else{
           opponent_profile=BASE_URL+'uploads/default/profile.svg';
         }
-        console.log('test data ',mute_status,mute_message,opponent_id,opponent_name,opponent_profile,opponent_phone);
+        //console.log('test data ',mute_status,mute_message,opponent_id,opponent_name,opponent_profile,opponent_phone);
         
         for(var j=0; j<group_status.length; j++){
           console.log(group_status[j]);
@@ -1653,6 +1712,12 @@ async function get_recent_chat_list_response(user_id){
           }else{
             group_removed_members=[];
           }
+          if(group_details[0].subject_history!=''){
+            console.log(get_recent_chat[i].id,group_details[0].subject_history)
+            subject_history=JSON.parse(group_details[0].subject_history);
+          }else{
+            subject_history=[];
+          }
         }else{
           group_name='';
           group_profile=BASE_URL+'uploads/default/group_profile.png';
@@ -1660,6 +1725,7 @@ async function get_recent_chat_list_response(user_id){
           group_current_members=[];
           group_left_members=[];
           group_removed_members=[];
+          subject_history=[];
         }
         
         //check message is deleted or not
@@ -1817,6 +1883,55 @@ async function get_recent_chat_list_response(user_id){
                   }
                   removed_user_msg=removed_by+removed_user;
                   get_recent_chat[i].message=removed_user_msg;
+                }else if(get_recent_chat[i].message=='changed_group_icon'){
+                  let icon_change_message='';
+                  let content="changed this group's icon";
+                  //console.log('senter id ',get_recent_chat[i].senter_id)
+                  if(get_recent_chat[i].senter_id==user_id){
+                    icon_change_message='You '+content;
+                  }else{
+                    icon_change_message=await queries.get_username(get_recent_chat[i].senter_id)+' '+content;
+                  }
+                  get_recent_chat[i].message=icon_change_message;
+                  //exit ();
+                }else if(get_recent_chat[i].message=='changed_group_description'){
+                  let description_message='';
+                  if(get_recent_chat[i].senter_id==user_id){
+                    description_message='You changed the group description. Tap to view.';
+                  }else{
+                    description_message=await queries.get_username(get_recent_chat[i].senter_id)+' changed the group description. Tap to view.';
+                  }
+                  get_recent_chat[i].message=description_message;
+                }else if(get_recent_chat[i].message=='changed_group_name'){
+                  let subject_message='';
+                  let subject_content='changed the subject from';
+                
+                  for(var subject_i=0; subject_i<subject_history.length; subject_i++){
+                    if(get_recent_chat[i].date==subject_history[subject_i].datetime){
+                      
+                      if(subject_history[subject_i].user_id==user_id){
+                        //you
+                        let subject_index=subject_i-1;
+                        if(subject_index>=0){
+                          let old_subject=subject_history[subject_index].subject ? subject_history[subject_index].subject : '';
+                          let new_subject=subject_history[subject_i].subject;
+                          subject_message='You '+subject_content+' "'+old_subject+'" to "'+new_subject+'"';
+                        }
+                      }else{
+                        //get other user name
+                        let subject_index=subject_i-1;
+                        //console.log(group_subject_history[subject_i],subject_index)
+                        if(subject_index>=0){
+                          //console.log('date time loop',group_subject_history[subject_i].datetime,group_subject_history[subject_i].user_id,user_id)
+                          let old_subject=subject_history[subject_index].subject ? subject_history[subject_index].subject : '';
+                          let new_subject=subject_history[subject_i].subject;
+                          subject_message=await queries.get_username(subject_history[subject_i].user_id)+' '+subject_content+' "'+old_subject+'" to "'+new_subject+'"';
+                        }
+                        
+                      }
+                    }
+                  }
+                  get_recent_chat[i].message=subject_message;
                 }
               }else if(get_recent_chat[i].message_type=='text'){
                 if(get_recent_chat[i].senter_id==user_id){
@@ -1849,7 +1964,7 @@ async function get_recent_chat_list_response(user_id){
               });
             }else if(group_status[j].user_id==user_id && group_status[j].status==2){
               //needed to find last message of the group
-              let get_last_group_message=await sub_function.get_last_group_message(get_recent_chat[i].room,get_recent_chat[i].id,user_id,group_members,group_current_members,group_left_members,group_removed_members);
+              let get_last_group_message=await sub_function.get_last_group_message(get_recent_chat[i].room,get_recent_chat[i].id,user_id,group_members,group_current_members,group_left_members,group_removed_members,subject_history);
               console.log(get_last_group_message);
               if(get_last_group_message==false){
                 chat_list_data.push({
