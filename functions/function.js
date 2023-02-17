@@ -690,8 +690,8 @@ async function get_group_chat_list_response(user_id,group_id){
     }else{
       profile_pic_history=[];
     }
-
-    if(check_user_in_group[0].group_subject_history!=''){
+    //console.log('json data ',check_user_in_group[0].subject_history)
+    if(check_user_in_group[0].subject_history!=''){
       group_subject_history=JSON.parse(check_user_in_group[0].subject_history);
     }else{
       group_subject_history=[];
@@ -743,6 +743,7 @@ async function get_group_chat_list_response(user_id,group_id){
     //split group created_date
     let split_created_date=group_created_date.split(" ");
     date_array.push(split_created_date[0]);
+    let group_profile_history_index=2;
     //set group created by data
     //created message
     let created_message='';
@@ -758,6 +759,7 @@ async function get_group_chat_list_response(user_id,group_id){
       senter_id:'',
       message:created_message,
       message_type:'notification',
+      duration:'',
       room:'',
       message_status:'',
       name:'',
@@ -1105,20 +1107,21 @@ async function get_group_chat_list_response(user_id,group_id){
                     message_type:get_all_group_messages[i].message_type,
                     duration: get_all_group_messages[i].duration.toString(),
                     room:get_all_group_messages[i].room,
-                    message_status:get_all_group_messages[i].message_status,
+                    message_status:get_all_group_messages[i].message_status.toString(),
                     name:get_all_group_messages[i].name,
                     type:get_all_group_messages[i].type,
-                    status:group_status_json[j].status,
-                    replay_id:replay_id,
+                    status:group_status_json[j].status.toString(),
+                    replay_id:replay_id.toString(),
                     replay_message:replay_message,
                     replay_message_type:replay_message_type,
                     replay_senter:replay_senter,
                     forward_id:forward_id.toString(),
-                    forward_count:forward_message_count,
-                    forward_message_status:forward_message_status,
+                    forward_count:forward_message_count.toString(),
+                    forward_message_status:forward_message_status.toString(),
                     delete_status:'' 
                   });
                 }else{
+                  group_profile_history_index=group_profile_history_index+1;
                   date_array.push(split_date[0]);
                   //add date array date
                   group_messages.push({
@@ -1129,7 +1132,7 @@ async function get_group_chat_list_response(user_id,group_id){
                     message_type:'',
                     duration: '',
                     room:'',
-                    message_status:0,
+                    message_status:'0',
                     name:'',
                     type:'date',
                     status:'',
@@ -1151,17 +1154,17 @@ async function get_group_chat_list_response(user_id,group_id){
                     message_type:get_all_group_messages[i].message_type,
                     duration: get_all_group_messages[i].duration.toString(),
                     room:get_all_group_messages[i].room,
-                    message_status:get_all_group_messages[i].message_status,
+                    message_status:get_all_group_messages[i].message_status.toString(),
                     name:get_all_group_messages[i].name,
                     type:get_all_group_messages[i].type,
-                    status:group_status_json[j].status,
-                    replay_id:replay_id,
+                    status:group_status_json[j].status.toString(),
+                    replay_id:replay_id.toString(),
                     replay_message:replay_message,
                     replay_message_type:replay_message_type,
                     replay_senter:replay_senter,
                     forward_id:forward_id.toString(),
-                    forward_count:forward_message_count,
-                    forward_message_status:forward_message_status,
+                    forward_count:forward_message_count.toString(),
+                    forward_message_status:forward_message_status.toString(),
                     delete_status:'0' 
                   });
                   console.log('date is not exist')
@@ -1179,20 +1182,21 @@ async function get_group_chat_list_response(user_id,group_id){
                     message_type:get_all_group_messages[i].message_type,
                     duration: get_all_group_messages[i].duration.toString(),
                     room:get_all_group_messages[i].room,
-                    message_status:get_all_group_messages[i].message_status,
+                    message_status:get_all_group_messages[i].message_status.toString(),
                     name:get_all_group_messages[i].name,
                     type:get_all_group_messages[i].type,
-                    status:group_status_json[j].status,
-                    replay_id:replay_id,
+                    status:group_status_json[j].status.toString(),
+                    replay_id:replay_id.toString(),
                     replay_message:replay_message,
                     replay_message_type:replay_message_type,
                     replay_senter:replay_senter,
                     forward_id:forward_id.toString(),
-                    forward_count:forward_message_count,
-                    forward_message_status:forward_message_status,
+                    forward_count:forward_message_count.toString(),
+                    forward_message_status:forward_message_status.toString(),
                     delete_status:'1' 
                   });
                 }else{
+                  group_profile_history_index=group_profile_history_index+1;
                   date_array.push(split_date[0]);
                   //add date array date
                   group_messages.push({
@@ -1203,7 +1207,7 @@ async function get_group_chat_list_response(user_id,group_id){
                     message_type:'',
                     duration: '',
                     room:'',
-                    message_status:0,
+                    message_status:'0',
                     name:'',
                     type:'date',
                     status:'',
@@ -1225,17 +1229,17 @@ async function get_group_chat_list_response(user_id,group_id){
                     message_type:get_all_group_messages[i].message_type,
                     duration: get_all_group_messages[i].duration.toString(),
                     room:get_all_group_messages[i].room,
-                    message_status:get_all_group_messages[i].message_status,
+                    message_status:get_all_group_messages[i].message_status.toString(),
                     name:get_all_group_messages[i].name,
                     type:get_all_group_messages[i].type,
                     status:'1',
-                    replay_id:replay_id,
+                    replay_id:replay_id.toString(),
                     replay_message:replay_message,
                     replay_message_type:replay_message_type,
                     replay_senter:replay_senter,
                     forward_id:forward_id.toString(),
-                    forward_count:forward_message_count,
-                    forward_message_status:forward_message_status,
+                    forward_count:forward_message_count.toString(),
+                    forward_message_status:forward_message_status.toString(),
                     delete_status:'1' 
                   });
                   console.log('date is not exist')
@@ -1244,11 +1248,11 @@ async function get_group_chat_list_response(user_id,group_id){
                 
                 if(get_all_group_messages[i].new_profile_pic!='' && get_all_group_messages[i].previous_profile_pic!=''){
                   //let last_index=group_messages.length;
-                  console.log(i)
-                  console.log(group_messages[i].id)
+                  // console.log(i)
+                  // console.log(group_messages[i].id)
                   // exit ()
                   //add two index for group_created_date and group_name
-                  let index_i=i+2;
+                  let index_i=i+group_profile_history_index;
                   group_messages[index_i].new_profile_pic=get_all_group_messages[i].new_profile_pic;
                   group_messages[index_i].previous_profile_pic=get_all_group_messages[i].previous_profile_pic;
                 }
@@ -1453,7 +1457,7 @@ async function get_recent_chat_list_response(user_id){
               get_recent_chat[i].message='This message was deleted';
             }
             chat_list_data.push({
-              id: get_recent_chat[i].id,
+              id: get_recent_chat[i].id.toString(),
               date: get_recent_chat[i].date,
               message: get_recent_chat[i].message,
               unread_message: unread_count,
@@ -1570,7 +1574,7 @@ async function get_recent_chat_list_response(user_id){
             }
             //push object to array chat list 
             chat_list_data.push({
-              id: get_recent_chat[i].id,
+              id: get_recent_chat[i].id.toString(),
               date: get_recent_chat[i].date,
               message: get_recent_chat[i].message,
               unread_message: unread_count,
@@ -1592,7 +1596,7 @@ async function get_recent_chat_list_response(user_id){
             console.log(get_last_private_message)
             if(get_last_private_message==false){
               chat_list_data.push({
-                id: get_recent_chat[i].id,
+                id: get_recent_chat[i].id.toString(),
                 date: get_recent_chat[i].date,
                 message: '',
                 unread_message: unread_count,
@@ -1608,7 +1612,7 @@ async function get_recent_chat_list_response(user_id){
               })
             }else{
               chat_list_data.push({
-                id: get_last_private_message[0].id,
+                id: get_last_private_message[0].id.toString(),
                 date: get_last_private_message[0].date,
                 message: get_last_private_message[0].message,
                 unread_message: get_last_private_message[0].unread_message,
@@ -1745,7 +1749,7 @@ async function get_recent_chat_list_response(user_id){
               }
 
               chat_list_data.push({
-                id: get_recent_chat[i].id,
+                id: get_recent_chat[i].id.toString(),
                 date: get_recent_chat[i].date,
                 message: get_recent_chat[i].message,
                 unread_message: unread_count,
@@ -1948,7 +1952,7 @@ async function get_recent_chat_list_response(user_id){
               }
 
               chat_list_data.push({
-                id: get_recent_chat[i].id,
+                id: get_recent_chat[i].id.toString(),
                 date: get_recent_chat[i].date,
                 message: get_recent_chat[i].message,
                 unread_message: unread_count,
@@ -1968,7 +1972,7 @@ async function get_recent_chat_list_response(user_id){
               console.log(get_last_group_message);
               if(get_last_group_message==false){
                 chat_list_data.push({
-                  id: get_recent_chat[0].id,
+                  id: get_recent_chat[0].id.toString(),
                   date: get_recent_chat[0].date,
                   message: get_recent_chat[0].message,
                   unread_message: unread_count,
@@ -1984,7 +1988,7 @@ async function get_recent_chat_list_response(user_id){
                 });
               }else{
                 chat_list_data.push({
-                  id: get_last_group_message[0].id,
+                  id: get_last_group_message[0].id.toString(),
                   date: get_last_group_message[0].date,
                   message: get_last_group_message[0].message,
                   unread_message: unread_count,
@@ -2010,6 +2014,7 @@ async function get_recent_chat_list_response(user_id){
       status: true,
       statuscode: 200,
       message: "success", 
+      socket: true,
       data:chat_list_data
     }
     return setresponse;
@@ -2018,6 +2023,7 @@ async function get_recent_chat_list_response(user_id){
       status: true,
       statuscode: 200,
       message: "No chat found", 
+      socket: true,
       data:[]
     }
     return setresponse;

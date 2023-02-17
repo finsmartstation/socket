@@ -71,7 +71,7 @@ async function get_last_private_message(room_id,message_id,user_id,opponent_prof
                             last_message_data[i].message='This message was deleted';
                           }
                           last_message_array=[{
-                            id: last_message_data[i].id,
+                            id: last_message_data[i].id.toString(),
                             date: last_message_data[i].date,
                             message: last_message_data[i].message,
                             unread_message: unread_message_count,
@@ -91,7 +91,7 @@ async function get_last_private_message(room_id,message_id,user_id,opponent_prof
                                 if(user_id==last_message_data[i].senter_id){
                                     last_message_data[i].message='You blocked this contact.';
                                     last_message_array=[{
-                                        id: last_message_data[i].id,
+                                        id: last_message_data[i].id.toString(),
                                         date: last_message_data[i].date,
                                         message: last_message_data[i].message,
                                         unread_message: unread_message_count,
@@ -107,7 +107,7 @@ async function get_last_private_message(room_id,message_id,user_id,opponent_prof
                                 }else{
                                 //get last private message
                                 last_message_array=[{
-                                    id: last_message_data[i].id,
+                                    id: last_message_data[i].id.toString(),
                                     date: last_message_data[i].date,
                                     message: '',
                                     unread_message: unread_message_count,
@@ -126,7 +126,7 @@ async function get_last_private_message(room_id,message_id,user_id,opponent_prof
                                 if(user_id==last_message_data[i].senter_id){
                                     last_message_data[i].message='You unblocked this contact.';
                                     last_message_array=[{
-                                        id: last_message_data[i].id,
+                                        id: last_message_data[i].id.toString(),
                                         date: last_message_data[i].date,
                                         message: last_message_data[i].message,
                                         unread_message: unread_message_count,
@@ -142,7 +142,7 @@ async function get_last_private_message(room_id,message_id,user_id,opponent_prof
                                 }else{
                                 //get last private message
                                 last_message_array=[{
-                                    id: last_message_data[i].id,
+                                    id: last_message_data[i].id.toString(),
                                     date: last_message_data[i].date,
                                     message: '',
                                     unread_message: unread_message_count,
@@ -159,7 +159,7 @@ async function get_last_private_message(room_id,message_id,user_id,opponent_prof
                             }
                         }else{
                             last_message_array=[{
-                                id: last_message_data[i].id,
+                                id: last_message_data[i].id.toString(),
                                 date: last_message_data[i].date,
                                 message: last_message_data[i].message,
                                 unread_message: unread_message_count,
@@ -176,7 +176,7 @@ async function get_last_private_message(room_id,message_id,user_id,opponent_prof
                     }else if(check_message_status[j].user_id==user_id && check_message_status[j].status==2){
                         console.log('message is cleared')
                         last_message_array=[{
-                            id: last_message_data[i].id,
+                            id: last_message_data[i].id.toString(),
                             date: last_message_data[i].date,
                             message: '',
                             unread_message: unread_message_count,
@@ -233,7 +233,7 @@ async function get_last_private_message(room_id,message_id,user_id,opponent_prof
                           }
 
                           last_message_array=[{
-                            id: last_message_data[i].id,
+                            id: last_message_data[i].id.toString(),
                             date: last_message_data[i].date,
                             message: last_message_data[i].message,
                             room: last_message_data[i].room,
@@ -274,7 +274,7 @@ async function get_last_private_message(room_id,message_id,user_id,opponent_prof
                                 console.log('added msg ',added_msg)
                                 last_message_data[i].message=added_msg;
                                 last_message_array=[{
-                                    id: last_message_data[i].id,
+                                    id: last_message_data[i].id.toString(),
                                     date: last_message_data[i].date,
                                     message: last_message_data[i].message,
                                     room: last_message_data[i].room,
@@ -302,7 +302,7 @@ async function get_last_private_message(room_id,message_id,user_id,opponent_prof
                                 }
                                 last_message_data[i].message=admin_notification_msg;
                                 last_message_array=[{
-                                    id: last_message_data[i].id,
+                                    id: last_message_data[i].id.toString(),
                                     date: last_message_data[i].date,
                                     message: last_message_data[i].message,
                                     room: last_message_data[i].room,
@@ -325,7 +325,7 @@ async function get_last_private_message(room_id,message_id,user_id,opponent_prof
                                 }
                                 last_message_data[i].message=left_msg;
                                 last_message_array=[{
-                                    id: last_message_data[i].id,
+                                    id: last_message_data[i].id.toString(),
                                     date: last_message_data[i].date,
                                     message: last_message_data[i].message,
                                     room: last_message_data[i].room,
@@ -360,7 +360,7 @@ async function get_last_private_message(room_id,message_id,user_id,opponent_prof
                                 removed_user_msg=removed_by+removed_user;
                                 last_message_data[i].message=removed_user_msg;
                                 last_message_array=[{
-                                    id: last_message_data[i].id,
+                                    id: last_message_data[i].id.toString(),
                                     date: last_message_data[i].date,
                                     message: last_message_data[i].message,
                                     room: last_message_data[i].room,
@@ -381,7 +381,7 @@ async function get_last_private_message(room_id,message_id,user_id,opponent_prof
                                 console.log(last_message_data[i].message)
                                 last_message_data[i].message=icon_change_message;
                                 last_message_array=[{
-                                    id: last_message_data[i].id,
+                                    id: last_message_data[i].id.toString(),
                                     date: last_message_data[i].date,
                                     message: last_message_data[i].message,
                                     room: last_message_data[i].room,
@@ -398,7 +398,7 @@ async function get_last_private_message(room_id,message_id,user_id,opponent_prof
                                 }
                                 last_message_data[i].message=description_message;
                                 last_message_array=[{
-                                    id: last_message_data[i].id,
+                                    id: last_message_data[i].id.toString(),
                                     date: last_message_data[i].date,
                                     message: last_message_data[i].message,
                                     room: last_message_data[i].room,
@@ -433,7 +433,7 @@ async function get_last_private_message(room_id,message_id,user_id,opponent_prof
 
                                 last_message_data[i].message=subject_message;
                                 last_message_array=[{
-                                    id: last_message_data[i].id,
+                                    id: last_message_data[i].id.toString(),
                                     date: last_message_data[i].date,
                                     message: last_message_data[i].message,
                                     room: last_message_data[i].room,
@@ -450,7 +450,7 @@ async function get_last_private_message(room_id,message_id,user_id,opponent_prof
                                 last_message_data[i].message=await queries.get_username(last_message_data[i].senter_id)+': '+last_message_data[i].message;
                               }
                             last_message_array=[{
-                                id: last_message_data[i].id,
+                                id: last_message_data[i].id.toString(),
                                 date: last_message_data[i].date,
                                 message: last_message_data[i].message,
                                 room: last_message_data[i].room,
@@ -467,7 +467,7 @@ async function get_last_private_message(room_id,message_id,user_id,opponent_prof
                             }
 
                             last_message_array=[{
-                                id: last_message_data[i].id,
+                                id: last_message_data[i].id.toString(),
                                 date: last_message_data[i].date,
                                 message: last_message_data[i].message,
                                 room: last_message_data[i].room,
@@ -478,7 +478,7 @@ async function get_last_private_message(room_id,message_id,user_id,opponent_prof
                         }
                     }else if(user_id==check_message_status[j].user_id && check_message_status[j].status==2){
                         last_message_array=[{
-                            id: last_message_data[i].id,
+                            id: last_message_data[i].id.toString(),
                             date: last_message_data[i].date,
                             message: '',
                             room: last_message_data[i].room,

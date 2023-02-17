@@ -3108,7 +3108,7 @@ io.sockets.on('connection',async function (socket) {
     socket.on('update_group_description',async function(data){
       try{
         //input -- {"user_id":"5","accessToken":"5","description":"hello","group_id":"group_20230212123759"}
-        console.log('group description')
+        //console.log('group description')
         if(typeof(data)=='object'){
           let user_id=data.user_id ? data.user_id : '';
           let accessToken=data.accessToken ? data.accessToken : '';
@@ -3255,7 +3255,7 @@ io.sockets.on('connection',async function (socket) {
                       datetime: datetime,
                       subject: name
                     });
-                    let save_subject=await queries.save_group_name(group_id,JSON.stringify(subject_history_array));
+                    let save_subject=await queries.save_group_name(group_id,name,JSON.stringify(subject_history_array));
                     if(save_subject.affectedRows>0){
                       //save message to db
                       console.log('saved to db')

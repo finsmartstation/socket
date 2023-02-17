@@ -81,7 +81,7 @@ async function individual_video_msg(datetime, sid, rid, message, room, group_sta
 }
 async function send_indv_message(rid, room){
     //const results = await db.sequelize.query("SELECT t1.id,DATE_FORMAT(t1.date,'%Y-%m-%d %H:%i:%s') as date,t1.senter_id,t1.receiver_id,t1.message,t1.message_type,t1.message_status,t1.room,t1.duration, IF(t1.receiver_id='" + rid + "', 'sent', 'receive') as type FROM `chat_list` t1 JOIN `user` t2 on t2.id='" + rid + "' WHERE room='" + room + "' and t1.status='1'");
-    const results = await db.sequelize.query("SELECT t1.id,DATE_FORMAT(t1.date,'%Y-%m-%d %H:%i:%s') as date,t1.senter_id,t1.receiver_id,t1.replay_id,t1.forward_id,t1.message,t1.message_type,t1.duration,t1.message_status,t1.room, IF(t1.receiver_id='"+rid+"', 'sent', 'receive') as type,t1.group_status  FROM `chat_list` t1 JOIN `user` t2 on t2.id='"+rid+"' where room='"+room+"' and message_type!='date';");
+    const results = await db.sequelize.query("SELECT t1.id,DATE_FORMAT(t1.date,'%Y-%m-%d %H:%i:%s') as date,t1.senter_id,t1.receiver_id,t1.replay_id,t1.forward_id,t1.message,t1.message_type,t1.duration,t1.message_status,t1.room, IF(t1.receiver_id='"+rid+"', 'sent', 'receive') as type,t1.group_status  FROM `chat_list` t1 JOIN `user` t2 on t2.id='"+rid+"' where room='"+room+"' and message_type!='date' order by id asc");
     return results;
 }
 async function get_recent_chat_accessToken(rid){
@@ -422,8 +422,8 @@ async function save_group_description(group_id,description,updated_datetime,desc
     return results[0];
 }
 
-async function save_group_name(group_id,subject_history_array){
-    const results=await db.sequelize.query("update group_list set subject_history='"+subject_history_array+"' where group_id='"+group_id+"'");
+async function save_group_name(group_id,name,subject_history_array){
+    const results=await db.sequelize.query("update group_list set group_name='"+name+"',subject_history='"+subject_history_array+"' where group_id='"+group_id+"'");
     return results[0];
 }
 
