@@ -96,7 +96,8 @@ async function get_recent_chat(user_id){
     let set_user_id='"'+user_id+'"';
     //const results=await db.sequelize.query("select t1.id ,t1.date,t1.message,t1.message_type,if(ISNULL(t6.unread_message),0,t6.unread_message) as unread_message,case t1.senter_id when '"+rid+"' then t4.id else t3.id end as userid,case t1.senter_id when '"+rid+"' then t4.name else t3.name end as name,case t1.senter_id when '"+rid+"' then t4.profile_pic else t3.profile_pic end as profile from chat_list t1 join (SELECT room, MAX(id) max_id FROM chat_list GROUP BY room)t2 on t1.id = t2.max_id and t1.room = t2.room join `user` t3 on t3.id=t1.senter_id join `user` t4 on t1.receiver_id=t4.id left join (select sum(t5.message_status) as unread_message, t5.room from `chat_list` t5 where t5.senter_id!='"+rid+"' GROUP BY t5.room )t6 on t6.room=t1.room where t1.senter_id='"+rid+"' or t1.receiver_id='"+rid+"' ORDER BY id DESC");
     //const results=await db.sequelize.query("select t1.id ,DATE_FORMAT(t1.date,'%Y-%m-%d %H:%i:%s') as date,t1.message,t1.message_type,if(ISNULL(t6.unread_message),0,t6.unread_message) as unread_message,case t1.senter_id when '"+rid+"' then t4.id else t3.id end as userid,case t1.senter_id when '"+rid+"' then t4.name else t3.name end as name,case t1.senter_id when '"+rid+"' then t4.profile_pic else t3.profile_pic end as profile from chat_list t1 join (SELECT room, MAX(id) max_id FROM chat_list GROUP BY room)t2 on t1.id = t2.max_id and t1.room = t2.room join `user` t3 on t3.id=t1.senter_id join `user` t4 on t1.receiver_id=t4.id left join (select sum(t5.message_status) as unread_message, t5.room from `chat_list` t5 where t5.senter_id!='"+rid+"' GROUP BY t5.room )t6 on t6.room=t1.room where t1.senter_id='"+rid+"' or t1.receiver_id='"+rid+"' ORDER BY id DESC");
-    const results=await db.sequelize.query("SELECT *, DATE_FORMAT(t1.date,'%Y-%m-%d %H:%i:%s') as date FROM `chat_list` t1 JOIN (SELECT MAX(id) as max_id FROM `chat_list` where message_type!='date' and JSON_CONTAINS(JSON_EXTRACT(group_status, '$[*].user_id'), '"+set_user_id+"', '$') GROUP by room) t2 on t1.id=t2.max_id where (t1.senter_id='"+user_id+"' or t1.receiver_id='"+user_id+"') or (t1.receiver_id='0' and JSON_CONTAINS(JSON_EXTRACT(t1.group_status, '$[*].user_id'), '"+set_user_id+"', '$')) order by id desc")
+    //const results=await db.sequelize.query("SELECT *, DATE_FORMAT(t1.date,'%Y-%m-%d %H:%i:%s') as date FROM `chat_list` t1 JOIN (SELECT MAX(id) as max_id FROM `chat_list` where message_type!='date' and JSON_CONTAINS(JSON_EXTRACT(group_status, '$[*].user_id'), '"+set_user_id+"', '$') GROUP by room) t2 on t1.id=t2.max_id where (t1.senter_id='"+user_id+"' or t1.receiver_id='"+user_id+"') or (t1.receiver_id='0' and JSON_CONTAINS(JSON_EXTRACT(t1.group_status, '$[*].user_id'), '"+set_user_id+"', '$')) order by id desc")
+    const results=await db.sequelize.query("SELECT *, DATE_FORMAT(t1.date,'%Y-%m-%d %H:%i:%s') as date, if(ISNULL(t4.pin_id), 0, 1) as pin_status FROM `chat_list` t1 JOIN (SELECT MAX(id) as max_id FROM `chat_list` where message_type!='date' and JSON_CONTAINS(JSON_EXTRACT(group_status, '$[*].user_id'), '"+set_user_id+"', '$') GROUP by room) t2 on t1.id=t2.max_id left JOIN (select t3.room as pin_room, t3.id as pin_id from pin_chat t3 where t3.user_id='"+user_id+"') t4 on t1.room=t4.pin_room where (t1.senter_id='"+user_id+"' or t1.receiver_id='"+user_id+"') or (t1.receiver_id='0' and JSON_CONTAINS(JSON_EXTRACT(t1.group_status, '$[*].user_id'), '"+set_user_id+"', '$')) order by t4.pin_id DESC,t1.id DESC");
     return results[0];
 }
 async function individual_date_insert(datetime,sid,rid,room,group_status_json_data,message_id){
@@ -187,7 +188,7 @@ async function get_mute_notification(user_id,receiver_id){
 }
 
 async function get_user_profile(user_id){
-    const results=await db.sequelize.query("select name,profile_pic,phone from user where id='"+user_id+"'");
+    const results=await db.sequelize.query("select name,profile_pic,about,phone from user where id='"+user_id+"'");
     return results[0];
 }
 
@@ -427,6 +428,26 @@ async function save_group_name(group_id,name,subject_history_array){
     return results[0];
 }
 
+async function total_pin_chat_count(user_id){
+    const results=await db.sequelize.query("select * from pin_chat where user_id='"+user_id+"'");
+    return results[0];
+}
+
+async function save_pin_chat(user_id,receiver_id,room,datetime){
+    const results=await db.sequelize.query("INSERT INTO `pin_chat`(`user_id`, `receiver_id`, `room`, `pin_date`) VALUES ('"+user_id+"','"+receiver_id+"','"+room+"','"+datetime+"')");
+    return results[1];
+}
+
+async function check_room_is_pinned(user_id,room){
+    const results=await db.sequelize.query("select * from `pin_chat` where user_id='"+user_id+"' and room='"+room+"'");
+    return results[0];
+}
+
+async function unpin_chat(user_id,room){
+    const results=await db.sequelize.query("delete from `pin_chat` where user_id='"+user_id+"' and room='"+room+"'");
+    return results[0];
+}
+
 module.exports = {
     update_online_status,
     select_online_status,
@@ -505,5 +526,9 @@ module.exports = {
     save_report_chat,
     update_clear_chat_with_single_query,
     save_group_description,
-    save_group_name
+    save_group_name,
+    total_pin_chat_count,
+    save_pin_chat,
+    check_room_is_pinned,
+    unpin_chat
 }

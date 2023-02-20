@@ -1351,7 +1351,9 @@ function  get_datetime() {
 
 async function get_recent_chat_list_response(user_id){
   let get_recent_chat=await queries.get_recent_chat(user_id);
+
   //console.log('recent chat ',get_recent_chat);
+  //
   let chat_list_data=[];
   //get current datetime
   let current_datetime=get_datetime();
@@ -1469,7 +1471,8 @@ async function get_recent_chat_list_response(user_id){
               mute_message: mute_message,
               room: get_recent_chat[i].room,
               message_type:get_recent_chat[i].message_type,
-              chat_type: 'private'
+              chat_type: 'private',
+              pin_status: get_recent_chat[i].pin_status.toString()
             })
           }else if(group_status[j].user_id==user_id && group_status[j].status==1){
             console.log('message is not deleted')
@@ -1586,7 +1589,8 @@ async function get_recent_chat_list_response(user_id){
               mute_message: mute_message,
               room: get_recent_chat[i].room,
               message_type:get_recent_chat[i].message_type,
-              chat_type: 'private'
+              chat_type: 'private',
+              pin_status: get_recent_chat[i].pin_status.toString()
             })
           }else if(group_status[j].user_id==user_id && group_status[j].status==2){
             console.log('message is cleared')
@@ -1608,7 +1612,8 @@ async function get_recent_chat_list_response(user_id){
                 mute_message: mute_message,
                 room: get_recent_chat[i].room,
                 message_type:get_recent_chat[i].message_type,
-                chat_type: 'private'
+                chat_type: 'private',
+                pin_status: get_recent_chat[i].pin_status.toString()
               })
             }else{
               chat_list_data.push({
@@ -1624,7 +1629,8 @@ async function get_recent_chat_list_response(user_id){
                 mute_message: mute_message,
                 room: get_last_private_message[0].room,
                 message_type:get_last_private_message[0].message_type,
-                chat_type: 'private'
+                chat_type: 'private',
+                pin_status: get_recent_chat[i].pin_status.toString()
               })
             }
           }
@@ -1761,7 +1767,8 @@ async function get_recent_chat_list_response(user_id){
                 mute_message: mute_message,
                 room: get_recent_chat[i].room,
                 message_type:get_recent_chat[i].message_type,
-                chat_type: 'group'
+                chat_type: 'group',
+                pin_status: get_recent_chat[i].pin_status.toString()
               });
             }else if(group_status[j].user_id==user_id && group_status[j].status==1){
               //set message based on message_type
@@ -1964,7 +1971,8 @@ async function get_recent_chat_list_response(user_id){
                 mute_message: mute_message,
                 room: get_recent_chat[i].room,
                 message_type:get_recent_chat[i].message_type,
-                chat_type: 'group'
+                chat_type: 'group',
+                pin_status: get_recent_chat[i].pin_status.toString()
               });
             }else if(group_status[j].user_id==user_id && group_status[j].status==2){
               //needed to find last message of the group
@@ -1984,7 +1992,8 @@ async function get_recent_chat_list_response(user_id){
                   mute_message: mute_message,
                   room: get_recent_chat[0].room,
                   message_type:get_recent_chat[0].message_type,
-                  chat_type: 'group'
+                  chat_type: 'group',
+                  pin_status: get_recent_chat[i].pin_status.toString()
                 });
               }else{
                 chat_list_data.push({
@@ -2000,7 +2009,8 @@ async function get_recent_chat_list_response(user_id){
                   mute_message: mute_message,
                   room: get_last_group_message[0].room,
                   message_type:get_last_group_message[0].message_type,
-                  chat_type: 'group'
+                  chat_type: 'group',
+                  pin_status: get_recent_chat[i].pin_status.toString()
                 });
               }
               
@@ -2174,7 +2184,7 @@ async function group_chat_push_notification(user_id='',room='',group_current_mem
   }
 }
 
-function create_group_id(){
+async function create_group_id(){
   var current_date = new Date();
     var date = current_date.toISOString().slice(0, 10);
     //console.log(date);
@@ -2195,7 +2205,15 @@ function create_group_id(){
     var time = hr + min + sec;
     //console.log('date', year,month,day)
     var group_id='group_' + year + month + day+ time
-    return group_id;
+    //check db group_id already exist or not
+    let check_group_data=await queries.check_group_data(group_id);
+    if(check_group_data.length>0){
+      console.log('group id already exist');
+      return group_id+'a';
+    }else{
+      console.log('group not exist already')
+      return group_id;
+    }
 }
 
 function check_group_user_is_admin(user_id, group_members){

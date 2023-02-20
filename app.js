@@ -322,7 +322,7 @@ io.sockets.on('connection',async function (socket) {
 
       //final var qur = db.sequelize.query("SELECT t1.created_datetime as created_date, t2.count FROM `group_list` t1 JOIN (select COUNT(*) as count from `chat_list` WHERE date(date)='" + date + "' and room='" + data.room + "') t2 where t1.group_id='" + data.room + "'")
       var x=await queries.get_current_date(date,data.room);
-      //  console.log('x is here',x[0][0]['created_date']); 
+        //console.log('x is here',x[0][0]['created_date']); 
       var group_created_date_time = x[0][0]['created_date']; 
       var group_created_date = group_created_date_time.toISOString().slice(0,10);
       var today_message_count = x[0][0]['count'];
@@ -4078,6 +4078,181 @@ io.sockets.on('connection',async function (socket) {
         console.error(e)
       }
     })
+
+    //pin chat
+    socket.on('pin_chat', async function(data){
+      //console.log('pin_chat')
+      //input -- {"user_id": "50", "accessToken": "50","receiver_id":"53","room":""}
+      try{
+        if(typeof(data)=='object'){
+          let user_id=data.user_id ? data.user_id : '';
+          let accessToken=data.accessToken ? data.accessToken : '';
+          let receiver_id=data.receiver_id ? data.receiver_id : '';
+          let room=data.room ? data.room : '';
+          let datetime=get_datetime();
+          if(user_id!='' && accessToken!='' && receiver_id!='' && room!=''){
+            //console.log('not empty')
+            socket.join(user_id+'_pin_chat');
+            //check user data is valid
+            let check_user_data=await queries.check_user_valid(user_id,accessToken);
+            if(check_user_data.length!=0){
+              //check total pin chat count
+              let get_total_pin_chat_count=await queries.total_pin_chat_count(user_id);
+              if(get_total_pin_chat_count.length<3){
+                //check room user is pinned or not
+                let check_room_is_pinned=await queries.check_room_is_pinned(user_id,room);
+                //console.log(check_receiver_is_pinned)
+                if(check_room_is_pinned.length>0){
+                  io.sockets.in(user_id+'_pin_chat').emit('pin_chat', {status: false, statuscode: 200, message: "Already pinned"})
+                }else{
+                  //save to pin chat 
+                  let save_pinchat=await queries.save_pin_chat(user_id,receiver_id,room,datetime);
+                  if(save_pinchat>0){
+                    io.sockets.in(user_id+'_pin_chat').emit('pin_chat', {status: true, statuscode: 200, message: "Pinned"})
+                  }else{
+                    io.sockets.in(user_id+'_pin_chat').emit('pin_chat', {status: false, statuscode: 400, message: "Not saved to db"})
+                  }
+                }
+                
+              }else{
+                io.sockets.in(user_id+'_pin_chat').emit('pin_chat', {status: false, statuscode: 200, message: "Pin chat limit is three"})
+              }
+            }else{
+              io.sockets.in(user_id+'_pin_chat').emit('pin_chat', {status: false, statuscode: 400, message: "No user data found"})
+            }
+            socket.leave(user_id+'_pin_chat');
+          }else{
+            //console.log('empty')
+            socket.join(data.user_id+'_pin_chat');
+            io.sockets.in(data.user_id+'_pin_chat').emit('pin_chat', {status: false, statuscode: 200, message: "No data found"});
+            socket.leave(data.user_id+'_pin_chat');
+          }
+        }else{
+          console.error('Input type is string');
+        }
+      }catch(e){
+        console.error(e)
+      }
+    });
+
+    //unpin_chat
+    socket.on('unpin_chat', async function(data){
+      //console.log('unpin_chat')
+      //input -- {"user_id": "50", "accessToken": "50","receiver_id":"53","room":""}
+      try{
+        if(typeof(data)=='object'){
+          let user_id=data.user_id ? data.user_id : '';
+          let accessToken=data.accessToken ? data.accessToken : '';
+          let receiver_id=data.receiver_id ? data.receiver_id : '';
+          let room=data.room ? data.room : '';
+          let datetime=get_datetime();
+          if(user_id!='' && accessToken!='' && receiver_id!='' && room!=''){
+            //console.log('not empty')
+            socket.join(user_id+'_unpin_chat');
+            //check user data is valid
+            let check_user_data=await queries.check_user_valid(user_id,accessToken);
+            if(check_user_data.length!=0){
+              //check total pin chat count
+              
+                //check room user is pinned or not
+                let check_room_is_pinned=await queries.check_room_is_pinned(user_id,room);
+                if(check_room_is_pinned.length>0){
+                  //delete pin_chat entry
+                  let delete_pin_chat=await queries.unpin_chat(user_id,room);
+                  //console.log(delete_pin_chat);
+                  if(delete_pin_chat.affectedRows>0){
+                    io.sockets.in(user_id+'_unpin_chat').emit('unpin_chat', {status: true, statuscode: 200, message: "Unpinned"})
+                  }else{
+                    io.sockets.in(user_id+'_unpin_chat').emit('unpin_chat', {status: false, statuscode: 200, message: "Not deleted from pin chat"})
+                  }
+                }else{
+                  io.sockets.in(user_id+'_unpin_chat').emit('unpin_chat', {status: false, statuscode: 200, message: "Not pinned"})
+                }
+                
+              
+            }else{
+              io.sockets.in(user_id+'_unpin_chat').emit('unpin_chat', {status: false, statuscode: 400, message: "No user data found"})
+            }
+            socket.leave(user_id+'_unpin_chat');
+          }else{
+            //console.log('empty')
+            socket.join(data.user_id+'_unpin_chat');
+            io.sockets.in(data.user_id+'_unpin_chat').emit('unpin_chat', {status: false, statuscode: 200, message: "No data found"});
+            socket.leave(data.user_id+'_unpin_chat');
+          }
+        }else{
+          console.error('Input type is string');
+        }
+      }catch(e){
+        console.error(e)
+      }
+    });
+    //get_group_user_list
+    //input {"user_id":"50","accessToken":"7520ff1679b65593200acf473d159e5f","group_id":"group_20220929161238"}
+    socket.on('get_group_user_list', async function(data){
+      //console.log('unpin_chat')
+      //input -- {"user_id": "50", "accessToken": "50","receiver_id":"53","room":""}
+      try{
+        if(typeof(data)=='object'){
+          let user_id=data.user_id ? data.user_id : '';
+          let accessToken=data.accessToken ? data.accessToken : '';
+          let group_id=data.group_id ? data.group_id : '';
+          if(user_id!='' && accessToken!='' && group_id!=''){
+            //console.log('not empty')
+            socket.join(user_id+'_user_list');
+            //check user_id and accessToken
+            let check_user_data=await queries.check_user_valid(user_id,accessToken);
+            if(check_user_data.length>0){
+              //check group data
+              let check_group_data=await queries.check_group_data(group_id);
+              if(check_group_data.length>0){
+                let current_group_users=check_group_data[0].current_members;
+                if(current_group_users!=''){
+                  current_group_users=JSON.parse(check_group_data[0].current_members);
+                }else{
+                  current_group_users=[];
+                }
+                console.log('yes',current_group_users);
+                let group_users=[];
+                for(var i=0; i<current_group_users.length; i++){
+                  let group_user_id=current_group_users[i].user_id;
+                  let get_user_profile_data=await queries.get_user_profile(group_user_id)
+                  let name=get_user_profile_data[0].name;
+                  let profile_pic=get_user_profile_data[0].profile_pic;
+                  let type=current_group_users[i].type;
+                  let about=get_user_profile_data[0].about;
+                  let phone=get_user_profile_data[0].phone;
+                  group_users.push({
+                    user_id: group_user_id,
+                    username: name,
+                    type: type,
+                    profile_pic: BASE_URL+profile_pic,
+                    about: about,
+                    phone: phone
+                  })
+                }
+                console.log(group_users)
+                //get media count data
+              }else{
+                io.sockets.in(data.user_id+'_user_list').emit('get_group_user_list', {status: false, statuscode: 200, message: "No group found"});
+              }
+            }else{
+              io.sockets.in(data.user_id+'_user_list').emit('get_group_user_list', {status: false, statuscode: 200, message: "No user data found"});
+            }
+            socket.leave(user_id+'_user_list');
+          }else{
+            //console.log('empty')
+            socket.join(data.user_id+'_user_list');
+            io.sockets.in(data.user_id+'_user_list').emit('get_group_user_list', {status: false, statuscode: 200, message: "No data found"});
+            socket.leave(data.user_id+'_user_list');
+          }
+        }else{
+          console.error('Input type is string');
+        }
+      }catch(e){
+        console.error(e)
+      }
+    });
   }catch(error){
       console.log(error)
       console.error('error occurs ', error);
