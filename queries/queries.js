@@ -448,6 +448,11 @@ async function unpin_chat(user_id,room){
     return results[0];
 }
 
+async function get_group_chat_list_for_media_count(group_id,set_user_id){
+    const results=await db.sequelize.query("SELECT * FROM `chat_list` where status='1' and room='"+group_id+"' and JSON_CONTAINS(JSON_EXTRACT(group_status, '$[*].user_id'), '"+set_user_id+"', '$')");
+    return results[0];
+}
+
 module.exports = {
     update_online_status,
     select_online_status,
@@ -530,5 +535,6 @@ module.exports = {
     total_pin_chat_count,
     save_pin_chat,
     check_room_is_pinned,
-    unpin_chat
+    unpin_chat,
+    get_group_chat_list_for_media_count
 }

@@ -2716,6 +2716,9 @@ io.sockets.on('connection',async function (socket) {
                         console.log(save_admin_message)
                         if(save_admin_message>0){
                           io.sockets.in(data.user_id+'_group_admin').emit('make_group_admin',{status: true, statuscode: 200, message: "success"})
+                          //emit message to user_list
+                          let get_group_info_and_user_details=await functions.get_group_info(user_id,accessToken,group_id);
+                          io.sockets.in(user_id+'_user_list').emit('get_group_user_list',get_group_info_and_user_details);
                           //emit message and chat_list to the user
                           let sender_group_chat_list=await functions.get_group_chat_list_response(user_id,group_id);
                           io.sockets.in(group_id+'_'+user_id).emit('message',sender_group_chat_list);
@@ -2872,6 +2875,9 @@ io.sockets.on('connection',async function (socket) {
                         //console.log(save_removed_message_data)
                         if(save_removed_message_data>0){
                           io.sockets.in(user_id+'_remove').emit('remove_group_member',{status: true, statuscode: 200, message: "success"})
+                          //emit to user_list
+                          let get_group_user_and_info_data=await functions.get_group_info(user_id,accessToken,group_id);
+                          io.sockets.in(user_id+'_user_list').emit('get_group_user_list',get_group_user_and_info_data);
                           //emit message and chat_list to all group users
                           let sender_group_chat_data=await functions.get_group_chat_list_response(user_id,group_id);
                           io.sockets.in(group_id+'_'+user_id).emit('message',sender_group_chat_data);
@@ -4109,6 +4115,9 @@ io.sockets.on('connection',async function (socket) {
                   let save_pinchat=await queries.save_pin_chat(user_id,receiver_id,room,datetime);
                   if(save_pinchat>0){
                     io.sockets.in(user_id+'_pin_chat').emit('pin_chat', {status: true, statuscode: 200, message: "Pinned"})
+                    //emit recent chat list
+                    let recent_chat_list=await functions.get_recent_chat_list_response(user_id);
+                    io.sockets.in(user_id).emit('chat_list',recent_chat_list)
                   }else{
                     io.sockets.in(user_id+'_pin_chat').emit('pin_chat', {status: false, statuscode: 400, message: "Not saved to db"})
                   }
@@ -4162,6 +4171,9 @@ io.sockets.on('connection',async function (socket) {
                   //console.log(delete_pin_chat);
                   if(delete_pin_chat.affectedRows>0){
                     io.sockets.in(user_id+'_unpin_chat').emit('unpin_chat', {status: true, statuscode: 200, message: "Unpinned"})
+                    //emit recent chat list
+                    let recent_chat_list=await functions.get_recent_chat_list_response(user_id);
+                    io.sockets.in(user_id).emit('chat_list',recent_chat_list)
                   }else{
                     io.sockets.in(user_id+'_unpin_chat').emit('unpin_chat', {status: false, statuscode: 200, message: "Not deleted from pin chat"})
                   }
@@ -4200,50 +4212,13 @@ io.sockets.on('connection',async function (socket) {
           if(user_id!='' && accessToken!='' && group_id!=''){
             //console.log('not empty')
             socket.join(user_id+'_user_list');
-            //check user_id and accessToken
-            let check_user_data=await queries.check_user_valid(user_id,accessToken);
-            if(check_user_data.length>0){
-              //check group data
-              let check_group_data=await queries.check_group_data(group_id);
-              if(check_group_data.length>0){
-                let current_group_users=check_group_data[0].current_members;
-                if(current_group_users!=''){
-                  current_group_users=JSON.parse(check_group_data[0].current_members);
-                }else{
-                  current_group_users=[];
-                }
-                console.log('yes',current_group_users);
-                let group_users=[];
-                for(var i=0; i<current_group_users.length; i++){
-                  let group_user_id=current_group_users[i].user_id;
-                  let get_user_profile_data=await queries.get_user_profile(group_user_id)
-                  let name=get_user_profile_data[0].name;
-                  let profile_pic=get_user_profile_data[0].profile_pic;
-                  let type=current_group_users[i].type;
-                  let about=get_user_profile_data[0].about;
-                  let phone=get_user_profile_data[0].phone;
-                  group_users.push({
-                    user_id: group_user_id,
-                    username: name,
-                    type: type,
-                    profile_pic: BASE_URL+profile_pic,
-                    about: about,
-                    phone: phone
-                  })
-                }
-                console.log(group_users)
-                //get media count data
-              }else{
-                io.sockets.in(data.user_id+'_user_list').emit('get_group_user_list', {status: false, statuscode: 200, message: "No group found"});
-              }
-            }else{
-              io.sockets.in(data.user_id+'_user_list').emit('get_group_user_list', {status: false, statuscode: 200, message: "No user data found"});
-            }
-            socket.leave(user_id+'_user_list');
+            let get_group_info_response=await functions.get_group_info(user_id,accessToken,group_id);
+            io.sockets.in(user_id+'_user_list').emit('get_group_user_list', get_group_info_response);
+            //socket.leave(user_id+'_user_list');
           }else{
             //console.log('empty')
             socket.join(data.user_id+'_user_list');
-            io.sockets.in(data.user_id+'_user_list').emit('get_group_user_list', {status: false, statuscode: 200, message: "No data found"});
+            io.sockets.in(data.user_id+'_user_list').emit('get_group_user_list', {status: false, statuscode: 200, message: "No data found", data:[]});
             socket.leave(data.user_id+'_user_list');
           }
         }else{

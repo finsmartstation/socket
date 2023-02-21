@@ -2227,10 +2227,135 @@ function check_user_already_member_in_group(user_id, group_members){
   });
 }
 
+function isUrl(url) {
+  var regexp = /(ftp|http|https):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?/
+  return regexp.test(url);
+}
+
 // function added_user_push_notification(user_id,new_user_id){
 //   //get_user_access_token
 
 // }
+
+async function get_group_info(user_id,accessToken,group_id){
+  let check_user_data=await queries.check_user_valid(user_id,accessToken);
+  if(check_user_data.length>0){
+    //check group data
+    let check_group_data=await queries.check_group_data(group_id);
+    if(check_group_data.length>0){
+      let current_group_users=check_group_data[0].current_members;
+      if(current_group_users!=''){
+        current_group_users=JSON.parse(check_group_data[0].current_members);
+      }else{
+        current_group_users=[];
+      }
+      console.log('yes',current_group_users);
+      let group_users=[];
+      for(var i=0; i<current_group_users.length; i++){
+        let group_user_id=current_group_users[i].user_id;
+        let get_user_profile_data=await queries.get_user_profile(group_user_id)
+        let name=get_user_profile_data[0].name;
+        let profile_pic=get_user_profile_data[0].profile_pic;
+        let type=current_group_users[i].type;
+        let about=get_user_profile_data[0].about;
+        let phone=get_user_profile_data[0].phone;
+        group_users.push({
+          user_id: group_user_id,
+          username: name,
+          type: type,
+          profile_pic: BASE_URL+profile_pic,
+          about: about,
+          phone: phone
+        })
+      }
+      //console.log(group_users)
+      //get media, doc, files, audio, link count
+      let media_count=0;
+      let set_user_id='"'+user_id+'"';
+      let get_group_chat_list_for_media_count=await queries.get_group_chat_list_for_media_count(group_id,set_user_id);
+      if(get_group_chat_list_for_media_count.length>0){
+        for(var i=0; i<get_group_chat_list_for_media_count.length; i++){
+          let group_status=get_group_chat_list_for_media_count[i].group_status;
+          let message_delete_status=false;
+          if(group_status!=''){
+            group_status=JSON.parse(get_group_chat_list_for_media_count[i].group_status);
+          }else{
+            group_status=[];
+          }
+          if(group_status.length>0){
+            for(var j=0; j<group_status.length; j++){
+              if(user_id==group_status[j].user_id && group_status[j].status==1){
+                message_delete_status=true;
+              }
+            }
+          }
+          if(message_delete_status){
+            if(get_group_chat_list_for_media_count[i].message_type=='voice' || get_group_chat_list_for_media_count[i].message_type=='video' || get_group_chat_list_for_media_count[i].message_type=='doc' || get_group_chat_list_for_media_count[i].message_type=='image'){
+              media_count=media_count+1;
+            }
+            
+            if(get_group_chat_list_for_media_count[i].message_type=='text'){
+              //find url in the text message
+              //console.log('text message')
+              let check_url=isUrl(get_group_chat_list_for_media_count[i].message);
+              console.log(get_group_chat_list_for_media_count[i].message,' - ',check_url);
+              if(check_url){
+                media_count=media_count+1;
+              }
+            }
+          }
+        }
+      }else{
+        media_count=0;
+      }
+      console.log('media count ',media_count)
+      //check private chat is muted or not
+      let mute_status=0;
+      let mute_end_datetime='';
+      let check_group_muted=await queries.check_group_mute_notification(user_id,group_id);
+      if(check_group_muted.length>0){
+        console.log('muted')
+        let end_datetime=check_group_muted[0].end_datetime;
+        if(end_datetime=='0000-00-00 00:00:00'){
+          mute_end_datetime='always';
+        }else{
+          mute_end_datetime=end_datetime;
+        }
+        mute_status=1;
+        mute_end_datetime=mute_end_datetime;
+      }else{
+        //console.log('not muted')
+        mute_status=0;
+        mute_end_datetime='';
+      }
+      let response={
+        status: true,
+        statuscode: 200,
+        message: 'success',
+        group_name: check_group_data[0].group_name,
+        group_profile: BASE_URL+check_group_data[0].profile_pic,
+        number_of_members: current_group_users.length,
+        created_datetime: check_group_data[0].created_datetime,
+        description: check_group_data[0].group_description,
+        description_updated_datetime: check_group_data[0].description_updated_datetime,
+        media_count: media_count,
+        mute_status: mute_status,
+        mute_end_datetime: mute_end_datetime,
+        data: group_users
+      }
+      return response;
+      //io.sockets.in(data.user_id+'_user_list').emit('get_group_user_list', response);
+    }else{
+      //io.sockets.in(data.user_id+'_user_list').emit('get_group_user_list', {status: false, statuscode: 200, message: "No group found",data:[]});
+      let response={status: false, statuscode: 200, message: "No group found",data:[]}
+      return response;
+    }
+  }else{
+    //io.sockets.in(data.user_id+'_user_list').emit('get_group_user_list', {status: false, statuscode: 200, message: "No user data found", data:[]});
+    let response={status: false, statuscode: 200, message: "No user data found",data:[]}
+    return response;
+  }
+}
 
 
 module.exports={
@@ -2241,5 +2366,7 @@ module.exports={
     group_chat_push_notification,
     check_user_already_member_in_group,
     check_group_user_is_admin,
-    create_group_id
+    create_group_id,
+    isUrl,
+    get_group_info
 }
