@@ -453,6 +453,21 @@ async function get_group_chat_list_for_media_count(group_id,set_user_id){
     return results[0];
 }
 
+async function update_individual_message_as_read(datetime,receiver_id,room){
+    const results=await db.sequelize.query("update `chat_list` set message_status='0', message_read_datetime='"+datetime+"' where room='"+room+"' and senter_id='"+receiver_id+"' and message_status='1' ");
+    return results[0];
+}
+
+async function update_group_message_as_read(current_datetime,group_status,id){
+    const results=await db.sequelize.query("update `chat_list` set message_status='0',message_read_datetime='"+current_datetime+"',group_status='"+group_status+"' where id='"+id+"'");
+    return results[0];
+}
+
+async function update_group_message_as_read_for_single_user(group_status,id){
+    const results=await db.sequelize.query("update `chat_list` set group_status='"+group_status+"' where id='"+id+"'");
+    return results[0];
+}
+
 module.exports = {
     update_online_status,
     select_online_status,
@@ -536,5 +551,8 @@ module.exports = {
     save_pin_chat,
     check_room_is_pinned,
     unpin_chat,
-    get_group_chat_list_for_media_count
+    get_group_chat_list_for_media_count,
+    update_individual_message_as_read,
+    update_group_message_as_read,
+    update_group_message_as_read_for_single_user
 }

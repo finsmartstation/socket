@@ -4199,6 +4199,10 @@ io.sockets.on('connection',async function (socket) {
         console.error(e)
       }
     });
+    socket.on('test', async function(data){
+      socket.join(data.user_id);
+      io.sockets.in(data.user_id).emit('test',{status: true, statuscode: 200, message:"Test success"})
+    });
     //get_group_user_list
     //input {"user_id":"50","accessToken":"7520ff1679b65593200acf473d159e5f","group_id":"group_20220929161238"}
     socket.on('get_group_user_list', async function(data){
@@ -4213,6 +4217,7 @@ io.sockets.on('connection',async function (socket) {
             //console.log('not empty')
             socket.join(user_id+'_user_list');
             let get_group_info_response=await functions.get_group_info(user_id,accessToken,group_id);
+            io.sockets.in(user_id+'_user_list').emit('get_group_user_list',{status: true, statuscode:200, message:'success'});
             io.sockets.in(user_id+'_user_list').emit('get_group_user_list', get_group_info_response);
             //socket.leave(user_id+'_user_list');
           }else{
@@ -4226,6 +4231,126 @@ io.sockets.on('connection',async function (socket) {
         }
       }catch(e){
         console.error(e)
+      }
+    });
+
+    socket.on('room_chat_list_details', async function(data){
+      //console.log('room_chat_list_details')
+      //input -- {"sid": "50", "rid": "50","room":""}
+      try{
+        if(typeof(data)=='object'){
+          let user_id=data.sid ? data.sid : '';
+          //let accessToken=data.accessToken ? data.accessToken : '';
+          let rid=data.rid ? data.rid : '';
+          let room=data.room ? data.room : '';
+          
+          //console.log('not empty')
+          if(room!=''){
+            //console.log('group')
+            let get_group_chat_list_response=await functions.get_group_chat_list_response(user_id,room);
+            //console.log(get_individual_chat_list_response)
+            io.sockets.in(room+'_'+user_id).emit('message', get_group_chat_list_response);
+          }else{
+            //console.log('private')
+            if (Number(user_id) > Number(rid)) {
+              //console.log('ssss')
+              room = '' + rid+user_id;
+              //console.log('room id in if' + room);
+            } else {
+              room = '' + user_id + rid;
+              //console.log('room id in else', room);
+            }
+            let get_individual_chat_list_response=await functions.get_individual_chat_list_response(user_id,rid,room);
+            //console.log(get_individual_chat_list_response)
+            io.sockets.in(room+'_'+user_id).emit('message', get_individual_chat_list_response);
+          }
+          //socket.leave(user_id+'_user_list');
+          
+        }else{
+          console.error('Input type is string');
+        }
+      }catch(e){
+        console.error(e)
+      }
+    });
+    socket.on('read', async function(data){
+      try{
+        if(typeof(data)=='object'){
+          console.log('read');
+          let user_id=data.sid ? data.sid : '';
+          //let accessToken=data.accessToken ? data.accessToken : '';
+          let rid=data.rid ? data.rid : '';
+          let room=data.room ? data.room : '';
+          let current_datetime=get_datetime();
+          //console.log('not empty')
+          if(room!=''){
+            console.log('group');
+            let set_user_id='"'+user_id+'"';
+            let unread_message_count=0;
+            let unread_message=0;
+            let get_all_group_messages=await queries.group_chat_response(user_id,set_user_id,room)
+            //console.log(get_all_group_messages)
+            for(var i=0; i<get_all_group_messages.length; i++){
+              //console.log(get_all_group_messages[i].id)
+              if(get_all_group_messages[i].message_status==1){
+                let id=get_all_group_messages[i].id;
+                console.log('not readed');
+                let group_status=get_all_group_messages[i].group_status;
+                if(group_status!=''){
+                  group_status=JSON.parse(get_all_group_messages[i].group_status);
+                }else{
+                  group_status=[];
+                }
+                for(var j=0; j<group_status.length; j++){
+                  if(group_status[j].message_status==1 && group_status[j].user_id==user_id){
+                    group_status[j].message_status=0;
+                    group_status[j].message_read_datetime=current_datetime;
+                    unread_message_count=unread_message_count+1;
+                  }
+                }
+                console.log('unread_message_count',unread_message_count)
+                if(unread_message==unread_message_count){
+                  console.log('all message')
+                  let update_read_message_status=await queries.update_group_message_as_read(current_datetime,JSON.stringify(group_status),id);
+                  if(update_read_message_status.affectedRows>0){
+                    console.log('success')
+                  }else{
+                    console.log('not updated to db')
+                  }
+                }else{
+                  console.log('single user message')
+                  let update_read_message_status=await queries.update_group_message_as_read_for_single_user(JSON.stringify(group_status),id);
+                  if(update_read_message_status.affectedRows>0){
+                    console.log('success')
+                  }else{
+                    console.log('not updated to db')
+                  }
+                }
+              }
+            }
+          }else{
+            //console.log('private')
+            if (Number(user_id) > Number(rid)) {
+              //console.log('ssss')
+              room = '' + rid+user_id;
+              //console.log('room id in if' + room);
+            } else {
+              room = '' + user_id + rid;
+              //console.log('room id in else', room);
+            }
+            //console.log('group')
+            let update_individual_message_as_read=await queries.update_individual_message_as_read(current_datetime,rid,room)
+            if(update_individual_message_as_read.affectedRows>0){
+              console.log('updated')
+            }else{
+              console.log('not updated')
+            }
+          }
+        }else{
+          console.error('Input type is string');
+        }
+      }catch(e){
+        console.error(e);
       }
     });
   }catch(error){
