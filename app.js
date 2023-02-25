@@ -4239,6 +4239,7 @@ io.sockets.on('connection',async function (socket) {
       //input -- {"sid": "50", "rid": "50","room":""}
       try{
         if(typeof(data)=='object'){
+          //console.log(data)
           let user_id=data.sid ? data.sid : '';
           //let accessToken=data.accessToken ? data.accessToken : '';
           let rid=data.rid ? data.rid : '';
@@ -4246,7 +4247,8 @@ io.sockets.on('connection',async function (socket) {
           
           //console.log('not empty')
           if(room!=''){
-            //console.log('group')
+            //console.log('group',room+'_'+user_id)
+            
             let get_group_chat_list_response=await functions.get_group_chat_list_response(user_id,room);
             //console.log(get_individual_chat_list_response)
             io.sockets.in(room+'_'+user_id).emit('message', get_group_chat_list_response);
@@ -4301,6 +4303,12 @@ io.sockets.on('connection',async function (socket) {
                 }else{
                   group_status=[];
                 }
+                //to get message unread count
+                for(var get_unread_count=0; get_unread_count<group_status.length; get_unread_count++){
+                  if(group_status[get_unread_count].message_status==1){
+                    unread_message=unread_message+1;
+                  }
+                }
                 for(var j=0; j<group_status.length; j++){
                   if(group_status[j].message_status==1 && group_status[j].user_id==user_id){
                     group_status[j].message_status=0;
@@ -4308,10 +4316,11 @@ io.sockets.on('connection',async function (socket) {
                     unread_message_count=unread_message_count+1;
                   }
                 }
-                console.log('unread_message_count',unread_message_count)
+                console.log('unread_message_count ',unread_message_count,'unread_message ',unread_message)
                 if(unread_message==unread_message_count){
                   console.log('all message')
                   let update_read_message_status=await queries.update_group_message_as_read(current_datetime,JSON.stringify(group_status),id);
+                  console.log(update_read_message_status);
                   if(update_read_message_status.affectedRows>0){
                     console.log('success')
                   }else{
@@ -4320,12 +4329,15 @@ io.sockets.on('connection',async function (socket) {
                 }else{
                   console.log('single user message')
                   let update_read_message_status=await queries.update_group_message_as_read_for_single_user(JSON.stringify(group_status),id);
+                  console.log(update_read_message_status)
                   if(update_read_message_status.affectedRows>0){
                     console.log('success')
                   }else{
                     console.log('not updated to db')
                   }
                 }
+              }else{
+                //console.log('message already readed ', get_all_group_messages[i].id)
               }
             }
           }else{
@@ -4354,7 +4366,7 @@ io.sockets.on('connection',async function (socket) {
       }
     });
   }catch(error){
-      console.log(error)
+      //console.log(error)
       console.error('error occurs ', error);
   }
 
