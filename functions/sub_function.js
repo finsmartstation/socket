@@ -522,8 +522,15 @@ async function get_last_private_message(room_id,message_id,user_id,opponent_prof
     })
   }
 
+  function check_value_exist_in_archived_chat_list(room,archived_chat_list){
+    return archived_chat_list.some(function(archived){
+      return archived.room==room;
+    });
+  }
+
   module.exports={
     get_last_private_message,
     get_last_group_message,
-    send_firebase_notification
+    send_firebase_notification,
+    check_value_exist_in_archived_chat_list
   }

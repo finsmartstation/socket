@@ -468,6 +468,31 @@ async function update_group_message_as_read_for_single_user(group_status,id){
     return results[0];
 }
 
+async function update_chat_group_status(group_status, message_id){
+    const results=await db.sequelize.query("update `chat_list` set group_status='"+group_status+"' where id='"+message_id+"'");
+    return results[0];
+}
+
+async function check_user_is_archived(user_id,room){
+    const results=await db.sequelize.query("select * from `archived_chat_list` where user_id='"+user_id+"' and room='"+room+"'");
+    return results[0];
+}
+
+async function save_archived_chat_list(user_id,current_datetime,room){
+    const results=await db.sequelize.query("INSERT INTO `archived_chat_list`(`user_id`, `datetime`, `room`) VALUES ('"+user_id+"','"+current_datetime+"','"+room+"')");
+    return results[1];
+}
+
+async function delete_archived_chat_list(id){
+    const results=await db.sequelize.query("delete from `archived_chat_list` where id='"+id+"'");
+    return results[0];
+}
+
+async function archived_chat_list_details(user_id){
+    const results=await db.sequelize.query("select * from `archived_chat_list` where user_id='"+user_id+"'");
+    return results[0];
+}
+
 module.exports = {
     update_online_status,
     select_online_status,
@@ -554,5 +579,10 @@ module.exports = {
     get_group_chat_list_for_media_count,
     update_individual_message_as_read,
     update_group_message_as_read,
-    update_group_message_as_read_for_single_user
+    update_group_message_as_read_for_single_user,
+    update_chat_group_status,
+    check_user_is_archived,
+    save_archived_chat_list,
+    delete_archived_chat_list,
+    archived_chat_list_details
 }

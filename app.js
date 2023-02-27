@@ -4365,6 +4365,298 @@ io.sockets.on('connection',async function (socket) {
         console.error(e);
       }
     });
+    //started message
+    socket.on('starred_message',async function (data){
+      console.log('started');
+      //{"user_id":"50","accessToken":"50","receiver_id":"6","message_id":"511,512"}
+      try{
+        if(typeof(data)=='object'){
+          let user_id=data.user_id ? data.user_id : '';
+          let receiver_id=data.receiver_id ? data.receiver_id : '';
+          let accessToken=data.accessToken ? data.accessToken : '';
+          let message_id=data.message_id ? data.message_id : '';
+          let current_datetime=get_datetime();
+          let room;
+          let private_group_status;
+          //console.log('not empty')
+          if(user_id!='' && accessToken!='' && message_id!=''){
+            // if (Number(user_id) > Number(receiver_id)) {
+            //   room = '' + receiver_id+user_id;
+            // } else {
+            //   room = '' + user_id + receiver_id;
+            // }
+            socket.join(user_id+'_starred');
+            //check user data
+            let check_user_data=await queries.check_user_valid(user_id,accessToken);
+            if(check_user_data.length>0){
+              //check message_id is valued
+              //split message_id data
+              let check_message_valid_status=false;
+              let updated_starred_msg_count=0;
+              let split_message_id=message_id.split(',');
+              console.log('splited values',split_message_id);
+              for(var i=0; i<split_message_id.length; i++){
+                console.log(split_message_id[i])
+
+                check_message_valid_status=true;
+                let check_message_id=await queries.check_message_id(split_message_id[i]);
+                if(check_message_id.length>0){
+                  room=check_message_id[0].room;
+                  private_group_status=check_message_id[0].private_group;
+                  //console.log(check_message_id);
+                  let group_status=JSON.parse(check_message_id[0].group_status);
+                  console.log(group_status)
+                  //add starred_status--1 and starred_datetime to the group_status
+                  for(var j=0; j<group_status.length; j++){
+                    //console.log(group_status[j].user_id)
+                    if(group_status[j].user_id==user_id){
+                      group_status[j].starred_status=1;
+                      group_status[j].starred_datetime=current_datetime;
+                    }
+                  }
+                  //console.log('star',split_message_id[i],group_status)
+                  //update to db
+                  let update_starred_message=await queries.update_chat_group_status(JSON.stringify(group_status),split_message_id[i]);
+                  if(update_starred_message.affectedRows>0){
+                    updated_starred_msg_count=updated_starred_msg_count+1;
+                  }
+                }
+                
+              }
+
+              if(check_message_valid_status){
+                //console.log('count',updated_starred_msg_count,room+'_'+user_id)
+               // exit()
+                if(updated_starred_msg_count>0){
+                  io.sockets.in(data.user_id+'_starred').emit('starred_message', {status: true, statuscode: 200, message: "success"});
+                  //emit to the user 
+                  if(private_group_status==1){
+                    //group
+                    let chat_list_details=await functions.get_group_chat_list_response(user_id,room)
+                    io.sockets.in(room+'_'+user_id).emit('message',chat_list_details)
+                  }else{
+                    //private
+                    let chat_list_details=await functions.get_individual_chat_list_response(user_id,receiver_id,room);
+                    io.sockets.in(room+'_'+user_id).emit('message',chat_list_details)
+                    //console.log('success')
+                  }
+                  
+                }else{
+                  io.sockets.in(data.user_id+'_starred').emit('starred_message', {status: false, statuscode: 400, message: "Not updated to db"});
+                }
+              }else{
+                io.sockets.in(data.user_id+'_starred').emit('starred_message', {status: false, statuscode: 200, message: "No message data found"});
+              }
+              
+            }else{
+              io.sockets.in(data.user_id+'_starred').emit('starred_message', {status: false, statuscode: 200, message: "No user data found"});
+            }
+            socket.leave(user_id+'_starred');
+          }else{
+            socket.join(data.user_id+'_starred');
+            io.sockets.in(data.user_id+'_starred').emit('starred_message', {status: false, statuscode: 200, message: "Data is empty"});
+            socket.leave(data.user_id+'_starred');
+          }
+        }else{
+          console.error('Input type is string');
+        }
+      }catch(e){
+        console.error(e);
+      }
+    });
+
+    //unstarted message
+    socket.on('unstarred_message',async function (data){
+      console.log('unstarted');
+      //{"user_id":"50","accessToken":"50","receiver_id":"6","message_id":"511,512"}
+      try{
+        if(typeof(data)=='object'){
+          let user_id=data.user_id ? data.user_id : '';
+          let receiver_id=data.receiver_id ? data.receiver_id : '';
+          let accessToken=data.accessToken ? data.accessToken : '';
+          let message_id=data.message_id ? data.message_id : '';
+          let current_datetime=get_datetime();
+          let room;
+          let private_group_status;
+          //console.log('not empty')
+          if(user_id!='' && accessToken!='' && message_id!=''){
+            socket.join(user_id+'_unstarred');
+            //check user data
+            let check_user_data=await queries.check_user_valid(user_id,accessToken);
+            if(check_user_data.length>0){
+              //check message_id is valued
+              //split message_id data
+              let check_message_valid_status=false;
+              let updated_unstarred_msg_count=0;
+              let split_message_id=message_id.split(',');
+              //console.log('splited values',split_message_id);
+              for(var i=0; i<split_message_id.length; i++){
+                //console.log(split_message_id[i])
+
+                check_message_valid_status=true;
+                let check_message_id=await queries.check_message_id(split_message_id[i]);
+                if(check_message_id.length>0){
+                  room=check_message_id[0].room;
+                  private_group_status=check_message_id[0].private_group;
+                  //console.log(check_message_id);
+                  let group_status=JSON.parse(check_message_id[0].group_status);
+                  //console.log(group_status)
+                  //add starred_status--1 and starred_datetime to the group_status
+                  for(var j=0; j<group_status.length; j++){
+                    //console.log(group_status[j].user_id)
+                    if(group_status[j].user_id==user_id){
+                      group_status[j].starred_status=0;
+                      group_status[j].starred_datetime=current_datetime;
+                    }
+                  }
+                  //console.log('star',split_message_id[i],group_status)
+                  //update to db
+                  let update_unstarred_message=await queries.update_chat_group_status(JSON.stringify(group_status),split_message_id[i]);
+                  if(update_unstarred_message.affectedRows>0){
+                    updated_unstarred_msg_count=updated_unstarred_msg_count+1;
+                  }
+                }
+                
+              }
+
+              if(check_message_valid_status){
+                //console.log('count',updated_starred_msg_count,room+'_'+user_id)
+               // exit()
+                if(updated_unstarred_msg_count>0){
+                  io.sockets.in(data.user_id+'_unstarred').emit('unstarred_message', {status: true, statuscode: 200, message: "success"});
+                  //emit to the user 
+                  if(private_group_status==1){
+                    //group
+                    let chat_list_details=await functions.get_group_chat_list_response(user_id,room)
+                    io.sockets.in(room+'_'+user_id).emit('message',chat_list_details)
+                  }else{
+                    //private
+                    let chat_list_details=await functions.get_individual_chat_list_response(user_id,receiver_id,room);
+                    io.sockets.in(room+'_'+user_id).emit('message',chat_list_details)
+                    //console.log('success')
+                  }
+                  
+                }else{
+                  io.sockets.in(data.user_id+'_unstarred').emit('unstarred_message', {status: false, statuscode: 400, message: "Not updated to db"});
+                }
+              }else{
+                io.sockets.in(data.user_id+'_unstarred').emit('unstarred_message', {status: false, statuscode: 200, message: "No message data found"});
+              }
+              
+            }else{
+              io.sockets.in(data.user_id+'_unstarred').emit('unstarred_message', {status: false, statuscode: 200, message: "No user data found"});
+            }
+            socket.leave(user_id+'_unstarred');
+          }else{
+            socket.join(data.user_id+'_unstarred');
+            io.sockets.in(data.user_id+'_unstarred').emit('unstarred_message', {status: false, statuscode: 200, message: "Data is empty"});
+            socket.leave(data.user_id+'_unstarred');
+          }
+        }else{
+          console.error('Input type is string');
+        }
+      }catch(e){
+        console.error(e);
+      }
+    });
+
+    //archived_chat_list
+    socket.on('archived_chat_list', async function (data){
+      try{
+        if(typeof(data)=='object'){
+          let user_id=data.user_id ? data.user_id : '';
+          let accessToken=data.accessToken ? data.accessToken : '';
+          let room=data.room ? data.room : '';
+          let current_datetime=get_datetime();
+          if(user_id!='' && accessToken!='' && room!=''){
+            socket.join(user_id+'_archived');
+            //check user is valid
+            let check_user_data=await queries.check_user_valid(user_id,accessToken);
+            if(check_user_data.length>0){
+              //check user is already archived
+              let check_user_archived=await queries.check_user_is_archived(user_id,room);
+              if(check_user_archived.length>0){
+                //data already exist
+                io.sockets.in(user_id+'_archived').emit('archived_chat_list', {status: false, statuscode: 200, message: "Already you archived this chat"});
+              }else{
+                //insert to archived_chat_list 
+                let save_archived_chat_list=await queries.save_archived_chat_list(user_id,current_datetime,room);
+                if(save_archived_chat_list>0){
+                  io.sockets.in(user_id+'_archived').emit('archived_chat_list', {status: true, statuscode: 200, message: "success"});
+                  //emit to chat_list
+                  let recent_chat_list_response=await functions.get_recent_chat_list_response(user_id);
+                  io.sockets.in(user_id).emit('chat_list',recent_chat_list_response);
+                }else{
+                  io.sockets.in(user_id+'_archived').emit('archived_chat_list', {status: false, statuscode: 400, message: "Not saved to db"});
+                }
+              }
+            }else{
+              io.sockets.in(user_id+'_archived').emit('archived_chat_list', {status: false, statuscode: 200, message: "No user data found"});
+            }
+            socket.leave(user_id+'_archived');
+          }else{
+            socket.join(data.user_id+'_archived');
+            io.sockets.in(data.user_id+'_archived').emit('archived_chat_list', {status: false, statuscode: 200, message: "Data is empty"});
+            socket.leave(data.user_id+'_archived');
+          }
+        }else{
+          console.error('Input type is string');
+        }
+      }catch(e){
+        console.error(e);
+      }
+    });
+
+    //unarchived_chat_list
+    socket.on('unarchived_chat_list', async function(data){
+      try{
+        if(typeof(data)=='object'){
+          let user_id=data.user_id ? data.user_id : '';
+          let accessToken=data.accessToken ? data.accessToken : '';
+          let room=data.room ? data.room : '';
+          let current_datetime=get_datetime();
+          if(user_id!='' && accessToken!='' && room!=''){
+            socket.join(user_id+'_unarchived');
+            //check user is valid
+            let check_user_data=await queries.check_user_valid(user_id,accessToken);
+            if(check_user_data.length>0){
+              //check user is already archived
+              let check_user_archived=await queries.check_user_is_archived(user_id,room);
+              if(check_user_archived.length>0){
+                //data already exist
+                //delete the entry to unarchived
+                let id=check_user_archived[0].id;
+                let unarchived_chat_list=await queries.delete_archived_chat_list(id);
+                console.log(unarchived_chat_list);
+                if(unarchived_chat_list.affectedRows>0){
+                  io.sockets.in(user_id+'_unarchived').emit('unarchived_chat_list', {status: true, statuscode: 200, message: "success"});
+                  //emit chat_list to user
+                  let recent_chat_list=await functions.get_recent_chat_list_response(user_id);
+                  io.sockets.in(user_id).emit('chat_list',recent_chat_list);
+                }else{
+                  io.sockets.in(user_id+'_unarchived').emit('unarchived_chat_list', {status: false, statuscode: 400, message: "Not removed from db"});
+                }
+              }else{
+                //no data found
+                io.sockets.in(user_id+'_unarchived').emit('unarchived_chat_list', {status: false, statuscode: 200, message: "Room is not archived"});
+              }
+            }else{
+              io.sockets.in(user_id+'_unarchived').emit('unarchived_chat_list', {status: false, statuscode: 200, message: "No user data found"});
+            }
+            socket.leave(user_id+'_unarchived');
+          }else{
+            socket.join(data.user_id+'_unarchived');
+            io.sockets.in(data.user_id+'_unarchived').emit('unarchived_chat_list', {status: false, statuscode: 200, message: "Data is empty"});
+            socket.leave(data.user_id+'_unarchived');
+          }
+        }else{
+          console.error('Input type is string');
+        }
+      }catch(e){
+        console.error(e);
+      }
+    });
+
   }catch(error){
       //console.log(error)
       console.error('error occurs ', error);

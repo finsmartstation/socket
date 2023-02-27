@@ -91,10 +91,10 @@ async function get_individual_chat_list_response(sid,rid,room){
               }
               
               if(group_status_json.length>0){
-
-              
               //console.log(group_status_json)
               for(j=0; j < group_status_json.length; j++){
+                let starred_status=group_status_json[j].starred_status ? group_status_json[j].starred_status : '0';
+                //console.log('starred ',starred_status)
                 //console.log('group status data ',group_status_json[j])
                 if(group_status_json[j].user_id==sid && group_status_json[j].status==0){
                   //console.log('0')
@@ -138,10 +138,11 @@ async function get_individual_chat_list_response(sid,rid,room){
                             replay_message_type:(result[0][i].reply_message_type ? result[0][i].reply_message_type : ''),
                             replay_senter:(result[0][i].reply_senter ? result[0][i].reply_senter : ''),
                             replay_duration:(result[0][i].reply_duration ? result[0][i].replay_duration : ''),
-                            forward_id : result[0][i].forward_id,
-                            forward_count : result[0][i].forward_count,
+                            forward_id : result[0][i].forward_id.toString(),
+                            forward_count : result[0][i].forward_count.toString(),
                             forward_message_status : result[0][i].forward_message_status,
-                            delete_status : 1
+                            delete_status : "0",
+                            starred_status: starred_status.toString()
                           })
                         }else{
                           //date already not exist
@@ -166,7 +167,8 @@ async function get_individual_chat_list_response(sid,rid,room){
                             forward_id : "",
                             forward_count : "",
                             forward_message_status : "",
-                            delete_status : ""
+                            delete_status : "",
+                            starred_status: ""
                           })
                           //add block message data entry
                           message_list_response.push({
@@ -186,10 +188,11 @@ async function get_individual_chat_list_response(sid,rid,room){
                             replay_message_type:(result[0][i].reply_message_type ? result[0][i].reply_message_type : ''),
                             replay_senter:(result[0][i].reply_senter ? result[0][i].reply_senter : ''),
                             replay_duration:(result[0][i].reply_duration ? result[0][i].replay_duration : ''),
-                            forward_id : result[0][i].forward_id,
-                            forward_count : result[0][i].forward_count,
+                            forward_id : result[0][i].forward_id.toString(),
+                            forward_count : result[0][i].forward_count.toString(),
                             forward_message_status : result[0][i].forward_message_status,
-                            delete_status : 0
+                            delete_status : "0",
+                            starred_status: starred_status.toString()
                           })
                           //console.log('inside data array data', date_array)
                         }
@@ -217,10 +220,11 @@ async function get_individual_chat_list_response(sid,rid,room){
                             replay_message_type:(result[0][i].reply_message_type ? result[0][i].reply_message_type : ''),
                             replay_senter:(result[0][i].reply_senter ? result[0][i].reply_senter : ''),
                             replay_duration:(result[0][i].reply_duration ? result[0][i].replay_duration : ''),
-                            forward_id : result[0][i].forward_id,
-                            forward_count : result[0][i].forward_count,
+                            forward_id : result[0][i].forward_id.toString(),
+                            forward_count : result[0][i].forward_count.toString(),
                             forward_message_status : result[0][i].forward_message_status,
-                            delete_status : 0
+                            delete_status : "0",
+                            starred_status: starred_status.toString()
                           })
                         }else{
                           //date already not exist
@@ -245,7 +249,8 @@ async function get_individual_chat_list_response(sid,rid,room){
                             forward_id : "",
                             forward_count : "",
                             forward_message_status : "",
-                            delete_status : ""
+                            delete_status : "",
+                            starred_status: ""
                           })
                           //add block message data entry
                           message_list_response.push({
@@ -265,10 +270,11 @@ async function get_individual_chat_list_response(sid,rid,room){
                             replay_message_type:(result[0][i].reply_message_type ? result[0][i].reply_message_type : ''),
                             replay_senter:(result[0][i].reply_senter ? result[0][i].reply_senter : ''),
                             replay_duration:(result[0][i].reply_duration ? result[0][i].replay_duration : ''),
-                            forward_id : result[0][i].forward_id,
-                            forward_count : result[0][i].forward_count,
+                            forward_id : result[0][i].forward_id.toString(),
+                            forward_count : result[0][i].forward_count.toString(),
                             forward_message_status : result[0][i].forward_message_status,
-                            delete_status : 0
+                            delete_status : "0",
+                            starred_status: starred_status.toString()
                           })
                          // console.log('inside data array data', date_array)
                         }
@@ -298,10 +304,11 @@ async function get_individual_chat_list_response(sid,rid,room){
                             replay_message_type:(result[0][i].reply_message_type ? result[0][i].reply_message_type : ''),
                             replay_senter:(result[0][i].reply_senter ? result[0][i].reply_senter : ''),
                             replay_duration:(result[0][i].reply_duration ? result[0][i].replay_duration : ''),
-                        forward_id : result[0][i].forward_id,
-                        forward_count : result[0][i].forward_count,
+                        forward_id : result[0][i].forward_id.toString(),
+                        forward_count : result[0][i].forward_count.toString(),
                         forward_message_status : result[0][i].forward_message_status,
-                        delete_status : 0
+                        delete_status : "0",
+                        starred_status: starred_status.toString()
                       })
                     }else{
                       //date already not exist
@@ -326,7 +333,8 @@ async function get_individual_chat_list_response(sid,rid,room){
                         forward_id : "",
                         forward_count : "",
                         forward_message_status : "",
-                        delete_status : ""
+                        delete_status : "",
+                        starred_status: ""
                       })
                       //add block message data entry
                       message_list_response.push({
@@ -346,10 +354,11 @@ async function get_individual_chat_list_response(sid,rid,room){
                             replay_message_type:(result[0][i].reply_message_type ? result[0][i].reply_message_type : ''),
                             replay_senter:(result[0][i].reply_senter ? result[0][i].reply_senter : ''),
                             replay_duration:(result[0][i].reply_duration ? result[0][i].replay_duration : ''),
-                        forward_id : result[0][i].forward_id,
-                        forward_count : result[0][i].forward_count,
+                        forward_id : result[0][i].forward_id.toString(),
+                        forward_count : result[0][i].forward_count.toString(),
                         forward_message_status : result[0][i].forward_message_status,
-                        delete_status : 0
+                        delete_status : "0",
+                        starred_status: starred_status.toString()
                       })
                       console.log('inside data array data', date_array)
                     }
@@ -370,7 +379,7 @@ async function get_individual_chat_list_response(sid,rid,room){
                           //date already exist
                           //add block message data entry
                           message_list_response.push({
-                            id: result[0][i].id,
+                            id: result[0][i].id.toString(),
                             date: result[0][i].date,
                             senter_id: result[0][i].senter_id,
                             receiver_id: result[0][i].receiver_id,
@@ -386,10 +395,11 @@ async function get_individual_chat_list_response(sid,rid,room){
                             replay_message_type:(result[0][i].reply_message_type ? result[0][i].reply_message_type : ''),
                             replay_senter:(result[0][i].reply_senter ? result[0][i].reply_senter : ''),
                             replay_duration:(result[0][i].reply_duration ? result[0][i].replay_duration : ''),
-                            forward_id : result[0][i].forward_id,
-                            forward_count : result[0][i].forward_count,
+                            forward_id : result[0][i].forward_id.toString(),
+                            forward_count : result[0][i].forward_count.toString(),
                             forward_message_status : result[0][i].forward_message_status,
-                            delete_status : 1
+                            delete_status : "1",
+                            starred_status: starred_status.toString()
                           })
                         }else{
                           //date already not exist
@@ -414,7 +424,8 @@ async function get_individual_chat_list_response(sid,rid,room){
                             forward_id : "",
                             forward_count : "",
                             forward_message_status : "",
-                            delete_status : ""
+                            delete_status : "",
+                            starred_status: ""
                           })
                           //add block message data entry
                           message_list_response.push({
@@ -434,10 +445,11 @@ async function get_individual_chat_list_response(sid,rid,room){
                             replay_message_type:(result[0][i].reply_message_type ? result[0][i].reply_message_type : ''),
                             replay_senter:(result[0][i].reply_senter ? result[0][i].reply_senter : ''),
                             replay_duration:(result[0][i].reply_duration ? result[0][i].replay_duration : ''),
-                            forward_id : result[0][i].forward_id,
-                            forward_count : result[0][i].forward_count,
+                            forward_id : result[0][i].forward_id.toString(),
+                            forward_count : result[0][i].forward_count.toString(),
                             forward_message_status : result[0][i].forward_message_status,
-                            delete_status : 1
+                            delete_status : "1",
+                            starred_status: starred_status.toString()
                           })
                           //console.log('inside data array data', date_array)
                         }
@@ -465,10 +477,11 @@ async function get_individual_chat_list_response(sid,rid,room){
                             replay_message_type:(result[0][i].reply_message_type ? result[0][i].reply_message_type : ''),
                             replay_senter:(result[0][i].reply_senter ? result[0][i].reply_senter : ''),
                             replay_duration:(result[0][i].reply_duration ? result[0][i].replay_duration : ''),
-                            forward_id : result[0][i].forward_id,
-                            forward_count : result[0][i].forward_count,
+                            forward_id : result[0][i].forward_id.toString(),
+                            forward_count : result[0][i].forward_count.toString(),
                             forward_message_status : result[0][i].forward_message_status,
-                            delete_status : 1
+                            delete_status : "1",
+                            starred_status: starred_status.toString()
                           })
                         }else{
                           //date already not exist
@@ -493,7 +506,8 @@ async function get_individual_chat_list_response(sid,rid,room){
                             forward_id : "",
                             forward_count : "",
                             forward_message_status : "",
-                            delete_status : ""
+                            delete_status : "",
+                            starred_status: ""
                           })
                           //add block message data entry
                           message_list_response.push({
@@ -513,10 +527,11 @@ async function get_individual_chat_list_response(sid,rid,room){
                             replay_message_type:(result[0][i].reply_message_type ? result[0][i].reply_message_type : ''),
                             replay_senter:(result[0][i].reply_senter ? result[0][i].reply_senter : ''),
                             replay_duration:(result[0][i].reply_duration ? result[0][i].replay_duration : ''),
-                            forward_id : result[0][i].forward_id,
-                            forward_count : result[0][i].forward_count,
+                            forward_id : result[0][i].forward_id.toString(),
+                            forward_count : result[0][i].forward_count.toString(),
                             forward_message_status : result[0][i].forward_message_status,
-                            delete_status : 1
+                            delete_status : "1",
+                            starred_status: starred_status.toString()
                           })
                           //console.log('inside data array data', date_array)
                         }
@@ -546,10 +561,11 @@ async function get_individual_chat_list_response(sid,rid,room){
                             replay_message_type:(result[0][i].reply_message_type ? result[0][i].reply_message_type : ''),
                             replay_senter:(result[0][i].reply_senter ? result[0][i].reply_senter : ''),
                             replay_duration:(result[0][i].reply_duration ? result[0][i].replay_duration : ''),
-                        forward_id : result[0][i].forward_id,
-                        forward_count : result[0][i].forward_count,
+                        forward_id : result[0][i].forward_id.toString(),
+                        forward_count : result[0][i].forward_count.toString(),
                         forward_message_status : result[0][i].forward_message_status,
-                        delete_status : 1
+                        delete_status : "1",
+                        starred_status: starred_status.toString()
                       })
                     }else{
                       //date already not exist
@@ -574,7 +590,8 @@ async function get_individual_chat_list_response(sid,rid,room){
                         forward_id : "",
                         forward_count : "",
                         forward_message_status : "",
-                        delete_status : ""
+                        delete_status : "",
+                        starred_status: ""
                       })
                       //add block message data entry
                       message_list_response.push({
@@ -594,10 +611,11 @@ async function get_individual_chat_list_response(sid,rid,room){
                             replay_message_type:(result[0][i].reply_message_type ? result[0][i].reply_message_type : ''),
                             replay_senter:(result[0][i].reply_senter ? result[0][i].reply_senter : ''),
                             replay_duration:(result[0][i].reply_duration ? result[0][i].replay_duration : ''),
-                        forward_id : result[0][i].forward_id,
-                        forward_count : result[0][i].forward_count,
+                        forward_id : result[0][i].forward_id.toString(),
+                        forward_count : result[0][i].forward_count.toString(),
                         forward_message_status : result[0][i].forward_message_status,
-                        delete_status : 1
+                        delete_status : "1",
+                        starred_status: starred_status.toString()
                       })
                       //console.log('inside data array data', date_array)
                     }
@@ -737,7 +755,8 @@ async function get_group_chat_list_response(user_id,group_id){
       forward_id:'',
       forward_count:'',
       forward_message_status:'',
-      delete_status:''
+      delete_status:'',
+      starred_status: ''
     }
     group_messages.push(group_started_data);
     //split group created_date
@@ -772,7 +791,8 @@ async function get_group_chat_list_response(user_id,group_id){
       forward_id:'',
       forward_count:'',
       forward_message_status:'',
-      delete_status:''
+      delete_status:'',
+      starred_status: ''
     }
     group_messages.push(group_created_by_data);
     //get group message from db
@@ -1081,7 +1101,7 @@ async function get_group_chat_list_response(user_id,group_id){
           //console.log('msg id',get_all_group_messages[i].id);
           if(group_status_json.length>0){
             for(var j=0; j<group_status_json.length; j++){
-              
+              let starred_status=group_status_json[j].starred_status ? group_status_json[j].starred_status : '0';
               //console.log(group_status_json[j].status)
               console.log('msg id',get_all_group_messages[i].id);
               if(group_status_json[j].status==0 && group_status_json[j].user_id==user_id){
@@ -1118,7 +1138,8 @@ async function get_group_chat_list_response(user_id,group_id){
                     forward_id:forward_id.toString(),
                     forward_count:forward_message_count.toString(),
                     forward_message_status:forward_message_status.toString(),
-                    delete_status:'' 
+                    delete_status:'',
+                    starred_status: starred_status.toString()
                   });
                 }else{
                   group_profile_history_index=group_profile_history_index+1;
@@ -1143,7 +1164,8 @@ async function get_group_chat_list_response(user_id,group_id){
                     forward_id:'',
                     forward_count:'',
                     forward_message_status:'',
-                    delete_status:''
+                    delete_status:'',
+                    starred_status: ''
                   });
                   //add message data
                   group_messages.push({
@@ -1165,7 +1187,8 @@ async function get_group_chat_list_response(user_id,group_id){
                     forward_id:forward_id.toString(),
                     forward_count:forward_message_count.toString(),
                     forward_message_status:forward_message_status.toString(),
-                    delete_status:'0' 
+                    delete_status:'0',
+                    starred_status: starred_status.toString()
                   });
                   console.log('date is not exist')
                 }
@@ -1193,7 +1216,8 @@ async function get_group_chat_list_response(user_id,group_id){
                     forward_id:forward_id.toString(),
                     forward_count:forward_message_count.toString(),
                     forward_message_status:forward_message_status.toString(),
-                    delete_status:'1' 
+                    delete_status:'1',
+                    starred_status: starred_status.toString()
                   });
                 }else{
                   group_profile_history_index=group_profile_history_index+1;
@@ -1218,7 +1242,8 @@ async function get_group_chat_list_response(user_id,group_id){
                     forward_id:'',
                     forward_count:'',
                     forward_message_status:'',
-                    delete_status:''
+                    delete_status:'',
+                    starred_status: ''
                   });
                   //add message data
                   group_messages.push({
@@ -1240,7 +1265,8 @@ async function get_group_chat_list_response(user_id,group_id){
                     forward_id:forward_id.toString(),
                     forward_count:forward_message_count.toString(),
                     forward_message_status:forward_message_status.toString(),
-                    delete_status:'1' 
+                    delete_status:'1',
+                    starred_status: starred_status.toString() 
                   });
                   console.log('date is not exist')
                 }
@@ -1356,6 +1382,7 @@ async function get_recent_chat_list_response(user_id){
   //
   let chat_list_data=[];
   //get current datetime
+  let archived_chat_list=await queries.archived_chat_list_details(user_id);
   let current_datetime=get_datetime();
   if(get_recent_chat.length>0){
     for(var i=0; i<get_recent_chat.length; i++){
@@ -2019,12 +2046,29 @@ async function get_recent_chat_list_response(user_id){
         }
       }
     }
-    console.log(chat_list_data)
+    //set response based on archived_chat_list
+    archived_list=[];
+    //console.log('before',chat_list_data.length,chat_list_data)
+    if(archived_chat_list.length>0){
+      for(var k=0; k<chat_list_data.length; k++){
+        let check_value_exist_in_archived_chat_list=await sub_function.check_value_exist_in_archived_chat_list(chat_list_data[k].room,archived_chat_list);
+        //console.log(check_value_exist_in_archived_chat_list)
+        if(check_value_exist_in_archived_chat_list){
+          //remove from the array
+          archived_list.push(chat_list_data[k]);
+          chat_list_data.splice(k, 1);
+          k--;
+        }
+      }
+    }
+    
+    //console.log('after',chat_list_data.length,chat_list_data)
     let setresponse={
       status: true,
       statuscode: 200,
       message: "success", 
       socket: true,
+      archived_chat_list:archived_list,
       data:chat_list_data
     }
     return setresponse;
@@ -2034,6 +2078,7 @@ async function get_recent_chat_list_response(user_id){
       statuscode: 200,
       message: "No chat found", 
       socket: true,
+      archived_chat_list:[],
       data:[]
     }
     return setresponse;
