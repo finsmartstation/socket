@@ -3336,7 +3336,7 @@ io.sockets.on('connection',async function (socket) {
       }
     });
     //clear_individual_chat
-    //input -- {"accessToken":"7520ff1679b65593200acf473d159e5f","user_id":"50","receiver_id":"6"}
+    //input -- {"accessToken":"7520ff1679b65593200acf473d159e5f","user_id":"50","receiver_id":"6","delete_starred_message":""}
     socket.on('clear_individual_chat',async function (data){
       //console.log('clear individual chat');
       try{
@@ -3344,7 +3344,8 @@ io.sockets.on('connection',async function (socket) {
           let user_id=data.user_id ? data.user_id : '';
           let accessToken=data.accessToken ? data.accessToken : '';
           let receiver_id=data.receiver_id ? data.receiver_id : '';
-          if(user_id!='' && accessToken!='' && receiver_id!=''){
+          let delete_starred_message=data.delete_starred_message ? data.delete_starred_message :'0';
+          if(user_id!='' && accessToken!='' && receiver_id!='' && delete_starred_message!=''){
             socket.join(user_id+'_clear_chat');
             //check user data is valid
             let check_user_data=await queries.check_user_valid(user_id,accessToken);
@@ -3363,45 +3364,83 @@ io.sockets.on('connection',async function (socket) {
               let clear_chat_status=false;
               let clear_chat_update_row_count=0;
               if(room_chat_list.length>0){
-                let set_query_case_data="";
-                let query_where_id="";
-                for(var i=0; i<room_chat_list.length; i++){
-                  let group_status=JSON.parse(room_chat_list[i].group_status);
-                  let message_id=room_chat_list[i].id;
-                  for(var j=0; j<group_status.length; j++){
-                    if(user_id==group_status[j].user_id){
-                      group_status[j].status=2;
+                if(delete_starred_message=="0"){
+                  let set_query_case_data="";
+                  let query_where_id="";
+                  console.log('not deleted  starred message 0',room_chat_list)
+                  for(var i=0; i<room_chat_list.length; i++){
+                    let group_status=JSON.parse(room_chat_list[i].group_status);
+                    let message_id=room_chat_list[i].id;
+                    for(var j=0; j<group_status.length; j++){
+                      
+                      let starred_status=group_status[j].starred_status ? group_status[j].starred_status : '0';
+                      console.log(`id ${message_id} starred status ${starred_status}`)
+                      if(user_id==group_status[j].user_id && starred_status==0){
+                        group_status[j].status=2;
+                      }
                     }
+                    set_query_case_data=set_query_case_data+"when id='"+message_id+"' then '"+JSON.stringify(group_status)+"'";
+                    query_where_id=query_where_id+"'"+message_id+"'"+",";
                   }
-                  set_query_case_data=set_query_case_data+"when id='"+message_id+"' then '"+JSON.stringify(group_status)+"'";
-                  query_where_id=query_where_id+"'"+message_id+"'"+",";
-                  //console.log('new data ', message_id, group_status)
-                  //update to db
-                  // let update_clear_chat_data=await queries.update_clear_chat(message_id,JSON.stringify(group_status));
-                  // //console.log('clear chat status',update_clear_chat_data);
-                  // if(update_clear_chat_data.affectedRows>0){
-                  //   clear_chat_update_row_count=clear_chat_update_row_count+1;
-                  // }
-                }
 
-                let query_case_data='case '+set_query_case_data+' end'
-                let removed_comma=query_where_id.replace(/,(?=[^,]*$)/, '');
-                let query="UPDATE chat_list SET group_status= ("+query_case_data+") where id in ("+removed_comma+")"
-                let update_clear_chat=await queries.update_clear_chat_with_single_query(query);
+                  let query_case_data='case '+set_query_case_data+' end'
+                  let removed_comma=query_where_id.replace(/,(?=[^,]*$)/, '');
+                  let query="UPDATE chat_list SET group_status= ("+query_case_data+") where id in ("+removed_comma+")"
+                  let update_clear_chat=await queries.update_clear_chat_with_single_query(query);
 
-                console.log('total affected row count ',clear_chat_update_row_count);
+                  console.log('total affected row count ',clear_chat_update_row_count);
 
-                if(update_clear_chat.affectedRows>0){
-                  io.sockets.in(user_id+'_clear_chat').emit('clear_individual_chat',{ status: true, statuscode: 200, message: "success"});
-                  //emit individual chat list to user
-                  let sender_chat_list_data=await functions.get_individual_chat_list_response(user_id,receiver_id,room)
-                  io.sockets.in(room+'_'+user_id).emit('message',sender_chat_list_data);
-                  let get_chat_list_response=await functions.get_recent_chat_list_response(user_id);
-                  io.sockets.in(user_id).emit('chat_list', get_chat_list_response);
+                  if(update_clear_chat.affectedRows>0){
+                    io.sockets.in(user_id+'_clear_chat').emit('clear_individual_chat',{ status: true, statuscode: 200, message: "success"});
+                    //emit individual chat list to user
+                    let sender_chat_list_data=await functions.get_individual_chat_list_response(user_id,receiver_id,room)
+                    io.sockets.in(room+'_'+user_id).emit('message',sender_chat_list_data);
+                    let get_chat_list_response=await functions.get_recent_chat_list_response(user_id);
+                    io.sockets.in(user_id).emit('chat_list', get_chat_list_response);
+                  }else{
+                    io.sockets.in(user_id+'_clear_chat').emit('clear_individual_chat',{ status: false, statuscode: 400, message: "Not updated to db"});
+                  }
+                
                 }else{
-                  io.sockets.in(user_id+'_clear_chat').emit('clear_individual_chat',{ status: false, statuscode: 400, message: "Not updated to db"});
-                }
+                  let set_query_case_data="";
+                  let query_where_id="";
+                  for(var i=0; i<room_chat_list.length; i++){
+                    let group_status=JSON.parse(room_chat_list[i].group_status);
+                    let message_id=room_chat_list[i].id;
+                    for(var j=0; j<group_status.length; j++){
+                      if(user_id==group_status[j].user_id){
+                        group_status[j].status=2;
+                      }
+                    }
+                    set_query_case_data=set_query_case_data+"when id='"+message_id+"' then '"+JSON.stringify(group_status)+"'";
+                    query_where_id=query_where_id+"'"+message_id+"'"+",";
+                    //console.log('new data ', message_id, group_status)
+                    //update to db
+                    // let update_clear_chat_data=await queries.update_clear_chat(message_id,JSON.stringify(group_status));
+                    // //console.log('clear chat status',update_clear_chat_data);
+                    // if(update_clear_chat_data.affectedRows>0){
+                    //   clear_chat_update_row_count=clear_chat_update_row_count+1;
+                    // }
+                  }
 
+                  let query_case_data='case '+set_query_case_data+' end'
+                  let removed_comma=query_where_id.replace(/,(?=[^,]*$)/, '');
+                  let query="UPDATE chat_list SET group_status= ("+query_case_data+") where id in ("+removed_comma+")"
+                  let update_clear_chat=await queries.update_clear_chat_with_single_query(query);
+
+                  console.log('total affected row count ',clear_chat_update_row_count);
+
+                  if(update_clear_chat.affectedRows>0){
+                    io.sockets.in(user_id+'_clear_chat').emit('clear_individual_chat',{ status: true, statuscode: 200, message: "success"});
+                    //emit individual chat list to user
+                    let sender_chat_list_data=await functions.get_individual_chat_list_response(user_id,receiver_id,room)
+                    io.sockets.in(room+'_'+user_id).emit('message',sender_chat_list_data);
+                    let get_chat_list_response=await functions.get_recent_chat_list_response(user_id);
+                    io.sockets.in(user_id).emit('chat_list', get_chat_list_response);
+                  }else{
+                    io.sockets.in(user_id+'_clear_chat').emit('clear_individual_chat',{ status: false, statuscode: 400, message: "Not updated to db"});
+                  }
+                }
               }else{
                 //no message to clear
                 io.sockets.in(user_id+'_clear_chat').emit('clear_individual_chat',{ status: false, statuscode: 200, message: "No message to clear"});
@@ -3431,6 +3470,7 @@ io.sockets.on('connection',async function (socket) {
           let user_id=data.user_id ? data.user_id : '';
           let accessToken=data.accessToken ? data.accessToken : '';
           let group_id=data.group_id ? data.group_id : '';
+          let delete_starred_message=data.delete_starred_message ? data.delete_starred_message :'0';
           if(user_id!='' && accessToken!='' && group_id!=''){
             //check user data is valid
             socket.join(user_id+'_clear_chat');
@@ -3449,41 +3489,81 @@ io.sockets.on('connection',async function (socket) {
                   let group_chat_list=await queries.group_chat_list(user_id,group_id);
                   console.log(group_chat_list)
                   if(group_chat_list.length>0){
-                    let set_query_case_data="";
-                    let query_where_id="";
-                    let clear_chat_update_row_count=0;
-                    for(var i=0; i<group_chat_list.length; i++){
-                      let message_id=group_chat_list[i].id
-                      let group_status=JSON.parse(group_chat_list[i].group_status);
-                      for(var j=0; j<group_status.length; j++){
-                        if(group_status[j].user_id==user_id){
-                          group_status[j].status=2;
+                    if(delete_starred_message=='0'){
+                      let set_query_case_data="";
+                      let query_where_id="";
+                      let clear_chat_update_row_count=0;
+                      for(var i=0; i<group_chat_list.length; i++){
+                        let message_id=group_chat_list[i].id
+                        let group_status=JSON.parse(group_chat_list[i].group_status);
+                        for(var j=0; j<group_status.length; j++){
+                          let starred_status=group_status[j].starred_status ? group_status[j].starred_status : '0';
+                          if(group_status[j].user_id==user_id && starred_status==0){
+                            group_status[j].status=2;
+                          }
                         }
+                       // console.log('new data ',message_id,group_status);
+                        //update update_clear_chat to db
+                        // let update_clear_chat=await queries.update_clear_chat(message_id,JSON.stringify(group_status));
+                        // if(update_clear_chat.affectedRows>0){
+                        //   clear_chat_update_row_count=clear_chat_update_row_count+1;
+                        // }
+                        set_query_case_data=set_query_case_data+"when id='"+message_id+"' then '"+JSON.stringify(group_status)+"'";
+                        query_where_id=query_where_id+"'"+message_id+"'"+",";
                       }
-                      console.log('new data ',message_id,group_status);
-                      //update update_clear_chat to db
-                      // let update_clear_chat=await queries.update_clear_chat(message_id,JSON.stringify(group_status));
-                      // if(update_clear_chat.affectedRows>0){
-                      //   clear_chat_update_row_count=clear_chat_update_row_count+1;
-                      // }
-                      set_query_case_data=set_query_case_data+"when id='"+message_id+"' then '"+JSON.stringify(group_status)+"'";
-                      query_where_id=query_where_id+"'"+message_id+"'"+",";
-                    }
-                    let query_case_data='case '+set_query_case_data+' end'
-                    let removed_comma=query_where_id.replace(/,(?=[^,]*$)/, '');
-                    let query="UPDATE chat_list SET group_status= ("+query_case_data+") where id in ("+removed_comma+")"
-                    //console.log('case data ',query)
-                    let update_clear_chat=await queries.update_clear_chat_with_single_query(query);
-                    //console.log('updated row',clear_chat_update_row_count);
-                    if(update_clear_chat.affectedRows>0){
-                      io.sockets.in(user_id+'_clear_chat').emit('clear_group_chat',{status: true, statuscode: 200, message: "success"});
-                      //emit to user chat list
-                      let group_chat_list_response=await functions.get_group_chat_list_response(user_id,group_id);
-                      io.sockets.in(group_id+'_'+user_id).emit('message', group_chat_list_response);
-                      let get_chat_list_response=await functions.get_recent_chat_list_response(user_id);
-                      io.sockets.in(user_id).emit('chat_list', get_chat_list_response);
+                      let query_case_data='case '+set_query_case_data+' end'
+                      let removed_comma=query_where_id.replace(/,(?=[^,]*$)/, '');
+                      let query="UPDATE chat_list SET group_status= ("+query_case_data+") where id in ("+removed_comma+")"
+                      //console.log('case data ',query)
+                      let update_clear_chat=await queries.update_clear_chat_with_single_query(query);
+                      //console.log('updated row',clear_chat_update_row_count);
+                      if(update_clear_chat.affectedRows>0){
+                        io.sockets.in(user_id+'_clear_chat').emit('clear_group_chat',{status: true, statuscode: 200, message: "success"});
+                        //emit to user chat list
+                        let group_chat_list_response=await functions.get_group_chat_list_response(user_id,group_id);
+                        io.sockets.in(group_id+'_'+user_id).emit('message', group_chat_list_response);
+                        let get_chat_list_response=await functions.get_recent_chat_list_response(user_id);
+                        io.sockets.in(user_id).emit('chat_list', get_chat_list_response);
+                      }else{
+                        io.sockets.in(user_id+'_clear_chat').emit('clear_group_chat',{status: false, statuscode: 400, message: "Not updated to db"});
+                      }
                     }else{
-                      io.sockets.in(user_id+'_clear_chat').emit('clear_group_chat',{status: false, statuscode: 400, message: "Not updated to db"});
+                      let set_query_case_data="";
+                      let query_where_id="";
+                      let clear_chat_update_row_count=0;
+                      for(var i=0; i<group_chat_list.length; i++){
+                        let message_id=group_chat_list[i].id
+                        let group_status=JSON.parse(group_chat_list[i].group_status);
+                        for(var j=0; j<group_status.length; j++){
+                          if(group_status[j].user_id==user_id){
+                            group_status[j].status=2;
+                          }
+                        }
+                        console.log('new data ',message_id,group_status);
+                        //update update_clear_chat to db
+                        // let update_clear_chat=await queries.update_clear_chat(message_id,JSON.stringify(group_status));
+                        // if(update_clear_chat.affectedRows>0){
+                        //   clear_chat_update_row_count=clear_chat_update_row_count+1;
+                        // }
+                        set_query_case_data=set_query_case_data+"when id='"+message_id+"' then '"+JSON.stringify(group_status)+"'";
+                        query_where_id=query_where_id+"'"+message_id+"'"+",";
+                      }
+                      let query_case_data='case '+set_query_case_data+' end'
+                      let removed_comma=query_where_id.replace(/,(?=[^,]*$)/, '');
+                      let query="UPDATE chat_list SET group_status= ("+query_case_data+") where id in ("+removed_comma+")"
+                      //console.log('case data ',query)
+                      let update_clear_chat=await queries.update_clear_chat_with_single_query(query);
+                      //console.log('updated row',clear_chat_update_row_count);
+                      if(update_clear_chat.affectedRows>0){
+                        io.sockets.in(user_id+'_clear_chat').emit('clear_group_chat',{status: true, statuscode: 200, message: "success"});
+                        //emit to user chat list
+                        let group_chat_list_response=await functions.get_group_chat_list_response(user_id,group_id);
+                        io.sockets.in(group_id+'_'+user_id).emit('message', group_chat_list_response);
+                        let get_chat_list_response=await functions.get_recent_chat_list_response(user_id);
+                        io.sockets.in(user_id).emit('chat_list', get_chat_list_response);
+                      }else{
+                        io.sockets.in(user_id+'_clear_chat').emit('clear_group_chat',{status: false, statuscode: 400, message: "Not updated to db"});
+                      }
                     }
                   }else{
                     io.sockets.in(user_id+'_clear_chat').emit('clear_group_chat',{status: false, statuscode: 200, message: "No message found"});

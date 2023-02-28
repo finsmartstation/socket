@@ -55,8 +55,8 @@ async function get_individual_chat_list_response(sid,rid,room){
                 result[0][i]['reply_duration']='0';
               }
 
-              console.log('reply id  ', result[0][i]['replay_id'], result[0][i].replay_id, result[0][i]['reply_message'], result[0][i]['reply_message_type'],result[0][i]['reply_duration'])
-
+              //console.log('reply id  ', result[0][i]);
+              //exit ();
               //get forward messages
               if(result[0][i]['forward_id']!=0 && result[0][i]['forward_id']!=''){
                 //message has forward message
@@ -137,7 +137,8 @@ async function get_individual_chat_list_response(sid,rid,room){
                             replay_message:(result[0][i].reply_message ? result[0][i].reply_message : ''),
                             replay_message_type:(result[0][i].reply_message_type ? result[0][i].reply_message_type : ''),
                             replay_senter:(result[0][i].reply_senter ? result[0][i].reply_senter : ''),
-                            replay_duration:(result[0][i].reply_duration ? result[0][i].replay_duration : ''),
+                            //replay_duration:(result[0][i].reply_duration ? result[0][i].replay_duration : ''),
+                            replay_duration: result[0][i].reply_duration ? result[0][i].reply_duration.toString() : '0',
                             forward_id : result[0][i].forward_id.toString(),
                             forward_count : result[0][i].forward_count.toString(),
                             forward_message_status : result[0][i].forward_message_status,
@@ -187,7 +188,8 @@ async function get_individual_chat_list_response(sid,rid,room){
                             replay_message:(result[0][i].reply_message ? result[0][i].reply_message : ''),
                             replay_message_type:(result[0][i].reply_message_type ? result[0][i].reply_message_type : ''),
                             replay_senter:(result[0][i].reply_senter ? result[0][i].reply_senter : ''),
-                            replay_duration:(result[0][i].reply_duration ? result[0][i].replay_duration : ''),
+                            //replay_duration:(result[0][i].reply_duration ? result[0][i].replay_duration : ''),
+                            replay_duration: result[0][i].reply_duration ? result[0][i].reply_duration.toString() : '0',
                             forward_id : result[0][i].forward_id.toString(),
                             forward_count : result[0][i].forward_count.toString(),
                             forward_message_status : result[0][i].forward_message_status,
@@ -219,7 +221,8 @@ async function get_individual_chat_list_response(sid,rid,room){
                             replay_message:(result[0][i].reply_message ? result[0][i].reply_message : ''),
                             replay_message_type:(result[0][i].reply_message_type ? result[0][i].reply_message_type : ''),
                             replay_senter:(result[0][i].reply_senter ? result[0][i].reply_senter : ''),
-                            replay_duration:(result[0][i].reply_duration ? result[0][i].replay_duration : ''),
+                            //replay_duration:(result[0][i].reply_duration ? result[0][i].replay_duration : ''),
+                            replay_duration: result[0][i].reply_duration ? result[0][i].reply_duration.toString() : '0',
                             forward_id : result[0][i].forward_id.toString(),
                             forward_count : result[0][i].forward_count.toString(),
                             forward_message_status : result[0][i].forward_message_status,
@@ -269,7 +272,8 @@ async function get_individual_chat_list_response(sid,rid,room){
                             replay_message:(result[0][i].reply_message ? result[0][i].reply_message : ''),
                             replay_message_type:(result[0][i].reply_message_type ? result[0][i].reply_message_type : ''),
                             replay_senter:(result[0][i].reply_senter ? result[0][i].reply_senter : ''),
-                            replay_duration:(result[0][i].reply_duration ? result[0][i].replay_duration : ''),
+                            //replay_duration:(result[0][i].reply_duration ? result[0][i].replay_duration : ''),
+                            replay_duration: result[0][i].reply_duration ? result[0][i].reply_duration.toString() : '0',
                             forward_id : result[0][i].forward_id.toString(),
                             forward_count : result[0][i].forward_count.toString(),
                             forward_message_status : result[0][i].forward_message_status,
@@ -303,7 +307,8 @@ async function get_individual_chat_list_response(sid,rid,room){
                             replay_message:(result[0][i].reply_message ? result[0][i].reply_message : ''),
                             replay_message_type:(result[0][i].reply_message_type ? result[0][i].reply_message_type : ''),
                             replay_senter:(result[0][i].reply_senter ? result[0][i].reply_senter : ''),
-                            replay_duration:(result[0][i].reply_duration ? result[0][i].replay_duration : ''),
+                            //replay_duration:(result[0][i].reply_duration ? result[0][i].replay_duration : ''),
+                            replay_duration: result[0][i].reply_duration ? result[0][i].reply_duration.toString() : '0',
                         forward_id : result[0][i].forward_id.toString(),
                         forward_count : result[0][i].forward_count.toString(),
                         forward_message_status : result[0][i].forward_message_status,
@@ -353,7 +358,8 @@ async function get_individual_chat_list_response(sid,rid,room){
                             replay_message:(result[0][i].reply_message ? result[0][i].reply_message : ''),
                             replay_message_type:(result[0][i].reply_message_type ? result[0][i].reply_message_type : ''),
                             replay_senter:(result[0][i].reply_senter ? result[0][i].reply_senter : ''),
-                            replay_duration:(result[0][i].reply_duration ? result[0][i].replay_duration : ''),
+                            //replay_duration:(result[0][i].reply_duration ? result[0][i].replay_duration : ''),
+                            replay_duration: result[0][i].reply_duration ? result[0][i].reply_duration.toString() : '0',
                         forward_id : result[0][i].forward_id.toString(),
                         forward_count : result[0][i].forward_count.toString(),
                         forward_message_status : result[0][i].forward_message_status,
@@ -394,7 +400,8 @@ async function get_individual_chat_list_response(sid,rid,room){
                             replay_message:(result[0][i].reply_message ? result[0][i].reply_message : ''),
                             replay_message_type:(result[0][i].reply_message_type ? result[0][i].reply_message_type : ''),
                             replay_senter:(result[0][i].reply_senter ? result[0][i].reply_senter : ''),
-                            replay_duration:(result[0][i].reply_duration ? result[0][i].replay_duration : ''),
+                            //replay_duration:(result[0][i].reply_duration ? result[0][i].replay_duration : ''),
+                            replay_duration: result[0][i].reply_duration ? result[0][i].reply_duration.toString() : '0',
                             forward_id : result[0][i].forward_id.toString(),
                             forward_count : result[0][i].forward_count.toString(),
                             forward_message_status : result[0][i].forward_message_status,
@@ -444,7 +451,8 @@ async function get_individual_chat_list_response(sid,rid,room){
                             replay_message:(result[0][i].reply_message ? result[0][i].reply_message : ''),
                             replay_message_type:(result[0][i].reply_message_type ? result[0][i].reply_message_type : ''),
                             replay_senter:(result[0][i].reply_senter ? result[0][i].reply_senter : ''),
-                            replay_duration:(result[0][i].reply_duration ? result[0][i].replay_duration : ''),
+                            //replay_duration:(result[0][i].reply_duration ? result[0][i].replay_duration : ''),
+                            replay_duration: result[0][i].reply_duration ? result[0][i].reply_duration.toString() : '0',
                             forward_id : result[0][i].forward_id.toString(),
                             forward_count : result[0][i].forward_count.toString(),
                             forward_message_status : result[0][i].forward_message_status,
@@ -476,7 +484,8 @@ async function get_individual_chat_list_response(sid,rid,room){
                             replay_message:(result[0][i].reply_message ? result[0][i].reply_message : ''),
                             replay_message_type:(result[0][i].reply_message_type ? result[0][i].reply_message_type : ''),
                             replay_senter:(result[0][i].reply_senter ? result[0][i].reply_senter : ''),
-                            replay_duration:(result[0][i].reply_duration ? result[0][i].replay_duration : ''),
+                            //replay_duration:(result[0][i].reply_duration ? result[0][i].replay_duration : ''),
+                            replay_duration: result[0][i].reply_duration ? result[0][i].reply_duration.toString() : '0',
                             forward_id : result[0][i].forward_id.toString(),
                             forward_count : result[0][i].forward_count.toString(),
                             forward_message_status : result[0][i].forward_message_status,
@@ -526,7 +535,8 @@ async function get_individual_chat_list_response(sid,rid,room){
                             replay_message:(result[0][i].reply_message ? result[0][i].reply_message : ''),
                             replay_message_type:(result[0][i].reply_message_type ? result[0][i].reply_message_type : ''),
                             replay_senter:(result[0][i].reply_senter ? result[0][i].reply_senter : ''),
-                            replay_duration:(result[0][i].reply_duration ? result[0][i].replay_duration : ''),
+                            //replay_duration:(result[0][i].reply_duration ? result[0][i].replay_duration : ''),
+                            replay_duration: result[0][i].reply_duration ? result[0][i].reply_duration.toString() : '0',
                             forward_id : result[0][i].forward_id.toString(),
                             forward_count : result[0][i].forward_count.toString(),
                             forward_message_status : result[0][i].forward_message_status,
@@ -560,8 +570,9 @@ async function get_individual_chat_list_response(sid,rid,room){
                             replay_message:(result[0][i].reply_message ? result[0][i].reply_message : ''),
                             replay_message_type:(result[0][i].reply_message_type ? result[0][i].reply_message_type : ''),
                             replay_senter:(result[0][i].reply_senter ? result[0][i].reply_senter : ''),
-                            replay_duration:(result[0][i].reply_duration ? result[0][i].replay_duration : ''),
-                        forward_id : result[0][i].forward_id.toString(),
+                            //replay_duration:(result[0][i].reply_duration ? result[0][i].replay_duration : ''),
+                            replay_duration: result[0][i].reply_duration ? result[0][i].reply_duration.toString() : '0',
+                        forward_id : result[0][i].forward_id ? result[0][i].forward_id.toString() : '0',
                         forward_count : result[0][i].forward_count.toString(),
                         forward_message_status : result[0][i].forward_message_status,
                         delete_status : "1",
@@ -594,6 +605,7 @@ async function get_individual_chat_list_response(sid,rid,room){
                         starred_status: ""
                       })
                       //add block message data entry
+                      console.log(result[0][i].id,result[0][i],result[0][i].reply_duration)
                       message_list_response.push({
                         id: result[0][i].id.toString(),
                         date: result[0][i].date,
@@ -610,8 +622,8 @@ async function get_individual_chat_list_response(sid,rid,room){
                             replay_message:(result[0][i].reply_message ? result[0][i].reply_message : ''),
                             replay_message_type:(result[0][i].reply_message_type ? result[0][i].reply_message_type : ''),
                             replay_senter:(result[0][i].reply_senter ? result[0][i].reply_senter : ''),
-                            replay_duration:(result[0][i].reply_duration ? result[0][i].replay_duration : ''),
-                        forward_id : result[0][i].forward_id.toString(),
+                            replay_duration: result[0][i].reply_duration ? result[0][i].reply_duration.toString() : '0',
+                        forward_id : result[0][i].forward_id? result[0][i].forward_id.toString() : '0',
                         forward_count : result[0][i].forward_count.toString(),
                         forward_message_status : result[0][i].forward_message_status,
                         delete_status : "1",
