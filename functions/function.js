@@ -547,6 +547,98 @@ async function get_individual_chat_list_response(sid,rid,room){
                         }
                       }
                     }
+                  }else if(result[0][i]['message_type']=='image' || result[0][i]['message_type']=='video' || result[0][i]['message_type']=='voice' || result[0][i]['message_type']=='doc'){
+                    //console.log(result[0][i]['message_type']);
+                    
+                    if(result[0][i]['message']!=''){
+                      let check_is_url=isUrl(result[0][i]['message']);
+                      //console.log(check_is_url);
+                      if(!check_is_url){
+                        result[0][i]['message']=BASE_URL+result[0][i]['message'];
+                      }
+                      // console.log(result[0][i]['message'])
+                      // exit ()
+                      if(date_array.includes(split_date[0])){
+                        //date already exist
+                        //add block message data entry
+                        message_list_response.push({
+                          id: result[0][i].id.toString(),
+                          date: result[0][i].date,
+                          senter_id: result[0][i].senter_id,
+                          receiver_id: result[0][i].receiver_id,
+                          message: result[0][i].message,
+                          message_type:result[0][i].message_type,
+                          duration: result[0][i].duration.toString(),
+                          message_status:result[0][i].message_status,
+                          room:result[0][i].room,
+                          type:result[0][i].type,
+                          status:group_status_json[j].status.toString(),
+                          replay_id:(result[0][i].replay_id ? result[0][i].replay_id : ''),
+                              replay_message:(result[0][i].reply_message ? result[0][i].reply_message : ''),
+                              replay_message_type:(result[0][i].reply_message_type ? result[0][i].reply_message_type : ''),
+                              replay_senter:(result[0][i].reply_senter ? result[0][i].reply_senter : ''),
+                              //replay_duration:(result[0][i].reply_duration ? result[0][i].replay_duration : ''),
+                              replay_duration: result[0][i].reply_duration ? result[0][i].reply_duration.toString() : '0',
+                          forward_id : result[0][i].forward_id ? result[0][i].forward_id.toString() : '0',
+                          forward_count : result[0][i].forward_count.toString(),
+                          forward_message_status : result[0][i].forward_message_status,
+                          delete_status : "1",
+                          starred_status: starred_status.toString()
+                        })
+                      }else{
+                        //date already not exist
+                        date_array.push(split_date[0]);
+                        message_list_response.push({
+                          id: "",
+                          date: result[0][i].date,
+                          senter_id: "",
+                          receiver_id: "",
+                          message: "",
+                          message_type:"date",
+                          duration: "",
+                          message_status:"0",
+                          room:"",
+                          type:"date",
+                          status:"",
+                          replay_id:"",
+                          replay_message:"",
+                          replay_message_type:"",
+                          replay_senter:"",
+                          replay_duration:"",
+                          forward_id : "",
+                          forward_count : "",
+                          forward_message_status : "",
+                          delete_status : "",
+                          starred_status: ""
+                        })
+                        //add block message data entry
+                        console.log(result[0][i].id,result[0][i],result[0][i].reply_duration)
+                        message_list_response.push({
+                          id: result[0][i].id.toString(),
+                          date: result[0][i].date,
+                          senter_id: result[0][i].senter_id,
+                          receiver_id: result[0][i].receiver_id,
+                          message: result[0][i].message,
+                          message_type:result[0][i].message_type,
+                          duration: result[0][i].duration.toString(),
+                          message_status:result[0][i].message_status,
+                          room:result[0][i].room,
+                          type:result[0][i].type,
+                          status:group_status_json[j].status.toString(),
+                          replay_id:(result[0][i].replay_id ? result[0][i].replay_id : ''),
+                              replay_message:(result[0][i].reply_message ? result[0][i].reply_message : ''),
+                              replay_message_type:(result[0][i].reply_message_type ? result[0][i].reply_message_type : ''),
+                              replay_senter:(result[0][i].reply_senter ? result[0][i].reply_senter : ''),
+                              replay_duration: result[0][i].reply_duration ? result[0][i].reply_duration.toString() : '0',
+                          forward_id : result[0][i].forward_id? result[0][i].forward_id.toString() : '0',
+                          forward_count : result[0][i].forward_count.toString(),
+                          forward_message_status : result[0][i].forward_message_status,
+                          delete_status : "1",
+                          starred_status: starred_status.toString()
+                        })
+                        //console.log('inside data array data', date_array)
+                      }
+                    }
                   }else{
                     //console.log('no others')
                     //push other msg to the array
@@ -1102,6 +1194,13 @@ async function get_group_chat_list_response(user_id,group_id){
             }else if(get_all_group_messages[i].message_type=='text'){
               //console.log('message')
               
+            }else if(get_all_group_messages[i].message_type=='image' || get_all_group_messages[i].message_type=='doc' || get_all_group_messages[i].message_type=='video' || get_all_group_messages[i].message_type=='voice'){
+              if(get_all_group_messages[i].message!=''){
+                let check_is_url=isUrl(get_all_group_messages[i].message);
+                if(!check_is_url){
+                  get_all_group_messages[i].message=BASE_URL+get_all_group_messages[i]['message'];
+                }
+              }
             }
 
         //get group_status
