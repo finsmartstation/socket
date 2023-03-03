@@ -1551,7 +1551,22 @@ async function get_recent_chat_list_response(user_id){
           if(opponent_data.length>0){
             opponent_id=get_recent_chat[i].receiver_id;
             opponent_name=opponent_data[0].name;
-            opponent_profile=opponent_data[0].profile_pic;
+            //check who can see user profile pic
+            let check_user_profile_privacy=await queries.check_user_privacy(get_recent_chat[i].receiver_id);
+            if(check_user_profile_privacy.length>0){
+              if(profile_options==0){
+                let profile_options=check_user_profile_privacy[0].options;
+              }else if(profile_options==1){
+
+              }else if(profile_options==2){
+
+              }else if(profile_options==3){
+                opponent_profile='uploads/default/profile.png';
+              }
+            }else{
+              
+            }
+            //opponent_profile=opponent_data[0].profile_pic;
             opponent_phone=opponent_data[0].phone;
           }else{
             opponent_id='';
@@ -1578,7 +1593,7 @@ async function get_recent_chat_list_response(user_id){
         if(opponent_profile!=''){
           opponent_profile=BASE_URL+opponent_profile;
         }else{
-          opponent_profile=BASE_URL+'uploads/default/profile.svg';
+          opponent_profile=BASE_URL+'uploads/default/profile.png';
         }
         //console.log('test data ',mute_status,mute_message,opponent_id,opponent_name,opponent_profile,opponent_phone);
         
@@ -2383,6 +2398,12 @@ function check_user_already_member_in_group(user_id, group_members){
   });
 }
 
+function check_user_data_exist_in_array(user_id, user_array){
+  return user_array.some(function(user){
+    return user.user_id == user_id
+  })
+}
+
 function isUrl(url) {
   var regexp = /(ftp|http|https):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?/
   return regexp.test(url);
@@ -2398,6 +2419,7 @@ async function get_group_info(user_id,accessToken,group_id){
   if(check_user_data.length>0){
     //check group data
     let check_group_data=await queries.check_group_data(group_id);
+    //console.log(check_group_data);
     if(check_group_data.length>0){
       let current_group_users=check_group_data[0].current_members;
       if(current_group_users!=''){
@@ -2408,12 +2430,109 @@ async function get_group_info(user_id,accessToken,group_id){
       console.log('yes',current_group_users);
       let group_users=[];
       for(var i=0; i<current_group_users.length; i++){
+        let profile_pic='';
+        let about='';
         let group_user_id=current_group_users[i].user_id;
+        let get_user_chat_list_data=await queries.user_chat_list_details(group_user_id);
+        console.log('user chat list ',group_user_id,get_user_chat_list_data);
+        
         let get_user_profile_data=await queries.get_user_profile(group_user_id)
+        console.log(get_user_profile_data[0].profile_pic)
         let name=get_user_profile_data[0].name;
-        let profile_pic=get_user_profile_data[0].profile_pic;
+        //check who can see my profile pic
+        let check_privacy_profile_pic=await queries.check_user_privacy(group_user_id,'profile_pic');
+        //console.log('profile privacy ',group_user_id,check_privacy_profile_pic);
+        if(check_privacy_profile_pic.length>0){
+          //console.log('user already set his privacy')
+          let profile_options=check_privacy_profile_pic[0].options;
+          if(profile_options==0){
+            profile_pic=get_user_profile_data[0].profile_pic;
+          }else if(profile_options==1){
+            //show only to chat_list users
+            //check this user is one of the member in chat_list
+            //check user_id is exist in array
+            //console.log('sssssss',get_user_chat_list_data)
+            let check_user_exist_in_chat_list=check_user_data_exist_in_array(user_id,get_user_chat_list_data)
+            if(check_user_exist_in_chat_list){
+              profile_pic=get_user_profile_data[0].profile_pic;
+              //console.log('s')
+            }else{
+              profile_pic='uploads/default/profile.png';
+            }
+            //console.log(check_user_exist_in_chat_list)
+          }else if(profile_options==2){
+            console.log('exclude chat list users',check_privacy_profile_pic)
+            let excepted_users=check_privacy_profile_pic[0].except_users;
+            if(excepted_users!=''){
+              excepted_users=JSON.parse(check_privacy_profile_pic[0].except_users);
+            }else{
+              excepted_users=[];
+            }
+            // console.log(excepted_users);
+            // console.log(excepted_users.indexOf(user_id))
+            if(excepted_users.indexOf(user_id)==1){
+              profile_pic='uploads/default/profile.png';
+            }else{
+              profile_pic=get_user_profile_data[0].profile_pic;
+            }
+            //console.log(profile_pic)
+            //exit 
+          }else if(profile_options==3){
+            profile_pic='uploads/default/profile.png';
+          }
+        }else{
+          //console.log('user not set privacy') 
+          profile_pic=get_user_profile_data[0].profile_pic;
+        }
+
+
+        
+        //console.log(profile_pic,'-',get_user_profile_data[0].profile_pic);
         let type=current_group_users[i].type;
-        let about=get_user_profile_data[0].about;
+
+        //check who can see my about
+        let check_privacy_about=await queries.check_user_privacy(group_user_id,'about');
+        if(check_privacy_about.length>0){
+          let about_options=check_privacy_about[0].options;
+          if(about_options==0){
+            about=get_user_profile_data[0].about;
+          }else if(about_options==1){
+            //check user is member of chat_list
+            let check_user_exist_in_chat_list=check_user_data_exist_in_array(user_id,get_user_chat_list_data)
+            if(check_user_exist_in_chat_list){
+              if(get_user_profile_data[0].about!=''){
+                about=get_user_profile_data[0].about;
+              }else{
+                about='Hey there! I am using Smart Station';
+              }
+            }else{
+              about='Hey there! I am using Smart Station';
+            }
+          }else if(about_options==2){
+            let excepted_users=check_privacy_about[0].except_users;
+            if(excepted_users!=''){
+              excepted_users=JSON.parse(check_privacy_about[0].except_users);
+            }else{
+              excepted_users=[];
+            }
+            if(excepted_users.indexOf(user_id)==1){
+              about='Hey there! I am using Smart Station';
+              
+            }else{
+              if(get_user_profile_data[0].about!=''){
+                about=get_user_profile_data[0].about;
+              }else{
+                about='Hey there! I am using Smart Station';
+              }
+            }
+          }else if(about_options==3){
+            about='Hey there! I am using Smart Station';
+          }
+        }else{
+          //console.log('user not set about option')
+          about=get_user_profile_data[0].about;
+        }
+        
         let phone=get_user_profile_data[0].phone;
         group_users.push({
           user_id: group_user_id,
@@ -2464,13 +2583,13 @@ async function get_group_info(user_id,accessToken,group_id){
       }else{
         media_count=0;
       }
-      console.log('media count ',media_count)
+      //console.log('media count ',media_count)
       //check private chat is muted or not
       let mute_status=0;
       let mute_end_datetime='';
       let check_group_muted=await queries.check_group_mute_notification(user_id,group_id);
       if(check_group_muted.length>0){
-        console.log('muted')
+        //console.log('muted')
         let end_datetime=check_group_muted[0].end_datetime;
         if(end_datetime=='0000-00-00 00:00:00'){
           mute_end_datetime='always';
@@ -2489,7 +2608,7 @@ async function get_group_info(user_id,accessToken,group_id){
         statuscode: 200,
         message: 'success',
         group_name: check_group_data[0].group_name,
-        group_profile: BASE_URL+check_group_data[0].profile_pic,
+        group_profile: BASE_URL+check_group_data[0].group_profile,
         number_of_members: current_group_users.length,
         created_datetime: check_group_data[0].created_datetime,
         description: check_group_data[0].group_description,
@@ -2524,5 +2643,6 @@ module.exports={
     check_group_user_is_admin,
     create_group_id,
     isUrl,
-    get_group_info
+    get_group_info,
+    check_user_data_exist_in_array
 }

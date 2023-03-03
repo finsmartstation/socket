@@ -493,6 +493,16 @@ async function archived_chat_list_details(user_id){
     return results[0];
 }
 
+async function user_chat_list_details(user_id){
+    const results=await db.sequelize.query("SELECT  case  senter_id when '"+user_id+"' then t1.receiver_id else t1.senter_id end as user_id FROM `chat_list` t1 JOIN `user` t2 on t2.id=t1.senter_id JOIN `user` t3 on t3.id=t1.receiver_id where (t1.senter_id='"+user_id+"' or t1.receiver_id='"+user_id+"') and t1.private_group='0' GROUP by t1.room");
+    return results[0];
+}
+
+async function check_user_privacy(user_id,privacy_type){
+    const results=await db.sequelize.query("select * from `user_chat_privacy` where user_id='"+user_id+"' and type='"+privacy_type+"'");
+    return results[0];
+}
+
 module.exports = {
     update_online_status,
     select_online_status,
@@ -584,5 +594,7 @@ module.exports = {
     check_user_is_archived,
     save_archived_chat_list,
     delete_archived_chat_list,
-    archived_chat_list_details
+    archived_chat_list_details,
+    user_chat_list_details,
+    check_user_privacy
 }
