@@ -777,6 +777,7 @@ io.sockets.on('connection',async function (socket) {
           //emit message
           //io.sockets.in(room).emit('message', setresponse);
           let individual_chat_list_response_sender=await functions.get_individual_chat_list_response(data.sid,data.rid,room);
+          io.sockets.in(room+'_'+data.sid).emit('message',individual_chat_list_response_sender);
           let individual_chat_list_response_receiver=await functions.get_individual_chat_list_response(data.rid,data.sid,room);
           //console.log(sockets,socket.id)
           //io.sockets.sockets[0].emit('message',sender_function_test_data)
@@ -787,7 +788,7 @@ io.sockets.on('connection',async function (socket) {
           //io.sockets.socket.id.emit('message','hello')
           //let receiver_function_test_data=await functions.get_individual_chat_list_response(data.rid,data.sid,room)
           //io.sockets.in(room).emit('message', individual_chat_list_response);
-          io.sockets.in(room+'_'+data.sid).emit('message',individual_chat_list_response_sender);
+          
           io.sockets.in(room+'_'+data.rid).emit('message',individual_chat_list_response_receiver);
           //chat_list
           // var results= await queries.get_recent_chat_accessToken(data.rid);
@@ -800,13 +801,14 @@ io.sockets.on('connection',async function (socket) {
           //   io.sockets.in(data.rid).emit('chat_list', get_recent_chat)
           //   io.sockets.in(room).emit('chat_list', get_recent_chat);
           // }
+          let get_recent_chat_response_senter=await functions.get_recent_chat_list_response(data.sid);
+          //io.sockets.in(room+'_'+data.sid).emit('chat_list', get_recent_chat_response_senter);
+          io.sockets.in(data.sid).emit('chat_list', get_recent_chat_response_senter);
           //get recent chat response
           let get_recent_chat_response_receiver=await functions.get_recent_chat_list_response(data.rid);
           //io.sockets.in(room+'_'+data.rid).emit('chat_list', get_recent_chat_response_receiver)
           io.sockets.in(data.rid).emit('chat_list', get_recent_chat_response_receiver)
-          let get_recent_chat_response_senter=await functions.get_recent_chat_list_response(data.sid);
-          //io.sockets.in(room+'_'+data.sid).emit('chat_list', get_recent_chat_response_senter);
-          io.sockets.in(data.sid).emit('chat_list', get_recent_chat_response_senter);
+          
           //push notification
           //get receiver device token
           //let receiver_devicetoken=await queries.get_device_token(data.rid);
@@ -1015,7 +1017,7 @@ io.sockets.on('connection',async function (socket) {
 
     socket.on('chat_list',async function (input) {
       try{
-        console.log(input)
+        //console.log(input)
         if(typeof(input)=='object'){
           // let user_data = {
           //   user_id: input.user_id,
@@ -4756,7 +4758,10 @@ io.sockets.on('connection',async function (socket) {
         console.error(e);
       }
     });
-
+    socket.on("testing",async function(data){
+      socket.join(data.user_id+'testing');
+      io.sockets.in(data.user_id+'testing').emit('testing',{status:true,statuscode:200,message:"testing successfull"})
+    })
     //unarchived_chat_list
     socket.on('unarchived_chat_list', async function(data){
       try{

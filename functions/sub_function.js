@@ -207,13 +207,13 @@ async function get_last_private_message(room_id,message_id,user_id,opponent_prof
   }
 
   async function get_last_group_message(room_id,message_id,user_id,group_members,group_current_members,group_left_members,group_removed_members,subject_history){
-    console.log('parameter ',room_id,message_id,user_id,group_members,group_current_members,group_left_members,group_removed_members)
+    //console.log('parameter ',room_id,message_id,user_id,group_members,group_current_members,group_left_members,group_removed_members)
     let set_user_id='"'+user_id+'"';
     let last_message_array=[];
     let last_message_available=false;
     
     let last_message_data=await queries.get_last_group_message(set_user_id,room_id,message_id)
-    console.log('last group message ',last_message_data)
+    //console.log('last group message ',last_message_data)
     
     //console.log('group basic data',group_details)
     if(last_message_data.length>0){
@@ -271,7 +271,7 @@ async function get_last_private_message(room_id,message_id,user_id,opponent_prof
 
                                 let remove_comma=added_users.replace(/,(?=[^,]*$)/, '');
                                 let added_msg=added_by_msg+remove_comma;
-                                console.log('added msg ',added_msg)
+                                //console.log('added msg ',added_msg)
                                 last_message_data[i].message=added_msg;
                                 last_message_array=[{
                                     id: last_message_data[i].id.toString(),
@@ -283,7 +283,7 @@ async function get_last_private_message(room_id,message_id,user_id,opponent_prof
                                   }];
                                   last_message_available=true;
                             }else if(last_message_data[i].message=='admin'){
-                                console.log('admin message loop')
+                                //console.log('admin message loop')
                                 let admin_notification_msg='';
                                 if(group_members.length>0){
                                     for(var l=0; l<group_members.length; l++){
@@ -334,13 +334,13 @@ async function get_last_private_message(room_id,message_id,user_id,opponent_prof
                                   }];
                                 last_message_available=true;
                             }else if(last_message_data[i].message=='removed'){
-                                console.log('removed message')
+                                //console.log('removed message')
                                 let removed_user_msg='';
                                 let removed_by='';
                                 let removed_user='';
                                 if(group_removed_members.length>0){
                                     for(var n=0; n<group_removed_members.length;n++){
-                                        console.log(last_message_data[i])
+                                        //console.log(last_message_data[i])
                                         if(last_message_data[i].date==group_removed_members[n].datetime){
                                             //check which user removed
                                             if(last_message_data[i].senter_id==user_id){
@@ -459,7 +459,7 @@ async function get_last_private_message(room_id,message_id,user_id,opponent_prof
                               }];
                             last_message_available=true;
                         }else if(last_message_data[i].message_type=='video' || last_message_data[i].message_type=='voice' || last_message_data[i].message_type=='doc' || last_message_data[i].message_type=='image'){
-                            console.log('other message');
+                            //console.log('other message');
                             if(last_message_data[i].senter_id==user_id){
                                 last_message_data[i].message='You: ';
                             }else{

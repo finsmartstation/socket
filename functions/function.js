@@ -740,12 +740,47 @@ async function get_individual_chat_list_response(sid,rid,room){
             let user_details=await queries.get_user_details(rid)
             let block_status=await queries.check_user_block_status(sid,rid)
             //console.log(user_details)
+             //check privacy who can see my profile pic
+             let check_privacy_profile_pic=await queries.check_user_privacy(rid,'profile_pic');
+             if(check_privacy_profile_pic.length>0){
+               let profile_options=check_privacy_profile_pic[0].options;
+               if(profile_options==0){
+                  user_details[0].profile_pic=user_details[0].profile_pic;
+               }else if(profile_options==1){
+                  //check user is member of users chat_list
+                  let get_user_chat_list_data=await queries.user_chat_list_details(rid);
+                  let check_user_exist_in_chat_list=check_user_data_exist_in_array(sid,get_user_chat_list_data);
+                  if(check_user_exist_in_chat_list){
+                    user_details[0].profile_pic=user_details[0].profile_pic;
+                  }else{
+                    user_details[0].profile_pic='uploads/default/profile.png';
+                  }
+               }else if(profile_options==2){
+                  let excepted_users=check_privacy_profile_pic[0].options;
+                  console.log(excepted_users)
+                  if(excepted_users!=''){
+                    excepted_users=JSON.parse(check_privacy_profile_pic[0].except_users);
+                  }else{
+                    excepted_users=[];
+                  }
+                  
+                  if(excepted_users.includes(sid)){
+                    user_details[0].profile_pic='uploads/default/profile.png';
+                  }else{
+                    user_details[0].profile_pic=user_details[0].profile_pic;
+                  }
+               }else if(profile_options==3){
+                 user_details[0].profile_pic='uploads/default/profile.png';
+               }
+             }else{
+               user_details[0].profile_pic=user_details[0].profile_pic;
+             }
             //set base url in profile pic
             if(user_details[0].profile_pic!=''){
               user_details[0].profile_pic=BASE_URL+user_details[0].profile_pic;
             }else{
               //give default profile url
-              user_details[0].profile_pic='';
+              user_details[0].profile_pic=BASE_URL+'uploads/default/profile.png';
             }
             let setresponse = {
               "status": true, "statuscode": 200, "message": "success", "data": {
@@ -1486,11 +1521,12 @@ function  get_datetime() {
 //   }
 // }
 
-async function get_recent_chat_list_response(user_id){
+async function get_recent_chat_list_response_old(user_id){
   let get_recent_chat=await queries.get_recent_chat(user_id);
 
-  //console.log('recent chat ',get_recent_chat);
-  //
+   //console.log('recent chat ',get_recent_chat);
+    
+  
   let chat_list_data=[];
   //get current datetime
   let archived_chat_list=await queries.archived_chat_list_details(user_id);
@@ -1501,10 +1537,12 @@ async function get_recent_chat_list_response(user_id){
       let mute_status=0;
       let mute_message='unmute';
       //console.log('group status',group_status)
+      
+     
       if(get_recent_chat[i].private_group==0){
         //private chat message
         let get_unread_message_count=await queries.get_unread_message_count(user_id,get_recent_chat[i].room)
-        console.log(user_id,get_recent_chat[i].room,'get unread msg count',get_unread_message_count)
+        //console.log(user_id,get_recent_chat[i].room,'get unread msg count',get_unread_message_count)
         let unread_count=0;
         if(get_unread_message_count==null){
           unread_count=0;
@@ -1547,25 +1585,109 @@ async function get_recent_chat_list_response(user_id){
         //get opponent data
         if(user_id==get_recent_chat[i].senter_id){
           opponent_data=await queries.get_user_profile(get_recent_chat[i].receiver_id);
-          console.log('current user ',opponent_data);
+          //console.log('current user ',opponent_data);
           if(opponent_data.length>0){
             opponent_id=get_recent_chat[i].receiver_id;
             opponent_name=opponent_data[0].name;
             //check who can see user profile pic
-            let check_user_profile_privacy=await queries.check_user_privacy(get_recent_chat[i].receiver_id);
-            if(check_user_profile_privacy.length>0){
-              if(profile_options==0){
-                let profile_options=check_user_profile_privacy[0].options;
-              }else if(profile_options==1){
-
-              }else if(profile_options==2){
-
-              }else if(profile_options==3){
+            //console.log(get_recent_chat[i].receiver_id)
+           
+            //let get_user_chat_list_data=await queries.user_chat_list_details(get_recent_chat[i].receiver_id);
+            //console.log(get_recent_chat[i].userid,get_recent_chat[i].options);
+            if(get_recent_chat[i].options==null){
+              //console.log('null data');
+              //show profile pic to all user
+              opponent_profile=opponent_data[0].profile_pic;
+            }else{
+              //console.log('not null')
+              if(get_recent_chat[i].options==0){
+                opponent_profile=opponent_data[0].profile_pic;
+              }else if(get_recent_chat[i].options==1){
+                //let get_user_chat_list_data=await queries.user_chat_list_details(get_recent_chat[i].userid);
+                let get_user_chat_list_data=await queries.user_chat_list_details(get_recent_chat[i].receiver_id);
+                let check_user_exist_in_chat_list=check_user_data_exist_in_array(get_recent_chat[i].receiver_id,get_user_chat_list_data);
+                //console.log(get_recent_chat[i].userid,get_user_chat_list_data,check_user_exist_in_chat_list)
+                if(check_user_exist_in_chat_list){
+                  opponent_profile=opponent_data[0].profile_pic;
+                }else{
+                  opponent_profile='uploads/default/profile.png';
+                }
+              }else if(get_recent_chat[i].options==2){
+                
+                //check 
+                let excepted_users=get_recent_chat[i].except_users;
+                if(excepted_users!=''){
+                  excepted_users=JSON.parse(get_recent_chat[i].except_users)
+                }else{
+                  excepted_users=[];
+                }
+                //console.log(user_id,get_recent_chat[i].except_users)
+                if(excepted_users.includes(user_id)){
+                  opponent_profile='uploads/default/profile.png';
+                }else{
+                  opponent_profile=opponent_data[0].profile_pic;
+                }
+                // console.log(opponent_profile)
+                // exit 
+              }else if(get_recent_chat[i].options==3){
                 opponent_profile='uploads/default/profile.png';
               }
-            }else{
-              
             }
+            
+            // let check_user_profile_privacy=await queries.check_user_privacy(get_recent_chat[i].receiver_id,'profile_pic');
+            // console.log(check_user_profile_privacy,get_recent_chat[i].receiver_id)
+            
+            // if(check_user_profile_privacy.length>0){
+              
+            //   let profile_options=check_user_profile_privacy[0].options;
+            //   if(profile_options==0){
+            //     if(opponent_data[0].profile_pic!=''){
+            //       opponent_profile=opponent_data[0].profile_pic;
+            //     }else{
+            //       opponent_profile='uploads/default/profile.png';
+            //     }
+            //   }else if(profile_options==1){
+                
+            //     //show only to chat_list users
+            //     //console.log(get_user_chat_list_data); 
+            //     let check_user_exist_in_chat_list=check_user_data_exist_in_array(user_id,get_user_chat_list_data);
+            //     //console.log(check_user_exist_in_chat_list);
+            //     if(check_user_exist_in_chat_list){
+            //         opponent_profile=opponent_data[0].profile_pic;
+            //     }else{
+            //       opponent_profile='uploads/default/profile.png';
+            //     }
+            //     //console.log('profile',opponent_profile)
+            //   }else if(profile_options==2){
+            //     let excepted_users=check_user_profile_privacy[0].except_users;
+            //     console.log(excepted_users)
+            //     if(excepted_users!=''){
+            //       excepted_users=JSON.parse(check_user_profile_privacy[0].except_users)
+            //     }else{
+            //       excepted_users=[];
+            //     }
+            //     // console.log(excepted_users,user_id)
+            //     // console.log(excepted_users.includes(user_id))
+            //     if(excepted_users.includes(user_id)){
+            //       //console.log('current user exist ')
+            //       opponent_profile='uploads/default/profile.png';
+            //     }else{
+            //       //console.log('not exist')
+            //       opponent_profile=opponent_data[0].profile_pic;
+            //     }
+            //     //console.log(profile_pic)
+            //   }else if(profile_options==3){
+            //     opponent_profile='uploads/default/profile.png';
+            //   }
+            // }else{
+            //     opponent_profile=opponent_data[0].profile_pic;
+            // }
+            // if(get_recent_chat[i].receiver_id==69){
+            //   console.log(opponent_profile)
+            //   exit 
+            // }
+            
+            // exit 
             //opponent_profile=opponent_data[0].profile_pic;
             opponent_phone=opponent_data[0].phone;
           }else{
@@ -1576,10 +1698,92 @@ async function get_recent_chat_list_response(user_id){
           }
         }else{
           opponent_data=await queries.get_user_profile(get_recent_chat[i].senter_id);
-          console.log('other user',opponent_data);
+          //console.log('other user',opponent_data);
           if(opponent_data.length>0){
             opponent_id=get_recent_chat[i].senter_id;
             opponent_name=opponent_data[0].name;
+            if(get_recent_chat[i].options==null){
+              //console.log('null data');
+              //show profile pic to all user
+              opponent_profile=opponent_data[0].profile_pic;
+            }else{
+              //console.log('not null')
+              if(get_recent_chat[i].options==0){
+                opponent_profile=opponent_data[0].profile_pic;
+              }else if(get_recent_chat[i].options==1){
+                //let get_user_chat_list_data=await queries.user_chat_list_details(get_recent_chat[i].userid);
+                let get_user_chat_list_data=await queries.user_chat_list_details(get_recent_chat[i].senter_id);
+                let check_user_exist_in_chat_list=check_user_data_exist_in_array(get_recent_chat[i].senter_id,get_user_chat_list_data);
+                //console.log(get_recent_chat[i].userid,get_user_chat_list_data,check_user_exist_in_chat_list)
+                if(check_user_exist_in_chat_list){
+                  opponent_profile=opponent_data[0].profile_pic;
+                }else{
+                  opponent_profile='uploads/default/profile.png';
+                }
+              }else if(get_recent_chat[i].options==2){
+                
+                //check 
+                let excepted_users=get_recent_chat[i].except_users;
+                if(excepted_users!=''){
+                  excepted_users=JSON.parse(get_recent_chat[i].except_users)
+                }else{
+                  excepted_users=[];
+                }
+                //console.log(user_id,get_recent_chat[i].except_users)
+                if(excepted_users.includes(user_id)){
+                  opponent_profile='uploads/default/profile.png';
+                }else{
+                  opponent_profile=opponent_data[0].profile_pic;
+                }
+                // console.log(opponent_profile)
+                // exit 
+              }else if(get_recent_chat[i].options==3){
+                opponent_profile='uploads/default/profile.png';
+              }
+            }
+            //check who can see user profile pic
+            //let get_user_chat_list_data=await queries.user_chat_list_details(get_recent_chat[i].senter_id);
+            // let check_user_profile_privacy=await queries.check_user_privacy(get_recent_chat[i].senter_id,'profile_pic');
+            // // console.log(get_user_chat_list_data);
+            // // console.log(check_user_profile_privacy)
+            // if(check_user_profile_privacy.length>0){
+            //   let profile_options=check_user_profile_privacy[0].options;
+            //   if(profile_options==0){
+            //     //console.log('option 1')
+            //     opponent_profile=opponent_data[0].profile_pic;
+            //   }else if(profile_options==1){
+            //     // console.log('option 1')
+            //     // console.log(get_user_chat_list_data)
+            //     let check_user_exist_in_chat_list=check_user_data_exist_in_array(user_id,get_user_chat_list_data); 
+            //     //console.log(check_user_exist_in_chat_list)
+            //     if(check_user_exist_in_chat_list){
+            //       //user exist in chat list
+            //       opponent_profile=opponent_data[0].profile_pic;
+            //     }else{
+            //       opponent_profile='uploads/default/profile.png';
+            //     }
+            //   }else if(profile_options==2){
+            //     let excepted_users=check_user_profile_privacy[0].except_users;
+            //     if(excepted_users!=''){
+            //       excepted_users=JSON.parse(check_user_profile_privacy[0].except_users);
+            //     }else{
+            //       excepted_users=[];
+            //     }
+            //     //console.log(excepted_users,excepted_users.includes(user_id))
+            //     if(excepted_users.includes(user_id)){
+            //       opponent_profile='uploads/default/profile.png';
+            //     }else{
+            //       opponent_profile=opponent_data[0].profile_pic;
+            //     }
+            //   }else if(profile_options==3){
+            //     //console.log('option 3')
+            //     opponent_profile='uploads/default/profile.png';
+            //   }
+            // }else{
+            //   opponent_profile=opponent_data[0].profile_pic;
+            // }
+            // console.log(get_recent_chat[i].senter_id,opponent_profile)
+            // exit 
             opponent_profile=opponent_data[0].profile_pic;
             opponent_phone=opponent_data[0].phone;
           }else{
@@ -1595,6 +1799,7 @@ async function get_recent_chat_list_response(user_id){
         }else{
           opponent_profile=BASE_URL+'uploads/default/profile.png';
         }
+        
         //console.log('test data ',mute_status,mute_message,opponent_id,opponent_name,opponent_profile,opponent_phone);
         
         for(var j=0; j<group_status.length; j++){
@@ -2213,6 +2418,821 @@ async function get_recent_chat_list_response(user_id){
   
 } 
 
+async function get_recent_chat_list_response(user_id){
+  let get_recent_chat=await queries.get_recent_chat(user_id);
+
+   //console.log('recent chat ',get_recent_chat);
+    console.log('testing')
+  
+  let chat_list_data=[];
+  //get current datetime
+  let archived_chat_list=await queries.archived_chat_list_details(user_id);
+  let current_datetime=get_datetime();
+  if(get_recent_chat.length>0){
+    for(var i=0; i<get_recent_chat.length; i++){
+      let group_status=JSON.parse(get_recent_chat[i].group_status);
+      let mute_status=0;
+      let mute_message='unmute';
+      //console.log('group status',group_status)
+      
+     
+      if(get_recent_chat[i].private_group==0){
+        //private chat message
+        let get_unread_message_count=await queries.get_unread_message_count(user_id,get_recent_chat[i].room)
+        //console.log(user_id,get_recent_chat[i].room,'get unread msg count',get_unread_message_count)
+        let unread_count=0;
+        if(get_unread_message_count==null){
+          unread_count=0;
+        }else{
+          unread_count=get_unread_message_count;
+        }
+        //console.log('unread count',unread_count)
+        //get mute notification data
+        //console.log(user_id,get_recent_chat[i].receiver_id)
+        
+        //let get_mute_notification=await queries.get_mute_notification(user_id,get_recent_chat[i].receiver_id);
+        //console.log('mute data', get_mute_notification);
+        //if(get_mute_notification.length>0){
+        if(get_recent_chat[i].mute_id!=null){
+          console.log('ss',get_recent_chat[i])
+          
+          if(get_recent_chat[i].mute_type!='always' && get_recent_chat[i].mute_end_datetime!='0000-00-00 00:00:00'){
+            //console.log('sss inner loop',current_datetime,get_mute_notification[0].end_datetime)
+            if(current_datetime<=get_recent_chat[i].mute_end_datetime){
+              //console.log('mute');
+              mute_status=1;
+              mute_message='mute';
+            }else{
+              //console.log('unmute');
+              mute_status=0;
+              mute_message='unmute';
+            }
+          }else{
+            // console.log('ss',get_recent_chat[i].id)
+            // exit 
+            //always muted
+            mute_status=1;
+            mute_message='mute';
+          }
+        }else{
+          
+          mute_status=0;
+          mute_message='unmute';
+        }
+        let opponent_data;
+        let opponent_id='';
+        let opponent_name='';
+        let opponent_profile='';
+        let opponent_phone='';
+        //get opponent data
+        //if(user_id==get_recent_chat[i].senter_id){
+          //opponent_data=await queries.get_user_profile(get_recent_chat[i].receiver_id);
+          //console.log('current user ',opponent_data);
+          //if(opponent_data.length>0){
+            opponent_id=get_recent_chat[i].receiver_id;
+            opponent_name=get_recent_chat[i].opponent_name;
+            //check who can see user profile pic
+            //console.log(get_recent_chat[i].receiver_id)
+           
+            //let get_user_chat_list_data=await queries.user_chat_list_details(get_recent_chat[i].receiver_id);
+            //console.log(get_recent_chat[i].userid,get_recent_chat[i].options);
+            if(get_recent_chat[i].options==null){
+              //console.log('null data');
+              //show profile pic to all user
+              //opponent_profile=opponent_data[0].profile_pic;
+              opponent_profile=get_recent_chat[i].opponent_profile_pic;
+            }else{
+              //console.log('not null')
+              if(get_recent_chat[i].options==0){
+                //opponent_profile=opponent_data[0].profile_pic;
+                opponent_profile=get_recent_chat[i].opponent_profile_pic;
+              }else if(get_recent_chat[i].options==1){
+                //let get_user_chat_list_data=await queries.user_chat_list_details(get_recent_chat[i].userid);
+                // let get_user_chat_list_data=await queries.user_chat_list_details(get_recent_chat[i].receiver_id);
+                // let check_user_exist_in_chat_list=check_user_data_exist_in_array(get_recent_chat[i].receiver_id,get_user_chat_list_data);
+                let get_user_chat_list_data=await queries.user_chat_list_details(get_recent_chat[i].opponent_id);
+                let check_user_exist_in_chat_list=check_user_data_exist_in_array(get_recent_chat[i].opponent_id,get_user_chat_list_data);
+                //console.log(get_recent_chat[i].userid,get_user_chat_list_data,check_user_exist_in_chat_list)
+                if(check_user_exist_in_chat_list){
+                  //opponent_profile=opponent_data[0].profile_pic;
+                  opponent_profile=get_recent_chat[i].opponent_profile_pic;
+                }else{
+                  opponent_profile='uploads/default/profile.png';
+                }
+              }else if(get_recent_chat[i].options==2){
+                
+                //check 
+                let excepted_users=get_recent_chat[i].except_users;
+                if(excepted_users!=''){
+                  excepted_users=JSON.parse(get_recent_chat[i].except_users)
+                }else{
+                  excepted_users=[];
+                }
+                //console.log(user_id,get_recent_chat[i].except_users)
+                if(excepted_users.includes(user_id)){
+                  opponent_profile='uploads/default/profile.png';
+                }else{
+                  //opponent_profile=opponent_data[0].profile_pic;
+                  opponent_profile=get_recent_chat[i].opponent_profile_pic;
+                }
+                // console.log(opponent_profile)
+                // exit 
+              }else if(get_recent_chat[i].options==3){
+                opponent_profile='uploads/default/profile.png';
+              }
+            }
+            
+            
+            //opponent_profile=opponent_data[0].profile_pic;
+            //opponent_phone=opponent_data[0].phone;
+            opponent_phone=get_recent_chat[i].opponent_phone;
+          //}else{
+            // opponent_id='';
+            // opponent_name='';
+            // opponent_profile='';
+            // opponent_phone='';
+          //}
+        // }else{
+        //   opponent_data=await queries.get_user_profile(get_recent_chat[i].senter_id);
+        //   //console.log('other user',opponent_data);
+        //   if(opponent_data.length>0){
+        //     opponent_id=get_recent_chat[i].senter_id;
+        //     opponent_name=opponent_data[0].name;
+        //     if(get_recent_chat[i].options==null){
+        //       //console.log('null data');
+        //       //show profile pic to all user
+        //       opponent_profile=opponent_data[0].profile_pic;
+        //     }else{
+        //       //console.log('not null')
+        //       if(get_recent_chat[i].options==0){
+        //         opponent_profile=opponent_data[0].profile_pic;
+        //       }else if(get_recent_chat[i].options==1){
+        //         //let get_user_chat_list_data=await queries.user_chat_list_details(get_recent_chat[i].userid);
+        //         let get_user_chat_list_data=await queries.user_chat_list_details(get_recent_chat[i].senter_id);
+        //         let check_user_exist_in_chat_list=check_user_data_exist_in_array(get_recent_chat[i].senter_id,get_user_chat_list_data);
+        //         //console.log(get_recent_chat[i].userid,get_user_chat_list_data,check_user_exist_in_chat_list)
+        //         if(check_user_exist_in_chat_list){
+        //           opponent_profile=opponent_data[0].profile_pic;
+        //         }else{
+        //           opponent_profile='uploads/default/profile.png';
+        //         }
+        //       }else if(get_recent_chat[i].options==2){
+                
+        //         //check 
+        //         let excepted_users=get_recent_chat[i].except_users;
+        //         if(excepted_users!=''){
+        //           excepted_users=JSON.parse(get_recent_chat[i].except_users)
+        //         }else{
+        //           excepted_users=[];
+        //         }
+        //         //console.log(user_id,get_recent_chat[i].except_users)
+        //         if(excepted_users.includes(user_id)){
+        //           opponent_profile='uploads/default/profile.png';
+        //         }else{
+        //           opponent_profile=opponent_data[0].profile_pic;
+        //         }
+        //         // console.log(opponent_profile)
+        //         // exit 
+        //       }else if(get_recent_chat[i].options==3){
+        //         opponent_profile='uploads/default/profile.png';
+        //       }
+        //     }
+            
+        //     opponent_profile=opponent_data[0].profile_pic;
+        //     opponent_phone=opponent_data[0].phone;
+        //   }else{
+        //     opponent_id='';
+        //     opponent_name='';
+        //     opponent_profile='';
+        //     opponent_phone='';
+        //   }
+        // }
+        //set base url to profile pic
+        if(opponent_profile!=''){
+          opponent_profile=BASE_URL+opponent_profile;
+        }else{
+          opponent_profile=BASE_URL+'uploads/default/profile.png';
+        }
+        
+        //console.log('test data ',mute_status,mute_message,opponent_id,opponent_name,opponent_profile,opponent_phone);
+        
+        for(var j=0; j<group_status.length; j++){
+          //console.log(group_status[j]);
+          //check message is deleted or not
+          if(group_status[j].user_id==user_id && group_status[j].status==0){
+            //console.log('message is deleted')
+            if('deleted_by' in group_status[j]){
+              if(group_status[j].user_id==user_id){
+                get_recent_chat[i].message='You deleted this message';
+              }else{
+                get_recent_chat[i].message='This message was deleted';
+              }
+            }else{
+              get_recent_chat[i].message='This message was deleted';
+            }
+            chat_list_data.push({
+              id: get_recent_chat[i].id.toString(),
+              date: get_recent_chat[i].date,
+              message: get_recent_chat[i].message,
+              unread_message: unread_count.toString(),
+              userid: opponent_id.toString(),
+              name: opponent_name,
+              profile: opponent_profile,
+              phone: opponent_phone,
+              mute_status: mute_status.toString(),
+              mute_message: mute_message,
+              room: get_recent_chat[i].room,
+              message_type:get_recent_chat[i].message_type,
+              chat_type: 'private',
+              pin_status: get_recent_chat[i].pin_status.toString()
+            })
+          }else if(group_status[j].user_id==user_id && group_status[j].status==1){
+            //console.log('message is not deleted')
+            //check message type
+            if(get_recent_chat[i].message_type=='notification'){
+              if(get_recent_chat[i].message=='block'){
+                if(user_id==get_recent_chat[i].senter_id){
+                  get_recent_chat[i].message='You blocked this contact.';
+                  //console.log('yes blocked',user_id,get_recent_chat[i].senter_id)
+                }else{
+                  //get last private message
+                  //let get_last_private_message=get_last_private_message(get_recent_chat[i].room,get_recent_chat[i].id,user_id,opponent_profile,opponent_phone);
+                  //let get_last_private_message=get_last_private_message();
+                  let get_last_private_message=await sub_function.get_last_private_message(get_recent_chat[i].room,get_recent_chat[i].id,user_id,opponent_profile,opponent_phone);
+                  console.log(get_last_private_message)
+                  if(get_last_private_message==false){
+                    get_recent_chat[i].message=get_last_private_message[0].message;
+                    // chat_list_data.push({
+                    //   id: get_recent_chat[i].id,
+                    //   date: get_recent_chat[i].date,
+                    //   message: '',
+                    //   unread_message: unread_count,
+                    //   user_id: opponent_id,
+                    //   name: opponent_name,
+                    //   profile: opponent_profile,
+                    //   phone: opponent_phone,
+                    //   mute_status: mute_status,
+                    //   mute_message: mute_message,
+                    //   room: get_recent_chat[i].room,
+                    //   message_type:get_recent_chat[i].message_type,
+                    //   chat_type: 'private'
+                    // })
+                  }else{
+                    get_recent_chat[i].id=get_last_private_message[0].id;
+                    get_recent_chat[i].date=get_last_private_message[0].date;
+                    get_recent_chat[i].message=get_last_private_message[0].message
+                    get_recent_chat[i].message_type=get_last_private_message[0].message_type
+                    // chat_list_data.push({
+                    //   id: get_last_private_message[0].id,
+                    //   date: get_last_private_message[0].date,
+                    //   message: get_last_private_message[0].message,
+                    //   unread_message: get_last_private_message[0].unread_message,
+                    //   user_id: get_last_private_message[0].user_id,
+                    //   name: get_last_private_message[0].name,
+                    //   profile: get_last_private_message[0].profile,
+                    //   phone: get_last_private_message[0].phone,
+                    //   mute_status: mute_status,
+                    //   mute_message: mute_message,
+                    //   room: get_last_private_message[0].room,
+                    //   message_type:get_last_private_message[0].message_type,
+                    //   chat_type: 'private'
+                    // })
+                  }
+                }
+              }else if(get_recent_chat[i].message=='unblock'){
+                if(user_id==get_recent_chat[i].senter_id){
+                  get_recent_chat[i].message='You unblocked this contact.';
+                }else{
+                  //get last private message
+                  let get_last_private_message=await sub_function.get_last_private_message(get_recent_chat[i].room,get_recent_chat[i].id,user_id,opponent_profile,opponent_phone);
+                  console.log(get_last_private_message)
+                  if(get_last_private_message==false){
+                    get_recent_chat[i].message='';
+                    // chat_list_data.push({
+                    //   id: get_recent_chat[i].id,
+                    //   date: get_recent_chat[i].date,
+                    //   message: '',
+                    //   unread_message: unread_count,
+                    //   user_id: opponent_id,
+                    //   name: opponent_name,
+                    //   profile: opponent_profile,
+                    //   phone: opponent_phone,
+                    //   mute_status: mute_status,
+                    //   mute_message: mute_message,
+                    //   room: get_recent_chat[i].room,
+                    //   message_type:get_recent_chat[i].message_type,
+                    //   chat_type: 'private'
+                    // })
+                  }else{
+                    get_recent_chat[i].id=get_last_private_message[0].id;
+                    get_recent_chat[i].date=get_last_private_message[0].date;
+                    get_recent_chat[i].message=get_last_private_message[0].message
+                    get_recent_chat[i].message_type=get_last_private_message[0].message_type
+                    // chat_list_data.push({
+                    //   id: get_last_private_message[0].id,
+                    //   date: get_last_private_message[0].date,
+                    //   message: get_last_private_message[0].message,
+                    //   unread_message: get_last_private_message[0].unread_message,
+                    //   user_id: get_last_private_message[0].user_id,
+                    //   name: get_last_private_message[0].name,
+                    //   profile: get_last_private_message[0].profile,
+                    //   phone: get_last_private_message[0].phone,
+                    //   mute_status: mute_status,
+                    //   mute_message: mute_message,
+                    //   room: get_last_private_message[0].room,
+                    //   message_type:get_last_private_message[0].message_type,
+                    //   chat_type: 'private'
+                    // })
+                  }
+                }
+              }
+            }
+            //push object to array chat list 
+            chat_list_data.push({
+              id: get_recent_chat[i].id.toString(),
+              date: get_recent_chat[i].date,
+              message: get_recent_chat[i].message,
+              unread_message: unread_count.toString(),
+              userid: opponent_id.toString(),
+              name: opponent_name,
+              profile: opponent_profile,
+              phone: opponent_phone,
+              mute_status: mute_status.toString(),
+              mute_message: mute_message,
+              room: get_recent_chat[i].room,
+              message_type:get_recent_chat[i].message_type,
+              chat_type: 'private',
+              pin_status: get_recent_chat[i].pin_status.toString()
+            })
+          }else if(group_status[j].user_id==user_id && group_status[j].status==2){
+            //console.log('message is cleared')
+            //get last private message
+            //let get_last_private_message=get_last_private_message(get_recent_chat[i].room,get_recent_chat[i].id,opponent_id,opponent_profile,opponent_phone);
+            let get_last_private_message=await sub_function.get_last_private_message(get_recent_chat[i].room,get_recent_chat[i].id,user_id,opponent_profile,opponent_phone);
+            console.log(get_last_private_message)
+            if(get_last_private_message==false){
+              chat_list_data.push({
+                id: get_recent_chat[i].id.toString(),
+                date: get_recent_chat[i].date,
+                message: '',
+                unread_message: unread_count.toString(),
+                userid: opponent_id.toString(),
+                name: opponent_name,
+                profile: opponent_profile,
+                phone: opponent_phone,
+                mute_status: mute_status.toString(),
+                mute_message: mute_message,
+                room: get_recent_chat[i].room,
+                message_type:get_recent_chat[i].message_type,
+                chat_type: 'private',
+                pin_status: get_recent_chat[i].pin_status.toString()
+              })
+            }else{
+              chat_list_data.push({
+                id: get_last_private_message[0].id.toString(),
+                date: get_last_private_message[0].date,
+                message: get_last_private_message[0].message,
+                unread_message: get_last_private_message[0].unread_message.toString(),
+                userid: get_last_private_message[0].user_id.toString(),
+                name: get_last_private_message[0].name,
+                profile: get_last_private_message[0].profile,
+                phone: get_last_private_message[0].phone,
+                mute_status: mute_status.toString(),
+                mute_message: mute_message,
+                room: get_last_private_message[0].room,
+                message_type:get_last_private_message[0].message_type,
+                chat_type: 'private',
+                pin_status: get_recent_chat[i].pin_status.toString()
+              })
+            }
+          }
+        }
+      }else{
+        //group chat message
+        let unread_count=0;
+        let get_unread_message_count_for_group=await queries.get_unread_message_count_for_group(user_id,get_recent_chat[i].room);
+        console.log('group unread count ',get_unread_message_count_for_group);
+        if(get_unread_message_count_for_group.length>0){
+          
+          let group_unread_message_status=JSON.parse(get_unread_message_count_for_group[0].group_status);
+          if(get_unread_message_count_for_group[0].message_status==1){
+            for(var k=0; k<group_unread_message_status; k++){
+              console.log(group_unread_message_status[k]);
+              if(user_id==group_unread_message_status[k].user_id && group_unread_message_status[k].message_status==1){
+                unread_count=unread_count+1;
+              }else{
+                unread_count=unread_count+0;
+              }
+            }
+          }else{
+            unread_count=0;
+          }
+          
+          
+        }else{
+          unread_count=0;
+        }
+        
+        //console.log('unread group count',unread_count)
+        //check group is muted by this user
+        //let check_group_mute_notification=await queries.check_group_mute_notification(user_id,get_recent_chat[i].room);
+        //console.log('group mute data ',check_group_mute_notification)
+        //if(check_group_mute_notification.length>0){
+        if(get_recent_chat[i].mute_id!=null){
+          if(get_recent_chat[i].mute_type!='always' && get_recent_chat[i].mute_end_datetime!='0000-00-00 00:00:00'){
+            //let get_mute_notification=await queries.get_mute_notification(user_id,get_recent_chat[i].receiver_id);
+            //console.log('sss inner loop',current_datetime,check_group_mute_notification[0].end_datetime)
+            if(current_datetime<=get_recent_chat[i].mute_end_datetime){
+              mute_status=1;
+              mute_message='mute';
+            }else{
+              mute_status=0;
+              mute_message='unmute';
+            }
+          }else{
+            mute_status=1;
+            mute_message='mute';
+          }
+        }else{
+          mute_status=0;
+          mute_message='unmute';
+        }
+        //get group data
+        //let group_details=await queries.get_group_basic_details(get_recent_chat[i].room);
+        //console.log('group basic details ', group_details, get_recent_chat[i].room)
+        let group_name='';
+        let group_profile='';
+        let group_members;
+        let group_current_members;
+        let group_left_members;
+        let group_removed_members;
+        //if(group_details.length>0){
+          if(get_recent_chat[i].group_id!=null){
+          group_name=get_recent_chat[i].opponent_name;
+          group_profile=get_recent_chat[i].opponent_profile_pic
+          if(group_profile!=''){
+            group_profile=BASE_URL+group_profile;
+          }else{
+            group_profile=BASE_URL+'uploads/default/group_profile.png';
+          }
+          if(get_recent_chat[i].members!=''){
+            group_members=JSON.parse(get_recent_chat[i].members);
+          }else{
+            group_members=[];
+          }
+          if(get_recent_chat[i].current_members!=''){
+            group_current_members=JSON.parse(get_recent_chat[i].current_members);
+          }else{
+            group_current_members=[];
+          }
+          if(get_recent_chat[i].left_members!=''){
+            group_left_members=JSON.parse(get_recent_chat[i].left_members);
+          }else{
+            group_left_members=[];
+          }
+          if(get_recent_chat[i].removed_members!=''){
+            group_removed_members=JSON.parse(get_recent_chat[i].removed_members);
+          }else{
+            group_removed_members=[];
+          }
+          if(get_recent_chat[i].subject_history!=''){
+            console.log(get_recent_chat[i].id,get_recent_chat[i].subject_history)
+            subject_history=JSON.parse(get_recent_chat[i].subject_history);
+          }else{
+            subject_history=[];
+          }
+        }else{
+          group_name='';
+          group_profile=BASE_URL+'uploads/default/group_profile.png';
+          group_members=[];
+          group_current_members=[];
+          group_left_members=[];
+          group_removed_members=[];
+          subject_history=[];
+        }
+        
+        //check message is deleted or not
+        if(group_status.length>0){
+          for(var j=0; j<group_status.length; j++){
+            //console.log('group_status json data',group_status[j].user_id)
+            if(group_status[j].user_id==user_id && group_status[j].status==0){
+              //check deleted_by key exist in array
+              if('deleted_by' in group_status[j]){
+                if(group_status[j].deleted_by==user_id){
+                  get_recent_chat[i].message='You deleted this message';
+                }else{
+                  get_recent_chat[i].message='This message was deleted';
+                }
+              }else{
+                get_recent_chat[i].message='This message was deleted';
+              }
+
+              chat_list_data.push({
+                id: get_recent_chat[i].id.toString(),
+                date: get_recent_chat[i].date,
+                message: get_recent_chat[i].message,
+                unread_message: unread_count.toString(),
+                userid: get_recent_chat[i].room.toString(),
+                name: group_name,
+                profile: group_profile,
+                phone: '',
+                mute_status: mute_status.toString(),
+                mute_message: mute_message,
+                room: get_recent_chat[i].room,
+                message_type:get_recent_chat[i].message_type,
+                chat_type: 'group',
+                pin_status: get_recent_chat[i].pin_status.toString()
+              });
+            }else if(group_status[j].user_id==user_id && group_status[j].status==1){
+              //set message based on message_type
+              if(get_recent_chat[i].message_type=='notification'){
+                if(get_recent_chat[i].message=='added'){
+                  //console.log('group_members',group_members)
+                  let added_by_msg='';
+                  let added_user_msg='';
+                  let added_users='';
+                  for(var k=0; k<group_members.length;k++){
+                    //not need to check first index of the array
+                    //console.log(group_members[k].user_id,'length ',group_members.length)
+                    if(k!=0){
+                      //console.log(k)
+                      //console.log(group_members[k].user_id,'length ',group_members.length)
+                      if(get_recent_chat[i].date==group_members[k].datetime){
+                        //check which user added
+                        //console.log('sss');
+                        
+                        //console.log(k,user_id, group_members[k].added_by)
+                        
+                        if(user_id==group_members[k].added_by){
+                          added_by_msg='You added ';
+                        }else{
+                          added_by_msg=await queries.get_username(group_members[k].added_by)+' added ';
+                        }
+                        // console.log(added_by_msg)
+                        // console.log(k,user_id, group_members[k].user_id)
+                        if(group_members[k].user_id==user_id){
+                          added_user_msg='You';
+                        }else{
+                          //console.log('entered in loop')
+                          //added_user_msg=group_members[k].username;
+                          added_user_msg=await queries.get_username(group_members[k].user_id);
+                        }
+                        
+                        added_users=added_users+added_user_msg+', ';
+                        //console.log('added user',added_users)
+                      }
+                    }
+                    
+                  }
+
+                  //console.log(added_user_msg)
+                       
+
+                  let remove_comma=added_users.replace(/,(?=[^,]*$)/, '');
+                  let added_msg=added_by_msg+remove_comma;
+                  //console.log('added msg ',added_msg)
+                  get_recent_chat[i].message=added_msg;
+                  // get_all_group_messages[i].message_type='';
+                  // get_all_group_messages[i].type='notification';
+
+                }else if(get_recent_chat[i].message=='admin'){
+                  let admin_notification_msg='';
+                  let admin_notification_msg_status=false;
+                  if(group_members.length>0){
+                    for(var l=0; l<group_members.length; l++){
+                      if(get_recent_chat[i].date==group_members[l].datetime){
+                        if(user_id==group_members[l].user_id){
+                          admin_notification_msg_status=true;
+                          admin_notification_msg="You're now an admin";
+                        }else{
+                          //get the last message
+                          let get_last_group_message=await sub_function.get_last_group_message(get_recent_chat[i].room,get_recent_chat[i].id,user_id,group_members,group_current_members,group_left_members,group_removed_members);
+                          console.log(get_last_group_message);
+                          if(get_last_group_message==false){
+                            
+                            
+                            get_recent_chat[0].message= '';
+                          
+                            
+                          }else{
+                            get_recent_chat[0].id= get_last_group_message[0].id;
+                            get_recent_chat[0].date= get_last_group_message[0].date;
+                            get_recent_chat[0].message= get_last_group_message[0].message;
+                            get_recent_chat[0].message_type= get_last_group_message[0].message_type;
+                          }
+                        }
+                      }
+                    }
+                  }
+                  if(admin_notification_msg_status){
+                    get_recent_chat[i].message=admin_notification_msg;
+                  }
+                  
+                }else if(get_recent_chat[i].message=='left'){
+                  let left_msg='';
+                  if(group_left_members.length>0){
+                    for(var m=0; m<group_left_members.length; m++){
+                      if(get_recent_chat[i].date==group_left_members[m].datetime){
+                        if(user_id==group_left_members[m].user_id){
+                          left_msg='You left';
+                        }else{
+                          left_msg=await queries.get_username(group_left_members[m].user_id)+' left';
+                        }
+                      }
+                    }
+                  }
+                  get_recent_chat[i].message=left_msg;
+                }else if(get_recent_chat[i].message=='removed'){
+                  let removed_user_msg='';
+                  let removed_by='';
+                  let removed_user='';
+                  if(group_removed_members.length>0){
+                    for(var n=0; n<group_removed_members.length;n++){
+                      console.log(get_recent_chat[i].date)
+                      if(get_recent_chat[i].date==group_removed_members[n].datetime){
+                        //check which user removed
+                        if(get_recent_chat[i].senter_id==user_id){
+                          removed_by='You removed ';
+                        }else{
+                          removed_by=await queries.get_username(get_recent_chat[i].senter_id)+' removed ';
+                        }
+                        //check which user has left
+                        if(user_id==group_removed_members[n].user_id){
+                          removed_user='You';
+                        }else{
+                          removed_user=await queries.get_username(group_removed_members[n].user_id);
+                        }
+                      }
+                    }
+                  }
+                  removed_user_msg=removed_by+removed_user;
+                  get_recent_chat[i].message=removed_user_msg;
+                }else if(get_recent_chat[i].message=='changed_group_icon'){
+                  let icon_change_message='';
+                  let content="changed this group's icon";
+                  //console.log('senter id ',get_recent_chat[i].senter_id)
+                  if(get_recent_chat[i].senter_id==user_id){
+                    icon_change_message='You '+content;
+                  }else{
+                    icon_change_message=await queries.get_username(get_recent_chat[i].senter_id)+' '+content;
+                  }
+                  get_recent_chat[i].message=icon_change_message;
+                  //exit ();
+                }else if(get_recent_chat[i].message=='changed_group_description'){
+                  let description_message='';
+                  if(get_recent_chat[i].senter_id==user_id){
+                    description_message='You changed the group description. Tap to view.';
+                  }else{
+                    description_message=await queries.get_username(get_recent_chat[i].senter_id)+' changed the group description. Tap to view.';
+                  }
+                  get_recent_chat[i].message=description_message;
+                }else if(get_recent_chat[i].message=='changed_group_name'){
+                  let subject_message='';
+                  let subject_content='changed the subject from';
+                
+                  for(var subject_i=0; subject_i<subject_history.length; subject_i++){
+                    if(get_recent_chat[i].date==subject_history[subject_i].datetime){
+                      
+                      if(subject_history[subject_i].user_id==user_id){
+                        //you
+                        let subject_index=subject_i-1;
+                        if(subject_index>=0){
+                          let old_subject=subject_history[subject_index].subject ? subject_history[subject_index].subject : '';
+                          let new_subject=subject_history[subject_i].subject;
+                          subject_message='You '+subject_content+' "'+old_subject+'" to "'+new_subject+'"';
+                        }
+                      }else{
+                        //get other user name
+                        let subject_index=subject_i-1;
+                        //console.log(group_subject_history[subject_i],subject_index)
+                        if(subject_index>=0){
+                          //console.log('date time loop',group_subject_history[subject_i].datetime,group_subject_history[subject_i].user_id,user_id)
+                          let old_subject=subject_history[subject_index].subject ? subject_history[subject_index].subject : '';
+                          let new_subject=subject_history[subject_i].subject;
+                          subject_message=await queries.get_username(subject_history[subject_i].user_id)+' '+subject_content+' "'+old_subject+'" to "'+new_subject+'"';
+                        }
+                        
+                      }
+                    }
+                  }
+                  get_recent_chat[i].message=subject_message;
+                }
+              }else if(get_recent_chat[i].message_type=='text'){
+                if(get_recent_chat[i].senter_id==user_id){
+                  get_recent_chat[i].message='You: '+get_recent_chat[i].message;
+                }else{
+                  get_recent_chat[i].message=await queries.get_username(get_recent_chat[i].senter_id)+': '+get_recent_chat[i].message;
+                }
+              }else if(get_recent_chat[i].message_type=='image' || get_recent_chat[i].message_type=='voice' || get_recent_chat[i].message_type=='video' || get_recent_chat[i].message_type=='doc'){
+                if(get_recent_chat[i].senter_id==user_id){
+                  get_recent_chat[i].message='You: ';
+                }else{
+                  get_recent_chat[i].message=await queries.get_username(get_recent_chat[i].senter_id)+': ';
+                }
+              }
+
+              chat_list_data.push({
+                id: get_recent_chat[i].id.toString(),
+                date: get_recent_chat[i].date,
+                message: get_recent_chat[i].message,
+                unread_message: unread_count.toString(),
+                userid: get_recent_chat[i].room.toString(),
+                name: group_name,
+                profile: group_profile,
+                phone: '',
+                mute_status: mute_status.toString(),
+                mute_message: mute_message,
+                room: get_recent_chat[i].room,
+                message_type:get_recent_chat[i].message_type,
+                chat_type: 'group',
+                pin_status: get_recent_chat[i].pin_status.toString()
+              });
+            }else if(group_status[j].user_id==user_id && group_status[j].status==2){
+              //needed to find last message of the group
+              let get_last_group_message=await sub_function.get_last_group_message(get_recent_chat[i].room,get_recent_chat[i].id,user_id,group_members,group_current_members,group_left_members,group_removed_members,subject_history);
+              console.log(get_last_group_message);
+              if(get_last_group_message==false){
+                chat_list_data.push({
+                  id: get_recent_chat[0].id.toString(),
+                  date: get_recent_chat[0].date,
+                  message: get_recent_chat[0].message,
+                  unread_message: unread_count.toString(),
+                  userid: get_recent_chat[0].room.toString(),
+                  name: group_name,
+                  profile: group_profile,
+                  phone: '',
+                  mute_status: mute_status.toString(),
+                  mute_message: mute_message,
+                  room: get_recent_chat[0].room,
+                  message_type:get_recent_chat[0].message_type,
+                  chat_type: 'group',
+                  pin_status: get_recent_chat[i].pin_status.toString()
+                });
+              }else{
+                chat_list_data.push({
+                  id: get_last_group_message[0].id.toString(),
+                  date: get_last_group_message[0].date,
+                  message: get_last_group_message[0].message,
+                  unread_message: unread_count.toString(),
+                  userid: get_last_group_message[0].room.toString(),
+                  name: group_name,
+                  profile: group_profile,
+                  phone: '',
+                  mute_status: mute_status.toString(),
+                  mute_message: mute_message,
+                  room: get_last_group_message[0].room,
+                  message_type:get_last_group_message[0].message_type,
+                  chat_type: 'group',
+                  pin_status: get_recent_chat[i].pin_status.toString()
+                });
+              }
+              
+            }
+          }
+        }
+      }
+    }
+    //set response based on archived_chat_list
+    archived_list=[];
+    //console.log('before',chat_list_data.length,chat_list_data)
+    if(archived_chat_list.length>0){
+      for(var k=0; k<chat_list_data.length; k++){
+        let check_value_exist_in_archived_chat_list=await sub_function.check_value_exist_in_archived_chat_list(chat_list_data[k].room,archived_chat_list);
+        //console.log(check_value_exist_in_archived_chat_list)
+        if(check_value_exist_in_archived_chat_list){
+          //remove from the array
+          archived_list.push(chat_list_data[k]);
+          chat_list_data.splice(k, 1);
+          k--;
+        }
+      }
+    }
+    
+    //console.log('after',chat_list_data.length,chat_list_data)
+    let setresponse={
+      status: true,
+      statuscode: 200,
+      message: "success", 
+      socket: true,
+      archived_chat_list:archived_list,
+      data:chat_list_data
+    }
+    return setresponse;
+  }else{
+    let setresponse={
+      status: true,
+      statuscode: 200,
+      message: "No chat found", 
+      socket: true,
+      archived_chat_list:[],
+      data:[]
+    }
+    return setresponse;
+  }
+  
+  
+} 
+
 
 
 async function individual_chat_push_notification(user_id,receiver_id,room,message,message_type){
@@ -2380,9 +3400,10 @@ async function create_group_id(){
     let check_group_data=await queries.check_group_data(group_id);
     if(check_group_data.length>0){
       console.log('group id already exist');
-      return group_id+'a';
+      let random_sequence=Math.floor(1000 + Math.random() * 9000)
+      return group_id+random_sequence;
     }else{
-      console.log('group not exist already')
+      //console.log('group not exist already')
       return group_id;
     }
 }
@@ -2470,7 +3491,7 @@ async function get_group_info(user_id,accessToken,group_id){
             }
             // console.log(excepted_users);
             // console.log(excepted_users.indexOf(user_id))
-            if(excepted_users.indexOf(user_id)==1){
+            if(excepted_users.includes(user_id)){
               profile_pic='uploads/default/profile.png';
             }else{
               profile_pic=get_user_profile_data[0].profile_pic;
@@ -2515,7 +3536,7 @@ async function get_group_info(user_id,accessToken,group_id){
             }else{
               excepted_users=[];
             }
-            if(excepted_users.indexOf(user_id)==1){
+            if(excepted_users.includes(user_id)){
               about='Hey there! I am using Smart Station';
               
             }else{
