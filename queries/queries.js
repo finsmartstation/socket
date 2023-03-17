@@ -510,6 +510,21 @@ async function check_user_privacy(user_id,privacy_type){
     return results[0];
 }
 
+async function check_private_chat_read_receipts(user_id,receiver_id){
+    const results=await db.sequelize.query("SELECT *, DATE_FORMAT(updated_datetime,'%Y-%m-%d %H:%i:%s') as updated_datetime FROM `user_chat_privacy` where user_id in ('"+user_id+"','"+receiver_id+"') and type='read_receipts'");
+    return results[0];
+}
+
+async function check_group_chat_read_receipts(query){
+    const results=await db.sequelize.query(query);
+    return results[0];
+}
+
+async function check_user_read_receipts(user_id){
+    const results=await db.sequelize.query("select * from `user_chat_privacy` where user_id='"+user_id+"'");
+    return results[0];
+}
+
 module.exports = {
     update_online_status,
     select_online_status,
@@ -603,5 +618,8 @@ module.exports = {
     delete_archived_chat_list,
     archived_chat_list_details,
     user_chat_list_details,
-    check_user_privacy
+    check_user_privacy,
+    check_private_chat_read_receipts,
+    check_group_chat_read_receipts,
+    check_user_read_receipts
 }

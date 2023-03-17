@@ -75,7 +75,7 @@ var online_user_room_data=[];
 
   function check_online_user_room_data(sid,rid,room){
     //console.log('online ',online_user_room_data)
-    return online_user_room_data.some(function(online_user_array){
+    return online_user_room_data.some(function (online_user_array){
       return online_user_array.sid == sid && online_user_array.rid == rid && online_user_array.room == room;
     });
   }
@@ -296,11 +296,11 @@ io.sockets.on('connection',async function (socket) {
     //     //})
     //   }
     // })
-    
     socket.on('message', async function (data) {
+      
       //console.log('message data')
       try{
-
+        
       var s_id = data.sid;
       var r_id = data.rid;
       var message = data.message;
@@ -342,9 +342,41 @@ io.sockets.on('connection',async function (socket) {
         var group_current_members;
         if(get_group_users.length>0){
           group_current_members=JSON.parse(get_group_users[0].current_members);
-          for(var group_user=0; group_user<group_current_members.length; group_user++){
-            group_status_array.push({ user_id: group_current_members[group_user].user_id, username: group_current_members[group_user].username, datetime: group_current_members[group_user].datetime, message_status: 1, message_read_datetime: "", status: 1 })
+          //get all group users id
+          get_group_users='';
+          for(var group_users=0;group_users<group_current_members.length; group_users++){
+            get_group_users=get_group_users+"'"+group_current_members[group_users].user_id+"',"
           }
+          get_group_users=get_group_users.replace(/(^,)|(,$)/g, "")
+          console.log(get_group_users)
+          let set_query="SELECT * FROM `user_chat_privacy` where user_id in ("+get_group_users+") and type='read_receipts'";
+          //replace(/(^,)|(,$)/g, "")
+          console.log(set_query)
+          //exit ()
+          let check_group_chat_read_receipts=await queries.check_group_chat_read_receipts(set_query);
+          console.log(check_group_chat_read_receipts);
+          
+          for(var group_user=0; group_user<group_current_members.length; group_user++){
+            //console.log('user id',group_current_members[group_user].user_id)
+            let message_read_datetime='';
+            if(data.sid==group_current_members[group_user].user_id){
+              message_read_datetime=datetime;
+            }
+            let read_receipt_status=0;
+            //console.log('count ',check_group_chat_read_receipts.length)
+            for(var read_receipt_i=0; read_receipt_i<check_group_chat_read_receipts.length; read_receipt_i++){
+              if(group_current_members[group_user].user_id==check_group_chat_read_receipts[read_receipt_i].user_id){
+                read_receipt_status=1;
+                //console.log(read_receipt_status)
+                break;
+              }
+            }
+            //exit ()
+            group_status_array.push({ user_id: group_current_members[group_user].user_id, username: group_current_members[group_user].username, datetime: datetime, message_status: 1, message_read_datetime: message_read_datetime, read_receipt: read_receipt_status, status: 1 })
+          }
+
+          // console.log(group_status_array)
+          // exit ()
           
         }
         var member_json_data = JSON.stringify(group_status_array);
@@ -499,6 +531,9 @@ io.sockets.on('connection',async function (socket) {
         //io.sockets.in(data.room).emit('message', set_group_chat_response); 
         let group_chat_response_data_for_sender=await functions.get_group_chat_list_response(data.sid,data.room);
         io.sockets.in(data.room+'_'+data.sid).emit('message', group_chat_response_data_for_sender);   
+        //emit chat_list to the senter
+        let get_recent_chat_response_senter=await functions.get_recent_chat_list_response(data.sid);
+        io.sockets.in(data.sid).emit('chat_list',get_recent_chat_response_senter);
         //io.in(data.room+'_'+data.sid).emit('message', group_chat_response_data_for_sender);
         //we need to emit different message to each user in the room or group
         if(group_status_array.length>0){
@@ -517,82 +552,89 @@ io.sockets.on('connection',async function (socket) {
           }
         }    
         
-        //emit chat_list to the senter
-        let get_recent_chat_response_senter=await functions.get_recent_chat_list_response(data.sid);
-        io.sockets.in(data.sid).emit('chat_list',get_recent_chat_response_senter);
+        // //emit chat_list to the senter
+        // let get_recent_chat_response_senter=await functions.get_recent_chat_list_response(data.sid);
+        // io.sockets.in(data.sid).emit('chat_list',get_recent_chat_response_senter);
         console.log(io.sockets.adapter.rooms)
         //send push notification
         //console.log('group_current_members', group_current_members)
         let group_chat_push_notification= await functions.group_chat_push_notification(data.sid,data.room,group_current_members,data.message,data.type);
       } else {
+        
         //individual chat
         if (Number(s_id) > Number(r_id)) {
-          console.log('ssss')
+          //console.log('ssss')
           var temp = s_id;
           s_id = r_id;
           r_id = temp;
           room = '' + s_id + r_id;
-          console.log('room id in if' + room);
+          //console.log('room id in if' + room);
         } else {
           room = '' + s_id + r_id;
-          console.log('room id in else', room);
+          //console.log('room id in else', room);
         }
+
+       
 
         //check message_id exist for replay_id
         let message_id=0;
         if(data.message_id){
           message_id=data.message_id;
         }
-        console.log('testing room line 327', room)
+        //console.log('sssss')
+        
+        //console.log('testing room line 327', room)
           //replay message
-          if(data.message_id){
-            var group_status_data = [{
-              "user_id": data.sid,
-              "username": "",
-              "datetime": datetime,
-              "message_status": 0,
-              "message_read_datetime": datetime,
-              "status": 1
-            }, {
-              "user_id": data.rid,
-              "username": "",
-              "datetime": datetime,
-              "message_status": 0,
-              "message_read_datetime": "",
+          // if(data.message_id){
+          //   var group_status_data = [{
+          //     "user_id": data.sid,
+          //     "username": "",
+          //     "datetime": datetime,
+          //     "message_status": 0,
+          //     "message_read_datetime": datetime,
+          //     "status": 1
+          //   }, {
+          //     "user_id": data.rid,
+          //     "username": "",
+          //     "datetime": datetime,
+          //     "message_status": 0,
+          //     "message_read_datetime": "",
               
-              "status": 1
-            }]
-            var group_status_json_data = JSON.stringify(group_status_data);
-            var get_receiver_details=await queries.get_receiver_details(data.rid)
-              console.log("get_receiver_details",get_receiver_details[0][0].name)
-              var recever_name=get_receiver_details[0][0].name;
-              var receiver_priofile=get_receiver_details[0][0].profile_pic;
-              console.log(get_receiver_details[0][0].profile_pic,get_receiver_details[0][0].name)
-              var get_messages=await queries.get_indv_messages(data.rid,room)
-              console.log("get_messages",get_messages)
-              if(get_messages!=''){
-                var R_datetime=get_datetime()
-                var update=await queries.reply_update(R_datetime,room,data.rid)
-                get_messages.forEach(elements=>{
-                  //console.log("sid",elements[0].senter_id)
-                  var replay_id='0';
-                  var message='';          
-                  var message_type='';
-                  var forward_id='0';
-                  var forward_message_count='0';
-                  var forward_message_status="";
-                  var get_date=get_datetime();
-
-                })
-              }
+          //     "status": 1
+          //   }]
+          //   var group_status_json_data = JSON.stringify(group_status_data);
+          //   var get_receiver_details=await queries.get_receiver_details(data.rid)
+          //     console.log("get_receiver_details",get_receiver_details[0][0].name)
+          //     var recever_name=get_receiver_details[0][0].name;
+          //     var receiver_priofile=get_receiver_details[0][0].profile_pic;
+          //     console.log(get_receiver_details[0][0].profile_pic,get_receiver_details[0][0].name)
+          //     var get_messages=await queries.get_indv_messages(data.rid,room)
+          //     console.log("get_messages",get_messages)
               
-              ///
+          //     if(get_messages!=''){
+          //       var R_datetime=get_datetime()
+          //       var update=await queries.reply_update(R_datetime,room,data.rid)
+          //       console.log(update)
+          //       get_messages.forEach(elements=>{
+          //         //console.log("sid",elements[0].senter_id)
+          //         var replay_id='0';
+          //         var message='';          
+          //         var message_type='';
+          //         var forward_id='0';
+          //         var forward_message_count='0';
+          //         var forward_message_status="";
+          //         var get_date=get_datetime();
 
-            // var R_datetime=get_datetime()
-            // var replay_qur="INSERT INTO chat_list( date,senter_id,receiver_id,message,message_type,room,message_status,group_status,replay_id) VALUES ('" + R_datetime + "','" + data.sid + "','" + data.rid + "','" + message + "','text','" + room + "','1','" + group_status_json_data + "','"+data.message_id+"')";
-            // con.query(replay_qur,function(err,result){
-            // })
-          }
+          //       })
+          //     }
+              
+          //     ///
+
+          //   // var R_datetime=get_datetime()
+          //   // var replay_qur="INSERT INTO chat_list( date,senter_id,receiver_id,message,message_type,room,message_status,group_status,replay_id) VALUES ('" + R_datetime + "','" + data.sid + "','" + data.rid + "','" + message + "','text','" + room + "','1','" + group_status_json_data + "','"+data.message_id+"')";
+          //   // con.query(replay_qur,function(err,result){
+          //   // })
+          // }
           //replay message end
         var current_date = new Date();
         var date = current_date.toISOString().slice(0, 10);
@@ -610,13 +652,33 @@ io.sockets.on('connection',async function (socket) {
         var datetime = date + " " + time;
         var individual_Date=await queries.individual_chat_date(date,room);
         console.log('individual date length',individual_Date.length)
-        
+        //check user read receipt status
+        let senter_read_receipt=0;
+        let receiver_read_receipt=0;
+        let check_private_chat_read_receipts=await queries.check_private_chat_read_receipts(data.sid,data.rid);
+        if(check_private_chat_read_receipts.length>0){
+          //console.log(check_private_chat_read_receipts)
+          for(var i=0;i<check_private_chat_read_receipts.length;i++){
+            console.log(check_private_chat_read_receipts[i],check_private_chat_read_receipts[i].user_id)
+            //exit ()
+            if(check_private_chat_read_receipts[i].user_id==data.sid){
+              console.log('senter id')
+              senter_read_receipt=1;
+            }else if(check_private_chat_read_receipts[i].user_id==data.rid){
+              console.log('receiver id')
+              receiver_read_receipt=1;
+            }
+          }
+        }
+        console.log(senter_read_receipt,receiver_read_receipt)  
+        //exit ()    
           var group_status_data = [{
             "user_id": data.sid,
             "username": "",
             "datetime": datetime,
             "message_status": 0,
             "message_read_datetime": datetime,
+            "read_receipt": senter_read_receipt,
             "status": 1
           }, {
             "user_id": data.rid,
@@ -624,35 +686,34 @@ io.sockets.on('connection',async function (socket) {
             "datetime": datetime,
             "message_status": 0,
             "message_read_datetime": "",
+            "read_receipt": receiver_read_receipt,
             "status": 1
           }]
+          console.log(group_status_data)
+          //exit ()
           var group_status_json_data = JSON.stringify(group_status_data);
           if (individual_Date.length > 0) {
             if (type == 'text') {
               var result=await queries.individual_text_msg(datetime,data.sid,data.rid,message,room,group_status_json_data,message_id)
-            }
-            else if (type == 'image') {
+            }else if (type == 'image') {
               let split_path=message.split(',');
               for(var i=0;i<split_path.length;i++){
                 var result=await queries.individual_image_msg(datetime,data.sid,data.rid,split_path[i],room,group_status_json_data,message_id) 
               }
               //var result=await queries.individual_image_msg(datetime,data.sid,data.rid,message,room,group_status_json_data,message_id) 
-            }
-            else if (type == "voice") {
+            }else if (type == "voice") {
               let split_path=message.split(',');
               for(var i=0;i<split_path.length;i++){
                 var result=await queries.individual_voice_msg(datetime,data.sid,data.rid,split_path[i],room,group_status_json_data,duration,message_id)
               }
               //var result=await queries.individual_voice_msg(datetime,data.sid,data.rid,message,room,group_status_json_data,duration,message_id)
-            }
-            else if (type == "doc") {
+            }else if (type == "doc") {
               let split_path=message.split(',');
               for(var i=0;i<split_path.length;i++){
                 var result=await queries.individual_doc_msg(datetime,data.sid,data.rid,split_path[i],room,group_status_json_data,duration,message_id) 
               }
               //var result=await queries.individual_doc_msg(datetime,data.sid,data.rid,message,room,group_status_json_data,duration,message_id) 
-            }
-            else if (type == "video") {
+            }else if (type == "video") {
               let split_path=message.split(',');
               for(var i=0;i<split_path.length;i++){
                 var result=await queries.individual_video_msg(datetime,data.sid,data.rid,split_path[i],room,group_status_json_data,duration,message_id) 
