@@ -349,7 +349,7 @@ io.sockets.on('connection',async function (socket) {
           }
           get_group_users=get_group_users.replace(/(^,)|(,$)/g, "")
           console.log(get_group_users)
-          let set_query="SELECT * FROM `user_chat_privacy` where user_id in ("+get_group_users+") and type='read_receipts'";
+          let set_query="SELECT * FROM `user_chat_privacy` where user_id in ("+get_group_users+") and type='read_receipts' and options='1'";
           //replace(/(^,)|(,$)/g, "")
           console.log(set_query)
           //exit ()
@@ -651,7 +651,7 @@ io.sockets.on('connection',async function (socket) {
         var time = hr + ":" + min + ":" + sec;
         var datetime = date + " " + time;
         var individual_Date=await queries.individual_chat_date(date,room);
-        console.log('individual date length',individual_Date.length)
+        //console.log('individual date length',individual_Date.length)
         //check user read receipt status
         let senter_read_receipt=0;
         let receiver_read_receipt=0;
@@ -662,7 +662,7 @@ io.sockets.on('connection',async function (socket) {
             console.log(check_private_chat_read_receipts[i],check_private_chat_read_receipts[i].user_id)
             //exit ()
             if(check_private_chat_read_receipts[i].user_id==data.sid){
-              console.log('senter id')
+              //console.log('senter id')
               senter_read_receipt=1;
             }else if(check_private_chat_read_receipts[i].user_id==data.rid){
               console.log('receiver id')
@@ -4864,6 +4864,84 @@ io.sockets.on('connection',async function (socket) {
             socket.join(data.user_id+'_unarchived');
             io.sockets.in(data.user_id+'_unarchived').emit('unarchived_chat_list', {status: false, statuscode: 200, message: "Data is empty"});
             socket.leave(data.user_id+'_unarchived');
+          }
+        }else{
+          console.error('Input type is string');
+        }
+      }catch(e){
+        console.error(e);
+      }
+    });
+    //remove group admin
+    socket.on('remove_group_admin', async function(data){
+      //console.log('remove group admin')
+      //input -- {"user_id":"50","accessToken":"50","group_id":"","remove_admin_id":""}
+      try{
+        if(typeof(data)=='object'){
+          let user_id=data.user_id ? data.user_id : '';
+          let accessToken=data.accessToken ? data.accessToken : '';
+          let group_id=data.group_id ? data.group_id : '';
+          let remove_admin_id=data.remove_admin_id ? data.remove_admin_id : '';
+          if(user_id!='' && accessToken!='' && group_id!='' && remove_admin_id!=''){
+            socket.join(user_id+'_remove_group_admin');
+            //check user is valid
+            let check_user_is_valid=await queries.check_user_valid(user_id,accessToken);
+            //console.log(check_user_is_valid)
+            if(check_user_is_valid.length>0){
+              //check group is valid
+              let check_group_data=await queries.check_group_data(group_id);
+              console.log(check_group_data);
+              if(check_group_data.length>0){
+                let created_by=check_group_data[0].created_by;
+                //check user is admin in the group
+                let current_members=JSON.parse(check_group_data[0].current_members);
+                //console.log(current_members);
+                let check_user_exist_in_group=await functions.check_group_user_is_admin(user_id,current_members);
+                //console.log(check_user_exist_in_group)
+                if(check_user_exist_in_group){
+                  //check remove admin exist in group
+                  let check_remove_admin_data=await functions.check_group_user_is_admin(remove_admin_id,current_members);
+                  if(check_remove_admin_data){
+                    //check removed user is created this group or not
+                    if(remove_admin_id==created_by){
+                      let username=await queries.get_username(remove_admin_id);
+                      io.sockets.in(data.user_id+'_remove_group_admin').emit('remove_group_admin',{status: false, statuscode: 200, message: "You can't dismiss "+username+" as admin because they created this group"});
+                    }else{
+                      //remove this user from current members
+                      for(var i=0; i<current_members.length; i++){
+                        if(current_members[i].user_id==remove_admin_id){
+                          current_members[i].type='user';
+                        }
+                      }
+                      //console.log(current_members);
+                      //update group data
+                      let update_group_data=await queries.update_group_current_member(group_id,JSON.stringify(current_members));
+                      //console.log(update_group_data)
+                      if(update_group_data.affectedRows>0){
+                        io.sockets.in(data.user_id+'_remove_group_admin').emit('remove_group_admin',{status: true, statuscode: 200, message: "success"});
+                        let get_group_info_response=await functions.get_group_info(user_id,accessToken,group_id);
+                        io.sockets.in(user_id+'_user_list').emit('get_group_user_list',get_group_info_response);
+                      }else{
+                        io.sockets.in(data.user_id+'_remove_group_admin').emit('remove_group_admin',{status: false, statuscode: 200, message: "Not updated in db"});
+                      }
+                    }
+                  }else{
+                    io.sockets.in(data.user_id+'_remove_group_admin').emit('remove_group_admin',{status: false, statuscode: 200, message: "Remove user is not an admin"});
+                  }
+                }else{
+                  io.sockets.in(data.user_id+'_remove_group_admin').emit('remove_group_admin',{status: false, statuscode: 200, message: "You're not an admin"});
+                }
+              }else{
+                io.sockets.in(data.user_id+'_remove_group_admin').emit('remove_group_admin',{status: false, statuscode: 200, message: "No group data found"});
+              }
+            }else{
+              io.sockets.in(data.user_id+'_remove_group_admin').emit('remove_group_admin',{status: false, statuscode: 200, message: "No user data found"});
+            }
+            socket.leave(user_id+'_remove_group_admin');
+          }else{
+            socket.join(data.user_id+'_remove_group_admin');
+            io.sockets.in(data.user_id+'_remove_group_admin').emit('remove_group_admin',{status: false, statuscode: 200, message: "Data is empty"});
+            socket.leave(data.user_id+'_remove_group_admin');
           }
         }else{
           console.error('Input type is string');

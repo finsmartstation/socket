@@ -511,7 +511,7 @@ async function check_user_privacy(user_id,privacy_type){
 }
 
 async function check_private_chat_read_receipts(user_id,receiver_id){
-    const results=await db.sequelize.query("SELECT *, DATE_FORMAT(updated_datetime,'%Y-%m-%d %H:%i:%s') as updated_datetime FROM `user_chat_privacy` where user_id in ('"+user_id+"','"+receiver_id+"') and type='read_receipts'");
+    const results=await db.sequelize.query("SELECT *, DATE_FORMAT(updated_datetime,'%Y-%m-%d %H:%i:%s') as updated_datetime FROM `user_chat_privacy` where user_id in ('"+user_id+"','"+receiver_id+"') and type='read_receipts' and options='1'");
     return results[0];
 }
 
@@ -521,7 +521,12 @@ async function check_group_chat_read_receipts(query){
 }
 
 async function check_user_read_receipts(user_id){
-    const results=await db.sequelize.query("select * from `user_chat_privacy` where user_id='"+user_id+"'");
+    const results=await db.sequelize.query("select * from `user_chat_privacy` where user_id='"+user_id+"' and options='1'");
+    return results[0];
+}
+
+async function update_group_current_member(group_id,current_member){
+    const results=await db.sequelize.query("update `group_list` set current_members='"+current_member+"' where group_id='"+group_id+"'");
     return results[0];
 }
 
@@ -621,5 +626,6 @@ module.exports = {
     check_user_privacy,
     check_private_chat_read_receipts,
     check_group_chat_read_receipts,
-    check_user_read_receipts
+    check_user_read_receipts,
+    update_group_current_member
 }
