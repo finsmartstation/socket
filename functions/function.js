@@ -2791,7 +2791,8 @@ async function get_recent_chat_list_response(user_id){
               room: get_recent_chat[i].room,
               message_type:get_recent_chat[i].message_type,
               chat_type: 'private',
-              pin_status: get_recent_chat[i].pin_status.toString()
+              pin_status: get_recent_chat[i].pin_status.toString(),
+              device_token: get_recent_chat[i].device_token
             })
           }else if(group_status[j].user_id==user_id && group_status[j].status==1){
             //console.log('message is not deleted')
@@ -2909,7 +2910,8 @@ async function get_recent_chat_list_response(user_id){
               room: get_recent_chat[i].room,
               message_type:get_recent_chat[i].message_type,
               chat_type: 'private',
-              pin_status: get_recent_chat[i].pin_status.toString()
+              pin_status: get_recent_chat[i].pin_status.toString(),
+              device_token: get_recent_chat[i].device_token
             })
           }else if(group_status[j].user_id==user_id && group_status[j].status==2){
             //console.log('message is cleared')
@@ -2932,7 +2934,8 @@ async function get_recent_chat_list_response(user_id){
                 room: get_recent_chat[i].room,
                 message_type:get_recent_chat[i].message_type,
                 chat_type: 'private',
-                pin_status: get_recent_chat[i].pin_status.toString()
+                pin_status: get_recent_chat[i].pin_status.toString(),
+                device_token: get_recent_chat[i].device_token
               })
             }else{
               chat_list_data.push({
@@ -2949,7 +2952,8 @@ async function get_recent_chat_list_response(user_id){
                 room: get_last_private_message[0].room,
                 message_type:get_last_private_message[0].message_type,
                 chat_type: 'private',
-                pin_status: get_recent_chat[i].pin_status.toString()
+                pin_status: get_recent_chat[i].pin_status.toString(),
+                device_token: get_recent_chat[i].device_token
               })
             }
           }
@@ -3088,7 +3092,8 @@ async function get_recent_chat_list_response(user_id){
                 room: get_recent_chat[i].room,
                 message_type:get_recent_chat[i].message_type,
                 chat_type: 'group',
-                pin_status: get_recent_chat[i].pin_status.toString()
+                pin_status: get_recent_chat[i].pin_status.toString(),
+                device_token: get_recent_chat[i].device_token
               });
             }else if(group_status[j].user_id==user_id && group_status[j].status==1){
               //set message based on message_type
@@ -3292,7 +3297,8 @@ async function get_recent_chat_list_response(user_id){
                 room: get_recent_chat[i].room,
                 message_type:get_recent_chat[i].message_type,
                 chat_type: 'group',
-                pin_status: get_recent_chat[i].pin_status.toString()
+                pin_status: get_recent_chat[i].pin_status.toString(),
+                device_token: get_recent_chat[i].device_token
               });
             }else if(group_status[j].user_id==user_id && group_status[j].status==2){
               //needed to find last message of the group
@@ -3313,7 +3319,8 @@ async function get_recent_chat_list_response(user_id){
                   room: get_recent_chat[0].room,
                   message_type:get_recent_chat[0].message_type,
                   chat_type: 'group',
-                  pin_status: get_recent_chat[i].pin_status.toString()
+                  pin_status: get_recent_chat[i].pin_status.toString(),
+                  device_token: get_recent_chat[i].device_token
                 });
               }else{
                 chat_list_data.push({
@@ -3330,7 +3337,8 @@ async function get_recent_chat_list_response(user_id){
                   room: get_last_group_message[0].room,
                   message_type:get_last_group_message[0].message_type,
                   chat_type: 'group',
-                  pin_status: get_recent_chat[i].pin_status.toString()
+                  pin_status: get_recent_chat[i].pin_status.toString(),
+                  device_token: get_recent_chat[i].device_token
                 });
               }
               
@@ -3595,17 +3603,17 @@ async function get_group_info(user_id,accessToken,group_id){
       }else{
         current_group_users=[];
       }
-      console.log('yes',current_group_users);
+      //console.log('yes',current_group_users);
       let group_users=[];
       for(var i=0; i<current_group_users.length; i++){
         let profile_pic='';
         let about='';
         let group_user_id=current_group_users[i].user_id;
         let get_user_chat_list_data=await queries.user_chat_list_details(group_user_id);
-        console.log('user chat list ',group_user_id,get_user_chat_list_data);
+        //console.log('user chat list ',group_user_id,get_user_chat_list_data);
         
         let get_user_profile_data=await queries.get_user_profile(group_user_id)
-        console.log(get_user_profile_data[0].profile_pic)
+        //console.log(get_user_profile_data[0].profile_pic)
         let name=get_user_profile_data[0].name;
         //check who can see my profile pic
         let check_privacy_profile_pic=await queries.check_user_privacy(group_user_id,'profile_pic');
@@ -3629,7 +3637,7 @@ async function get_group_info(user_id,accessToken,group_id){
             }
             //console.log(check_user_exist_in_chat_list)
           }else if(profile_options==2){
-            console.log('exclude chat list users',check_privacy_profile_pic)
+            //console.log('exclude chat list users',check_privacy_profile_pic)
             let excepted_users=check_privacy_profile_pic[0].except_users;
             if(excepted_users!=''){
               excepted_users=JSON.parse(check_privacy_profile_pic[0].except_users);
