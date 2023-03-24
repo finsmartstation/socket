@@ -177,7 +177,9 @@ async function get_individual_chat_list_response(sid,rid,room){
                             forward_message_status : result[0][i].forward_message_status,
                             delete_status : "0",
                             starred_status: starred_status.toString(),
-                            read_receipt: read_receipt.toString()
+                            read_receipt: read_receipt.toString(),
+                            optional_text: result[0][i].optional_text,
+                            thumbnail: ''
                           })
                         }else{
 
@@ -205,7 +207,9 @@ async function get_individual_chat_list_response(sid,rid,room){
                             forward_message_status : "",
                             delete_status : "",
                             starred_status: "",
-                            read_receipt:""
+                            read_receipt:"",
+                            optional_text:"",
+                            thumbnail: ""
                           })
                           //add block message data entry
                           message_list_response.push({
@@ -231,7 +235,9 @@ async function get_individual_chat_list_response(sid,rid,room){
                             forward_message_status : result[0][i].forward_message_status,
                             delete_status : "0",
                             starred_status: starred_status.toString(),
-                            read_receipt: read_receipt.toString()
+                            read_receipt: read_receipt.toString(),
+                            optional_text: result[0][i].optional_text,
+                            thumbnail: ""
                           })
                           //console.log('inside data array data', date_array)
                         }
@@ -265,7 +271,9 @@ async function get_individual_chat_list_response(sid,rid,room){
                             forward_message_status : result[0][i].forward_message_status,
                             delete_status : "0",
                             starred_status: starred_status.toString(),
-                            read_receipt: read_receipt.toString()
+                            read_receipt: read_receipt.toString(),
+                            optional_text: result[0][i].optional_text,
+                            thumbnail: ""
                           })
                         }else{
                           //date already not exist
@@ -292,7 +300,9 @@ async function get_individual_chat_list_response(sid,rid,room){
                             forward_message_status : "",
                             delete_status : "",
                             starred_status: "",
-                            read_receipt: ""
+                            read_receipt: "",
+                            optional_text: "",
+                            thumbnail: ""
                           })
                           //add block message data entry
                           message_list_response.push({
@@ -318,7 +328,9 @@ async function get_individual_chat_list_response(sid,rid,room){
                             forward_message_status : result[0][i].forward_message_status,
                             delete_status : "0",
                             starred_status: starred_status.toString(),
-                            read_receipt: read_receipt.toString()
+                            read_receipt: read_receipt.toString(),
+                            optional_text: result[0][i].optional_text,
+                            thumbnail: ''
                           })
                          // console.log('inside data array data', date_array)
                         }
@@ -354,7 +366,9 @@ async function get_individual_chat_list_response(sid,rid,room){
                         forward_message_status : result[0][i].forward_message_status,
                         delete_status : "0",
                         starred_status: starred_status.toString(),
-                        read_receipt: read_receipt.toString()
+                        read_receipt: read_receipt.toString(),
+                        optional_text: result[0][i].optional_text,
+                        thumbnail: ''
                       })
                     }else{
                       //date already not exist
@@ -381,7 +395,9 @@ async function get_individual_chat_list_response(sid,rid,room){
                         forward_message_status : "",
                         delete_status : "",
                         starred_status: "",
-                        read_receipt: ""
+                        read_receipt: "",
+                        optional_text: "",
+                        thumbnail: ''
                       })
                       //add block message data entry
                       message_list_response.push({
@@ -407,14 +423,16 @@ async function get_individual_chat_list_response(sid,rid,room){
                         forward_message_status : result[0][i].forward_message_status,
                         delete_status : "0",
                         starred_status: starred_status.toString(),
-                        read_receipt: read_receipt.toString()
+                        read_receipt: read_receipt.toString(),
+                        optional_text: result[0][i].optional_text,
+                        thumbnail: ''
                       })
                       //console.log('inside data array data', date_array)
                     }
                   }
                   //console.log('all the dates', date_array)
                 }else if(group_status_json[j].user_id==sid && group_status_json[j].status==1){
-                  console.log(group_status_json[j])
+                  //console.log(group_status_json[j])
                   if('read_receipt' in group_status_json[j]){
                     read_receipt=group_status_json[j].read_receipt;
                   }else{
@@ -469,7 +487,9 @@ async function get_individual_chat_list_response(sid,rid,room){
                             forward_message_status : result[0][i].forward_message_status,
                             delete_status : "1",
                             starred_status: starred_status.toString(),
-                            read_receipt: read_receipt.toString()
+                            read_receipt: read_receipt.toString(),
+                            optional_text: result[0][i].optional_text,
+                            thumbnail: ''
                           })
                         }else{
                           //date already not exist
@@ -496,7 +516,9 @@ async function get_individual_chat_list_response(sid,rid,room){
                             forward_message_status : "",
                             delete_status : "",
                             starred_status: "",
-                            read_receipt: ""
+                            read_receipt: "",
+                            optional_text: "",
+                            thumbnail: ""
                           })
                           //add block message data entry
                           message_list_response.push({
@@ -522,7 +544,9 @@ async function get_individual_chat_list_response(sid,rid,room){
                             forward_message_status : result[0][i].forward_message_status,
                             delete_status : "1",
                             starred_status: starred_status.toString(),
-                            read_receipt: read_receipt.toString()
+                            read_receipt: read_receipt.toString(),
+                            optional_text: result[0][i].optional_text,
+                            thumbnail: ''
                           })
                           //console.log('inside data array data', date_array)
                         }
@@ -556,7 +580,9 @@ async function get_individual_chat_list_response(sid,rid,room){
                             forward_message_status : result[0][i].forward_message_status,
                             delete_status : "1",
                             starred_status: starred_status.toString(),
-                            read_receipt: read_receipt.toString()
+                            read_receipt: read_receipt.toString(),
+                            optional_text: result[0][i].optional_text,
+                            thumbnail: ''
                           })
                         }else{
                           //date already not exist
@@ -583,7 +609,9 @@ async function get_individual_chat_list_response(sid,rid,room){
                             forward_message_status : "",
                             delete_status : "",
                             starred_status: "",
-                            read_receipt: ""
+                            read_receipt: "",
+                            optional_text: "",
+                            thumbnail: ""
                           })
                           //add block message data entry
                           message_list_response.push({
@@ -609,7 +637,9 @@ async function get_individual_chat_list_response(sid,rid,room){
                             forward_message_status : result[0][i].forward_message_status,
                             delete_status : "1",
                             starred_status: starred_status.toString(),
-                            read_receipt: read_receipt.toString()
+                            read_receipt: read_receipt.toString(),
+                            optional_text: result[0][i].optional_text,
+                            thumbnail: ''
                           })
                           //console.log('inside data array data', date_array)
                         }
@@ -623,6 +653,9 @@ async function get_individual_chat_list_response(sid,rid,room){
                       //console.log(check_is_url);
                       if(!check_is_url){
                         result[0][i]['message']=BASE_URL+result[0][i]['message'];
+                      }
+                      if(result[0][i]['thumbnail']!=''){
+                        result[0][i]['thumbnail']=BASE_URL+result[0][i]['thumbnail'];
                       }
                       // console.log(result[0][i]['message'])
                       // exit ()
@@ -652,7 +685,9 @@ async function get_individual_chat_list_response(sid,rid,room){
                           forward_message_status : result[0][i].forward_message_status,
                           delete_status : "1",
                           starred_status: starred_status.toString(),
-                          read_receipt: read_receipt.toString()
+                          read_receipt: read_receipt.toString(),
+                          optional_text: result[0][i].optional_text,
+                          thumbnail: result[0][i]['thumbnail']
                         })
                       }else{
                         //date already not exist
@@ -679,7 +714,9 @@ async function get_individual_chat_list_response(sid,rid,room){
                           forward_message_status : "",
                           delete_status : "",
                           starred_status: "",
-                          read_receipt: ""
+                          read_receipt: "",
+                          optional_text: "",
+                          thumbnail: ''
                         })
                         //add block message data entry
                         console.log(result[0][i].id,result[0][i],result[0][i].reply_duration)
@@ -705,7 +742,9 @@ async function get_individual_chat_list_response(sid,rid,room){
                           forward_message_status : result[0][i].forward_message_status,
                           delete_status : "1",
                           starred_status: starred_status.toString(),
-                          read_receipt: read_receipt.toString()
+                          read_receipt: read_receipt.toString(),
+                          optional_text: result[0][i].optional_text,
+                          thumbnail: result[0][i]['thumbnail']
                         })
                         //console.log('inside data array data', date_array)
                       }
@@ -740,7 +779,9 @@ async function get_individual_chat_list_response(sid,rid,room){
                         forward_message_status : result[0][i].forward_message_status,
                         delete_status : "1",
                         starred_status: starred_status.toString(),
-                        read_receipt: read_receipt.toString()
+                        read_receipt: read_receipt.toString(),
+                        optional_text: result[0][i].optional_text,
+                        thumbnail: ''
                       })
                     }else{
                       //date already not exist
@@ -767,7 +808,9 @@ async function get_individual_chat_list_response(sid,rid,room){
                         forward_message_status : "",
                         delete_status : "",
                         starred_status: "",
-                        read_receipt: ""
+                        read_receipt: "",
+                        optional_text: "",
+                        thumbnail: ""
                       })
                       //add block message data entry
                       console.log(result[0][i].id,result[0][i],result[0][i].reply_duration)
@@ -793,7 +836,9 @@ async function get_individual_chat_list_response(sid,rid,room){
                         forward_message_status : result[0][i].forward_message_status,
                         delete_status : "1",
                         starred_status: starred_status.toString(),
-                        read_receipt: read_receipt.toString()
+                        read_receipt: read_receipt.toString(),
+                        optional_text: result[0][i].optional_text,
+                        thumbnail: ''
                       })
                       //console.log('inside data array data', date_array)
                     }
@@ -999,7 +1044,9 @@ async function get_group_chat_list_response(user_id,group_id){
       forward_message_status:'',
       delete_status:'',
       starred_status: '',
-      read_receipt: ''
+      read_receipt: '',
+      optional_text: '',
+      thumbnail: ''
     }
     group_messages.push(group_started_data);
     //split group created_date
@@ -1036,7 +1083,9 @@ async function get_group_chat_list_response(user_id,group_id){
       forward_message_status:'',
       delete_status:'',
       starred_status: '',
-      read_receipt: ''
+      read_receipt: '',
+      optional_text: '',
+      thumbnail: ''
     }
     group_messages.push(group_created_by_data);
     //get group message from db
@@ -1254,7 +1303,7 @@ async function get_group_chat_list_response(user_id,group_id){
                         new_profile_pic=BASE_URL+profile_pic_history[group_icon_i].profile_pic;
                         let previous_index=group_icon_i-1;
                         previous_profile_pic=BASE_URL+profile_pic_history[previous_index].profile_pic;
-                        console.log('testing ',previous_profile_pic,new_profile_pic)
+                        //console.log('testing ',previous_profile_pic,new_profile_pic)
                         
                       }
                       
@@ -1341,6 +1390,9 @@ async function get_group_chat_list_response(user_id,group_id){
                   get_all_group_messages[i].message=BASE_URL+get_all_group_messages[i]['message'];
                 }
               }
+              if(get_all_group_messages[i].thumbnail!=''){
+                get_all_group_messages[i].thumbnail=BASE_URL+get_all_group_messages[i]['thumbnail'];
+              }
             }
 
         //get group_status
@@ -1409,7 +1461,9 @@ async function get_group_chat_list_response(user_id,group_id){
                     forward_message_status:forward_message_status.toString(),
                     delete_status:'',
                     starred_status: starred_status.toString(),
-                    read_receipt: read_receipt.toString()
+                    read_receipt: read_receipt.toString(),
+                    optional_text: get_all_group_messages[i].optional_text,
+                    thumbnail: get_all_group_messages[i].thumbnail
                   });
                 }else{
                   group_profile_history_index=group_profile_history_index+1;
@@ -1436,7 +1490,9 @@ async function get_group_chat_list_response(user_id,group_id){
                     forward_message_status:'',
                     delete_status:'',
                     starred_status: '',
-                    read_receipt: ''
+                    read_receipt: '',
+                    optional_text: '',
+                    thumbnail: ''
                   });
                   //add message data
                   group_messages.push({
@@ -1460,7 +1516,9 @@ async function get_group_chat_list_response(user_id,group_id){
                     forward_message_status:forward_message_status.toString(),
                     delete_status:'0',
                     starred_status: starred_status.toString(),
-                    read_receipt: read_receipt.toString()
+                    read_receipt: read_receipt.toString(),
+                    optional_text: get_all_group_messages[i].optional_text,
+                    thumbnail: get_all_group_messages[i].thumbnail
                   });
                   console.log('date is not exist')
                 }
@@ -1508,7 +1566,9 @@ async function get_group_chat_list_response(user_id,group_id){
                     forward_message_status:forward_message_status.toString(),
                     delete_status:'1',
                     starred_status: starred_status.toString(),
-                    read_receipt: read_receipt.toString()
+                    read_receipt: read_receipt.toString(),
+                    optional_text: get_all_group_messages[i].optional_text,
+                    thumbnail: get_all_group_messages[i].thumbnail
                   });
                 }else{
                   group_profile_history_index=group_profile_history_index+1;
@@ -1535,7 +1595,9 @@ async function get_group_chat_list_response(user_id,group_id){
                     forward_message_status:'',
                     delete_status:'',
                     starred_status: '',
-                    read_receipt: ''
+                    read_receipt: '',
+                    optional_text: '',
+                    thumbnail: ''
                   });
                   //add message data
                   group_messages.push({
@@ -1559,7 +1621,9 @@ async function get_group_chat_list_response(user_id,group_id){
                     forward_message_status:forward_message_status.toString(),
                     delete_status:'1',
                     starred_status: starred_status.toString(),
-                    read_receipt: read_receipt.toString()
+                    read_receipt: read_receipt.toString(),
+                    optional_text: get_all_group_messages[i].optional_text,
+                    thumbnail: get_all_group_messages[i].thumbnail
                   });
                   //console.log('date is not exist')
                 }
@@ -2792,7 +2856,8 @@ async function get_recent_chat_list_response(user_id){
               message_type:get_recent_chat[i].message_type,
               chat_type: 'private',
               pin_status: get_recent_chat[i].pin_status.toString(),
-              device_token: get_recent_chat[i].device_token
+              device_token: get_recent_chat[i].device_token,
+              optional_text: get_recent_chat[i].optional_text
             })
           }else if(group_status[j].user_id==user_id && group_status[j].status==1){
             //console.log('message is not deleted')
@@ -2911,7 +2976,8 @@ async function get_recent_chat_list_response(user_id){
               message_type:get_recent_chat[i].message_type,
               chat_type: 'private',
               pin_status: get_recent_chat[i].pin_status.toString(),
-              device_token: get_recent_chat[i].device_token
+              device_token: get_recent_chat[i].device_token,
+              optional_text: get_recent_chat[i].optional_text
             })
           }else if(group_status[j].user_id==user_id && group_status[j].status==2){
             //console.log('message is cleared')
@@ -2935,7 +3001,8 @@ async function get_recent_chat_list_response(user_id){
                 message_type:get_recent_chat[i].message_type,
                 chat_type: 'private',
                 pin_status: get_recent_chat[i].pin_status.toString(),
-                device_token: get_recent_chat[i].device_token
+                device_token: get_recent_chat[i].device_token,
+                optional_text: get_recent_chat[i].optional_text
               })
             }else{
               chat_list_data.push({
@@ -2953,7 +3020,8 @@ async function get_recent_chat_list_response(user_id){
                 message_type:get_last_private_message[0].message_type,
                 chat_type: 'private',
                 pin_status: get_recent_chat[i].pin_status.toString(),
-                device_token: get_recent_chat[i].device_token
+                device_token: get_recent_chat[i].device_token,
+                optional_text: get_recent_chat[i].optional_text
               })
             }
           }
@@ -3093,7 +3161,8 @@ async function get_recent_chat_list_response(user_id){
                 message_type:get_recent_chat[i].message_type,
                 chat_type: 'group',
                 pin_status: get_recent_chat[i].pin_status.toString(),
-                device_token: get_recent_chat[i].device_token
+                device_token: get_recent_chat[i].device_token,
+                optional_text: get_recent_chat[i].optional_text
               });
             }else if(group_status[j].user_id==user_id && group_status[j].status==1){
               //set message based on message_type
@@ -3298,7 +3367,8 @@ async function get_recent_chat_list_response(user_id){
                 message_type:get_recent_chat[i].message_type,
                 chat_type: 'group',
                 pin_status: get_recent_chat[i].pin_status.toString(),
-                device_token: get_recent_chat[i].device_token
+                device_token: get_recent_chat[i].device_token,
+                optional_text: get_recent_chat[i].optional_text
               });
             }else if(group_status[j].user_id==user_id && group_status[j].status==2){
               //needed to find last message of the group
@@ -3320,7 +3390,8 @@ async function get_recent_chat_list_response(user_id){
                   message_type:get_recent_chat[0].message_type,
                   chat_type: 'group',
                   pin_status: get_recent_chat[i].pin_status.toString(),
-                  device_token: get_recent_chat[i].device_token
+                  device_token: get_recent_chat[i].device_token,
+                  optional_text: get_recent_chat[i].optional_text
                 });
               }else{
                 chat_list_data.push({
@@ -3338,7 +3409,8 @@ async function get_recent_chat_list_response(user_id){
                   message_type:get_last_group_message[0].message_type,
                   chat_type: 'group',
                   pin_status: get_recent_chat[i].pin_status.toString(),
-                  device_token: get_recent_chat[i].device_token
+                  device_token: get_recent_chat[i].device_token,
+                  optional_text: get_recent_chat[i].optional_text
                 });
               }
               

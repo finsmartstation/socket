@@ -307,6 +307,7 @@ io.sockets.on('connection',async function (socket) {
       var type = data.type;
       var duration=data.duration ? data.duration : '0';
       var optional_text=data.optional_text ? data.optional_text : '';
+      var thumbnail=data.thumbnail ? data.thumbnail : '';
       // var room=data.room;
       //entering to group chat
        
@@ -405,32 +406,52 @@ io.sockets.on('connection',async function (socket) {
           // var member_json_data = JSON.stringify(group_status_array);
           
           if(type=='text'){
-            await queries.post_text_message(datetime,s_id,message,data.room,member_json_data,message_id)
+            await queries.post_text_message(datetime,s_id,message,data.room,member_json_data,message_id,optional_text)
           }else if(type=='image'){
             let split_path=message.split(',');
             //console.log(split_path)
             for(var i=0;i<split_path.length;i++){
               //console.log(split_path[i])
-              await queries.post_image_message(datetime,s_id,split_path[i],data.room,member_json_data,message_id)
+              if(i==0){
+                await queries.post_image_message(datetime,s_id,split_path[i],data.room,member_json_data,message_id,optional_text)
+              }else{
+                await queries.post_image_message(datetime,s_id,split_path[i],data.room,member_json_data,message_id,'')
+              }
             }
             //exit_s
           //await queries.post_image_message(datetime,s_id,message,data.room,member_json_data,message_id) 
           }else if(type=='voice'){
             let split_path=message.split(',');
             for(var i=0;i<split_path.length;i++){
-              await queries.post_voice_message(datetime,s_id,split_path[i],data.room,member_json_data,duration,message_id) 
+              if(i==0){
+                await queries.post_voice_message(datetime,s_id,split_path[i],data.room,member_json_data,duration,message_id,optional_text) 
+              }else{
+                await queries.post_voice_message(datetime,s_id,split_path[i],data.room,member_json_data,duration,message_id,'') 
+              }
             }
             //await queries.post_voice_message(datetime,s_id,message,data.room,member_json_data,duration,message_id) 
           }else if(type=='doc'){
             let split_path=message.split(',');
             for(var i=0;i<split_path.length;i++){
-              await queries.post_doc_message(datetime,s_id,split_path[i],data.room,member_json_data,message_id) 
+              if(i==0){
+                await queries.post_doc_message(datetime,s_id,split_path[i],data.room,member_json_data,message_id,optional_text) 
+              }else{
+                await queries.post_doc_message(datetime,s_id,split_path[i],data.room,member_json_data,message_id,'') 
+              }
+              
             }
             //await queries.post_doc_message(datetime,s_id,message,data.room,member_json_data,message_id) 
           }else if(type=='video'){
             let split_path=message.split(',');
+            let split_thumbnail=thumbnail.split(',');
             for(var i=0;i<split_path.length;i++){
-              await queries.post_video_message(datetime,s_id,split_path[i],data.room,member_json_data,duration,message_id) 
+              let thumbnail_path=split_thumbnail[i] ? split_thumbnail[i] : '';
+              if(i==0){
+                await queries.post_video_message(datetime,s_id,split_path[i],data.room,member_json_data,duration,message_id,optional_text,thumbnail_path) 
+              }else{
+                await queries.post_video_message(datetime,s_id,split_path[i],data.room,member_json_data,duration,message_id,'',thumbnail_path) 
+              }
+              
             }
             //await queries.post_video_message(datetime,s_id,message,data.room,member_json_data,duration,message_id) 
           }else{
@@ -454,29 +475,50 @@ io.sockets.on('connection',async function (socket) {
           // var member_json_data = JSON.stringify(group_status_array);
           var grp=queries.date_inserting(datetime,s_id,data.room,member_json_data)
           if(type=='text'){
-            await queries.post_text_message(datetime,s_id,message,data.room,member_json_data,message_id)
+            await queries.post_text_message(datetime,s_id,message,data.room,member_json_data,message_id,optional_text)
           }else if(type=='image'){
             let split_path=message.split(',');
             for(var i=0;i<split_path.length;i++){
-              await queries.post_image_message(datetime,s_id,split_path[i],data.room,member_json_data,message_id)
+              if(i==0){
+                await queries.post_image_message(datetime,s_id,split_path[i],data.room,member_json_data,message_id,optional_text)
+              }else{
+                await queries.post_image_message(datetime,s_id,split_path[i],data.room,member_json_data,message_id,'')
+              }
             }
             //await queries.post_image_message(datetime,s_id,message,data.room,member_json_data,message_id) 
           }else if(type=='voice'){
             let split_path=message.split(',');
             for(var i=0;i<split_path.length;i++){
-              await queries.post_voice_message(datetime,s_id,split_path[i],data.room,member_json_data,duration,message_id)
+              if(i==0){
+                await queries.post_voice_message(datetime,s_id,split_path[i],data.room,member_json_data,duration,message_id,optional_text)
+              }else{
+                await queries.post_voice_message(datetime,s_id,split_path[i],data.room,member_json_data,duration,message_id,'')
+              }
+              
             }
             //await queries.post_voice_message(datetime,s_id,message,data.room,member_json_data,duration,message_id) 
           }else if(type=='doc'){
             let split_path=message.split(',');
             for(var i=0;i<split_path.length;i++){
-              await queries.post_doc_message(datetime,s_id,split_path[i],data.room,member_json_data,message_id)
+              if(i==0){
+                await queries.post_doc_message(datetime,s_id,split_path[i],data.room,member_json_data,message_id,optional_text)
+              }else{
+                await queries.post_doc_message(datetime,s_id,split_path[i],data.room,member_json_data,message_id,'')
+              }
+              
             }
             //await queries.post_doc_message(datetime,s_id,message,data.room,member_json_data,message_id) 
           }else if(type=='video'){
             let split_path=message.split(',');
+            let split_thumbnail=thumbnail.split(',');
             for(var i=0;i<split_path.length;i++){
-              await queries.post_video_message(datetime,s_id,split_path[i],data.room,member_json_data,duration,message_id)
+              let thumbnail_path=split_thumbnail[i] ? split_thumbnail[i] : '';
+              if(i==0){
+                await queries.post_video_message(datetime,s_id,split_path[i],data.room,member_json_data,duration,message_id,optional_text,thumbnail_path)
+              }else{
+                await queries.post_video_message(datetime,s_id,split_path[i],data.room,member_json_data,duration,message_id,'',thumbnail_path)
+              }
+              
             }
             //await queries.post_video_message(datetime,s_id,message,data.room,member_json_data,duration,message_id) 
           }else{
@@ -701,28 +743,44 @@ io.sockets.on('connection',async function (socket) {
             }else if (type == 'image') {
               let split_path=message.split(',');
               for(var i=0;i<split_path.length;i++){
-                var result=await queries.individual_image_msg(datetime,data.sid,data.rid,split_path[i],room,group_status_json_data,message_id,optional_text) 
+                if(i==0){
+                  //insert optional text or caption only to the first entry data
+                  var result=await queries.individual_image_msg(datetime,data.sid,data.rid,split_path[i],room,group_status_json_data,message_id,optional_text) 
+                }else{
+                  var result=await queries.individual_image_msg(datetime,data.sid,data.rid,split_path[i],room,group_status_json_data,message_id,'') 
+                }
               }
               //var result=await queries.individual_image_msg(datetime,data.sid,data.rid,message,room,group_status_json_data,message_id) 
             }else if (type == "voice") {
               let split_path=message.split(',');
               for(var i=0;i<split_path.length;i++){
-                var result=await queries.individual_voice_msg(datetime,data.sid,data.rid,split_path[i],room,group_status_json_data,duration,message_id,optional_text)
+                if(i==0){
+                  var result=await queries.individual_voice_msg(datetime,data.sid,data.rid,split_path[i],room,group_status_json_data,duration,message_id,optional_text)
+                }else{
+                  var result=await queries.individual_voice_msg(datetime,data.sid,data.rid,split_path[i],room,group_status_json_data,duration,message_id,'')
+                }
               }
               //var result=await queries.individual_voice_msg(datetime,data.sid,data.rid,message,room,group_status_json_data,duration,message_id)
             }else if (type == "doc") {
               let split_path=message.split(',');
               for(var i=0;i<split_path.length;i++){
-                
-                var result=await queries.individual_doc_msg(datetime,data.sid,data.rid,split_path[i],room,group_status_json_data,duration,message_id,optional_text) 
-                //console.log(optional_text)
-                // exit ()
+                if(i==0){
+                  var result=await queries.individual_doc_msg(datetime,data.sid,data.rid,split_path[i],room,group_status_json_data,duration,message_id,optional_text) 
+                }else{
+                  var result=await queries.individual_doc_msg(datetime,data.sid,data.rid,split_path[i],room,group_status_json_data,duration,message_id,'')
+                }
               }
               //var result=await queries.individual_doc_msg(datetime,data.sid,data.rid,message,room,group_status_json_data,duration,message_id) 
             }else if (type == "video") {
               let split_path=message.split(',');
+              let split_thumbnail=thumbnail.split(',');
               for(var i=0;i<split_path.length;i++){
-                var result=await queries.individual_video_msg(datetime,data.sid,data.rid,split_path[i],room,group_status_json_data,duration,message_id,optional_text) 
+                let thumbnail_path=split_thumbnail[i] ? split_thumbnail[i] : '';
+                if(i==0){
+                  var result=await queries.individual_video_msg(datetime,data.sid,data.rid,split_path[i],room,group_status_json_data,duration,message_id,optional_text,thumbnail_path) 
+                }else{
+                  var result=await queries.individual_video_msg(datetime,data.sid,data.rid,split_path[i],room,group_status_json_data,duration,message_id,'',thumbnail_path) 
+                }
               }
               //var result=await queries.individual_video_msg(datetime,data.sid,data.rid,message,room,group_status_json_data,duration,message_id)
             } else {
@@ -766,28 +824,50 @@ io.sockets.on('connection',async function (socket) {
             else if (type == 'image') {
               let split_path=message.split(',');
               for(var i=0;i<split_path.length;i++){
-                await queries.individual_image_msg(datetime, data.sid, data.rid, split_path[i], room, group_status_json_data,message_id,optional_text)
+                if(i==0){
+                  await queries.individual_image_msg(datetime, data.sid, data.rid, split_path[i], room, group_status_json_data,message_id,optional_text)
+                }else{
+                  await queries.individual_image_msg(datetime, data.sid, data.rid, split_path[i], room, group_status_json_data,message_id,'')
+                }
+                
               }
               //await queries.individual_image_msg(datetime, data.sid, data.rid, message, room, group_status_json_data,message_id)
             }
             else if (type == "voice") {
               let split_path=message.split(',');
               for(var i=0;i<split_path.length;i++){
-                await queries.individual_voice_msg(datetime, data.sid, data.rid, split_path[i], room, group_status_json_data, duration,message_id,optional_text)
+                if(i==0){
+                  await queries.individual_voice_msg(datetime, data.sid, data.rid, split_path[i], room, group_status_json_data, duration,message_id,optional_text)
+                }else{
+                  await queries.individual_voice_msg(datetime, data.sid, data.rid, split_path[i], room, group_status_json_data, duration,message_id,'')
+                }
+                
               }
               //await queries.individual_voice_msg(datetime, data.sid, data.rid, message, room, group_status_json_data, duration,message_id)
             }
             else if (type == "doc") {
               let split_path=message.split(',');
               for(var i=0;i<split_path.length;i++){
-                await queries.individual_doc_msg(datetime, data.sid, data.rid, split_path[i], room, group_status_json_data,message_id,optional_text)
+                if(i==0){
+                  await queries.individual_doc_msg(datetime, data.sid, data.rid, split_path[i], room, group_status_json_data,message_id,optional_text)
+                }else{
+                  await queries.individual_doc_msg(datetime, data.sid, data.rid, split_path[i], room, group_status_json_data,message_id,'')
+                }
+                
               }
               //await queries.individual_doc_msg(datetime, data.sid, data.rid, message, room, group_status_json_data,message_id)
             }
             else if (type == "video") {
               let split_path=message.split(',');
+              let split_thumbnail=thumbnail.split(',');
               for(var i=0;i<split_path.length;i++){
-                await queries.individual_video_msg(datetime, data.sid, data.rid, split_path[i], room, group_status_json_data, duration,message_id,optional_text)
+                let thumbnail_path=split_thumbnail[i] ? split_thumbnail[i] : '';
+                if(i==0){
+                  await queries.individual_video_msg(datetime, data.sid, data.rid, split_path[i], room, group_status_json_data, duration,message_id,optional_text,thumbnail_path)
+                }else{
+                  await queries.individual_video_msg(datetime, data.sid, data.rid, split_path[i], room, group_status_json_data, duration,message_id,'',thumbnail_path)
+                }
+                
               }
               //await queries.individual_video_msg(datetime, data.sid, data.rid, message, room, group_status_json_data, duration,message_id)
             } else {
