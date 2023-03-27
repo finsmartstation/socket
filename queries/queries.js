@@ -1,3 +1,4 @@
+const { query } = require('express');
 const db = require('../models/index')
 
 async function update_online_status(last_seen, s_id) {
@@ -540,6 +541,17 @@ async function execute_update_query(query){
     return results[0];
 }
 
+async function get_last_room_messages(rooms){
+    //SELECT * FROM `chat_list` WHERE `room` IN ('group_202303141437479924', '550') AND `id` IN (SELECT MAX(`id`) FROM `chat_list` WHERE `room` IN ('group_202303141437479924', '550') and message_type!='date' GROUP BY `room`) ORDER BY `date` DESC;
+    const results=await db.sequelize.query("SELECT * FROM `chat_list` WHERE `room` IN ("+rooms+") AND `id` IN (SELECT MAX(`id`) FROM `chat_list` WHERE `room` IN ("+rooms+") and message_type!='date' GROUP BY `room`) ORDER BY `date` DESC");
+    return results[0];
+}
+
+async function mark_as_unread(query){
+    const results=await db.sequelize.query(query);
+    return results[0];
+}
+
 module.exports = {
     update_online_status,
     select_online_status,
@@ -639,5 +651,7 @@ module.exports = {
     check_user_read_receipts,
     update_group_current_member,
     room_unread_messages,
-    execute_update_query
+    execute_update_query,
+    get_last_room_messages,
+    mark_as_unread
 }

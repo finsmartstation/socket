@@ -44,6 +44,7 @@ const { duration } = require('moment');
 const { resolve } = require('path');
 const e = require('express');
 const { on } = require('events');
+const { where } = require('sequelize');
 const botName = 'Smart_Station_Bot';
 const port = process.env.PORT || 3000;
 db.sequelize.sync();
@@ -5191,7 +5192,93 @@ io.sockets.on('connection',async function (socket) {
       }
     });
 
-
+    //mark as unread option
+    socket.on('mark_as_unread',async function(data){
+      try{
+        //{"user_id":"50","accessToken":"50","room":"550,group_202303141437479924"}
+        console.log('mark as unread')
+        if(typeof(data)=='object'){
+          let user_id=data.user_id;
+          let accessToken=data.accessToken;
+          let room=data.room;
+          if(user_id!='' && accessToken!='' && room!=''){
+            socket.join(user_id+'_mark_as_unread');
+            //check user data
+            let check_user_data=await queries.check_user_valid(user_id,accessToken);
+            if(check_user_data.length>0){
+              //slipt rooms
+              let split_rooms=room.split(',');
+              if(split_rooms.length>0){
+                let rooms='';
+                for(var i=0; i<split_rooms.length; i++){
+                  //console.log('room',split_rooms[i])
+                  rooms=rooms+"'"+split_rooms[i]+"',";
+                }
+                rooms=rooms.replace(/,(?=[^,]*$)/, '');
+                //console.log(rooms);
+                //get last message of each room
+                let get_last_room_messages=await queries.get_last_room_messages(rooms);
+                //console.log('last room messages ',get_last_room_messages);
+                let group_status_case_query='';
+                let where_case_query='';
+                let mark_as_unread_count=0;
+                for(var i=0; i<get_last_room_messages.length; i++){
+                  let message_id=get_last_room_messages[i].id;
+                  let group_status=JSON.parse(get_last_room_messages[i].group_status);
+                  //console.log(get_last_room_messages[i].id,group_status);
+                  for(var j=0; j<group_status.length; j++){
+                    if(group_status[j].user_id==user_id){
+                      mark_as_unread_count=mark_as_unread_count+1;
+                      //console.log('sssss');
+                      if('mark_as_unread' in group_status[j]){
+                        //console.log('yes mark_as_unread exist')
+                        //add mark as unread key and set it as 1
+                        group_status[j].mark_as_unread=1;
+                      }else{
+                        //console.log('mark_as_unread nnnn')
+                        group_status[j].mark_as_unread=1;
+                      }
+                    }
+                  }
+                  group_status_case_query=group_status_case_query+" when id='"+message_id+"' then '"+JSON.stringify(group_status)+"'";
+                  where_case_query=where_case_query+"'"+message_id+"', "
+                  console.log(get_last_room_messages[i].id,group_status);
+                }
+                console.log(mark_as_unread_count);
+                if(mark_as_unread_count>0){
+                  //update to db
+                  where_case_query=where_case_query.replace(/,(?=[^,]*$)/, '');
+                  console.log(group_status_case_query);
+                  let query="UPDATE chat_list SET group_status = (case "+group_status_case_query+" end) WHERE id in ("+where_case_query+")";
+                  let update_data=await queries.mark_as_unread(query);
+                  console.log(update_data);
+                  if(update_data.affectedRows>0){
+                    io.sockets.in(user_id+'_mark_as_unread').emit('mark_as_unread',{status: true, statuscode: 200, message: "success"});
+                  }else{
+                    io.sockets.in(user_id+'_mark_as_unread').emit('mark_as_unread',{status: false, statuscode: 400, message: "Not updated to db"});
+                  }
+                }else{
+                  io.sockets.in(user_id+'_mark_as_unread').emit('mark_as_unread',{status: false, statuscode: 200, message: "No data to update"});
+                }
+              }else{
+                io.sockets.in(user_id+'_mark_as_unread').emit('mark_as_unread',{status: false, statuscode: 200, message: "No room data found"});
+              }
+            }else{
+              io.sockets.in(user_id+'_mark_as_unread').emit('mark_as_unread',{status: false, statuscode: 200, message: "No user data found"});
+            }
+            socket.leave(user_id+'_mark_as_unread');
+          }else{
+            socket.join(data.user_id+'_mark_as_unread');
+            io.sockets.in(data.user_id+'_mark_as_unread').emit('mark_as_unread',{status: false, statuscode: 200, message: "Data is empty"});
+            socket.leave(data.user_id);
+          }
+        }else{
+          console.error('Input type is string');
+        }
+      }catch{
+        console.error(e)
+      }
+    })
   }catch(error){
       //console.log(error)
       console.error('error occurs ', error);
