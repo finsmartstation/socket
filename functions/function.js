@@ -892,6 +892,11 @@ async function get_individual_chat_list_response(sid,rid,room){
                  user_details[0].profile_pic='uploads/default/profile.png';
                }
              }else{
+              // if(user_details[0].profile_pic){
+              //   user_details[0].profile_pic=user_details[0].profile_pic;
+              // }else{
+              //   user_details[0].profile_pic='';
+              // }
                user_details[0].profile_pic=user_details[0].profile_pic;
              }
             //set base url in profile pic
@@ -3718,6 +3723,7 @@ async function get_group_info(user_id,accessToken,group_id){
         let get_user_profile_data=await queries.get_user_profile(group_user_id)
         //console.log(get_user_profile_data[0].profile_pic)
         let name=get_user_profile_data[0].name;
+        let device_token=get_user_profile_data[0].deviceToken;
         //check who can see my profile pic
         let check_privacy_profile_pic=await queries.check_user_privacy(group_user_id,'profile_pic');
         //console.log('profile privacy ',group_user_id,check_privacy_profile_pic);
@@ -3819,7 +3825,8 @@ async function get_group_info(user_id,accessToken,group_id){
           type: type,
           profile_pic: BASE_URL+profile_pic,
           about: about,
-          phone: phone
+          phone: phone,
+          device_token: device_token
         })
       }
       //console.log(group_users)
@@ -3911,6 +3918,35 @@ async function get_group_info(user_id,accessToken,group_id){
   }
 }
 
+async function update_mark_as_unread_status(user_id,room){
+  let get_room_last_message=await queries.get_room_last_message(user_id,room);
+  console.log(get_room_last_message);
+  let group_status=get_room_last_message[0].group_status;
+  if(group_status!=''){
+    let check_mark_as_unread_exist=false;
+    group_status=JSON.parse(get_room_last_message[0].group_status);
+    for(var i=0; i<group_status.length; i++){
+      if(user_id==group_status[i].user_id && 'mark_as_unread' in group_status[i]){
+        if(group_status[i].mark_as_unread==1){
+          group_status[i].mark_as_unread=0;
+          check_mark_as_unread_exist=true;
+        }
+      }
+    }
+    if(check_mark_as_unread_exist){
+      //update to db
+      let update_mark_as_unread_status=await queries.remove_mark_as_unread(get_room_last_message[0].id,JSON.stringify(group_status));
+      //console.log(update_mark_as_unread_status)
+      if(update_mark_as_unread_status.affectedRows>0){
+        console.log('updated successfully')
+      }else{
+        console.log('not updated to db')
+      }
+    }
+  }
+  
+}
+
 
 module.exports={
     get_individual_chat_list_response,
@@ -3923,5 +3959,6 @@ module.exports={
     create_group_id,
     isUrl,
     get_group_info,
-    check_user_data_exist_in_array
+    check_user_data_exist_in_array,
+    update_mark_as_unread_status
 }

@@ -196,7 +196,7 @@ async function get_mute_notification(user_id,receiver_id){
 }
 
 async function get_user_profile(user_id){
-    const results=await db.sequelize.query("select name,profile_pic,about,phone from user where id='"+user_id+"'");
+    const results=await db.sequelize.query("select name,profile_pic,about,phone,deviceToken from user where id='"+user_id+"'");
     return results[0];
 }
 
@@ -466,6 +466,13 @@ async function update_individual_message_as_read(datetime,receiver_id,room){
     return results[0];
 }
 
+async function get_room_last_message(user_id,room){
+    let set_user_id='"'+user_id+'"'
+    //SELECT * FROM `chat_list` where room='550' and JSON_CONTAINS(JSON_EXTRACT(group_status, '$[*].user_id'), '"50"', '$') and message_type!='date' order by id desc limit 1;
+    const results=await db.sequelize.query("SELECT * FROM `chat_list` where room='"+room+"' and JSON_CONTAINS(JSON_EXTRACT(group_status, '$[*].user_id'), '"+set_user_id+"', '$') and message_type!='date' order by id desc limit 1");
+    return results[0];
+}
+
 async function update_group_message_as_read(current_datetime,group_status,id){
     const results=await db.sequelize.query("update `chat_list` set message_status='0',message_read_datetime='"+current_datetime+"',group_status='"+group_status+"' where id='"+id+"'");
     return results[0];
@@ -549,6 +556,11 @@ async function get_last_room_messages(rooms){
 
 async function mark_as_unread(query){
     const results=await db.sequelize.query(query);
+    return results[0];
+}
+
+async function remove_mark_as_unread(message_id,group_status){
+    const results=await db.sequelize.query("update `chat_list` set group_status='"+group_status+"' where id='"+message_id+"'");
     return results[0];
 }
 
@@ -653,5 +665,7 @@ module.exports = {
     room_unread_messages,
     execute_update_query,
     get_last_room_messages,
-    mark_as_unread
+    mark_as_unread,
+    get_room_last_message,
+    remove_mark_as_unread
 }

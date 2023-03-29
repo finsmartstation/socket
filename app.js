@@ -4578,7 +4578,7 @@ io.sockets.on('connection',async function (socket) {
     socket.on('read', async function(data){
       try{
         if(typeof(data)=='object'){
-          console.log('read');
+          //console.log('read');
           let user_id=data.sid ? data.sid : '';
           //let accessToken=data.accessToken ? data.accessToken : '';
           let rid=data.rid ? data.rid : '';
@@ -4590,6 +4590,8 @@ io.sockets.on('connection',async function (socket) {
             let set_user_id='"'+user_id+'"';
             let unread_message_count=0;
             let unread_message=0;
+            //update remove mark_as_unread status
+            let update_mark_as_unread_status=await functions.update_mark_as_unread_status(user_id,room);
             let get_all_group_messages=await queries.group_chat_response(user_id,set_user_id,room)
             //console.log(get_all_group_messages)
             for(var i=0; i<get_all_group_messages.length; i++){
@@ -4641,6 +4643,7 @@ io.sockets.on('connection',async function (socket) {
               }
             }
           }else{
+            
             //console.log('private')
             if (Number(user_id) > Number(rid)) {
               //console.log('ssss')
@@ -4650,6 +4653,8 @@ io.sockets.on('connection',async function (socket) {
               room = '' + user_id + rid;
               //console.log('room id in else', room);
             }
+            //update remove mark_as_unread status
+            let update_mark_as_unread_status=await functions.update_mark_as_unread_status(user_id,room);
             //console.log('group')
             let update_individual_message_as_read=await queries.update_individual_message_as_read(current_datetime,rid,room)
             if(update_individual_message_as_read.affectedRows>0){
@@ -5068,6 +5073,7 @@ io.sockets.on('connection',async function (socket) {
               //console.log(split_room)
               if(split_room.length>0){
                 let rooms='';
+                let other_users=[];
                 for(var i=0; i<split_room.length; i++){
                   console.log('room',split_room[i])
                   rooms=rooms+"'"+split_room[i]+"',";
@@ -5090,15 +5096,30 @@ io.sockets.on('connection',async function (socket) {
                       let set_status=false;
                       if(room_unread_messages[j].private_group==0){
                           for(var k=0; k<group_status.length; k++){
-                          //console.log('user id ',group_status[k].user_id)
-                          if(user_id==group_status[k].user_id && group_status[k].message_status==1){
-                            group_status[k].message_status=0;
-                            group_status[k].message_read_datetime=current_datetime;
-                            set_status=true;
+                            //console.log('user id ',group_status[k].user_id)
+                            if(user_id==group_status[k].user_id && group_status[k].message_status==1){
+                              group_status[k].message_status=0;
+                              group_status[k].message_read_datetime=current_datetime;
+                              set_status=true;
+                            }
                           }
-                        }
                         //console.log('new ',group_status)
                         if(set_status){
+                          //add opponent user to the array
+                          let opponent_user_id='';
+                          if(room_unread_messages[j].senter_id==user_id){
+                            opponent_user_id=room_unread_messages[j].receiver_id;
+                          }else{
+                            opponent_user_id=room_unread_messages[j].senter_id;
+                          }
+                          //check user exist in ther other_user array
+                          //in private message, there is no need to check
+                          other_users.push({
+                            user_id: opponent_user_id.toString(),
+                            receiver_id: user_id,
+                            room: room_unread_messages[j].room,
+                            type: 'private'
+                          });
                           unread_count=unread_count+1;
                           group_status_case_query=group_status_case_query+"when id='"+room_unread_messages[j].id+"' then '"+JSON.stringify(group_status)+"' ";
                           read_datetime_case_query=read_datetime_case_query+"when id='"+room_unread_messages[j].id+"' then '"+current_datetime+"' ";
@@ -5126,9 +5147,21 @@ io.sockets.on('connection',async function (socket) {
                             set_status=true;
                             message_unread_count=message_unread_count+1;
                           }
+                          if(set_status){
+                            //add users and room to other_users arrays
+                            if(user_id!=group_status[k].user_id){
+                              other_users.push({
+                                user_id: group_status[k].user_id,
+                                receiver_id: '0',
+                                room: room_unread_messages[j].room,
+                                type: 'group'
+                              })
+                            }
+                          }
                         }
                         console.log(room_unread_messages[j].id+' - '+total_unread_users+' - '+message_unread_count)
                         if(set_status){
+                          
                           unread_count=unread_count+1;
                           if(total_unread_users==message_unread_count){
                             console.log('equal',current_datetime)
@@ -5161,6 +5194,28 @@ io.sockets.on('connection',async function (socket) {
                     console.log(update_data)
                     if(update_data.affectedRows>0){
                       io.sockets.in(user_id+'_mark_as_read').emit('mark_as_read',{status: true, statuscode: 200, message: "success"});
+                      //emit to chat list
+                      let user_recent_chat_list=await functions.get_recent_chat_list_response(user_id);
+                      io.sockets.in(user_id).emit('chat_list', user_recent_chat_list);
+                      console.log(other_users)
+                      if(other_users.length>0){
+                        for(var m=0; m<other_users.length; m++){
+                          //emit to users chat list
+                          if(other_users[m].type=='private'){
+                            let receiver_room_chat_list=await functions.get_individual_chat_list_response(other_users[m].user_id,other_users[m].receiver_id,other_users[m].room);
+                            io.sockets.in(other_users[m].room+'_'+other_users[m].user_id).emit('message',receiver_room_chat_list);
+                            //emit to recent chat_list
+                            let receiver_recent_chat_list=await functions.get_recent_chat_list_response(other_users[m].user_id);
+                            io.sockets.in(other_users[m].user_id).emit('chat_list',receiver_recent_chat_list);
+                          }else if(other_users[m].type=='group'){
+                            let receiver_room_chat_list=await functions.get_group_chat_list_response(other_users[m].user_id,other_users[m].room);
+                            io.sockets.in(other_users[m].room+'_'+other_users[m].user_id).emit('message',receiver_room_chat_list);
+                            //emit to recent chat_list
+                            let receiver_recent_chat_list=await functions.get_recent_chat_list_response(other_users[m].user_id);
+                            io.sockets.in(other_users[m].user_id).emit('chat_list',receiver_recent_chat_list);
+                          }
+                        }
+                      }
                     }else{
                       io.sockets.in(user_id+'_mark_as_read').emit('mark_as_read',{status: false, statuscode: 400, message: "Not updated to db"});
                     }
@@ -5196,7 +5251,7 @@ io.sockets.on('connection',async function (socket) {
     socket.on('mark_as_unread',async function(data){
       try{
         //{"user_id":"50","accessToken":"50","room":"550,group_202303141437479924"}
-        console.log('mark as unread')
+        //console.log('mark as unread')
         if(typeof(data)=='object'){
           let user_id=data.user_id;
           let accessToken=data.accessToken;
@@ -5254,6 +5309,9 @@ io.sockets.on('connection',async function (socket) {
                   console.log(update_data);
                   if(update_data.affectedRows>0){
                     io.sockets.in(user_id+'_mark_as_unread').emit('mark_as_unread',{status: true, statuscode: 200, message: "success"});
+                    //emit recent chat list to user
+                    let user_recent_chat_list=await functions.get_recent_chat_list_response(user_id);
+                    io.sockets.in(user_id).emit('chat_list',user_recent_chat_list);
                   }else{
                     io.sockets.in(user_id+'_mark_as_unread').emit('mark_as_unread',{status: false, statuscode: 400, message: "Not updated to db"});
                   }
