@@ -518,6 +518,11 @@ async function check_user_privacy(user_id,privacy_type){
     return results[0];
 }
 
+async function check_user_privacy_for_last_seen_and_online(user_id){
+    const results=await db.sequelize.query("SELECT * FROM `user_chat_privacy` where (type='last_seen' or type='online') and user_id='"+user_id+"'");
+    return results[0];
+}
+
 async function check_private_chat_read_receipts(user_id,receiver_id){
     const results=await db.sequelize.query("SELECT *, DATE_FORMAT(updated_datetime,'%Y-%m-%d %H:%i:%s') as updated_datetime FROM `user_chat_privacy` where user_id in ('"+user_id+"','"+receiver_id+"') and type='read_receipts' and options='1'");
     return results[0];
@@ -667,5 +672,6 @@ module.exports = {
     get_last_room_messages,
     mark_as_unread,
     get_room_last_message,
-    remove_mark_as_unread
+    remove_mark_as_unread,
+    check_user_privacy_for_last_seen_and_online
 }

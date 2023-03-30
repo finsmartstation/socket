@@ -228,13 +228,19 @@ io.sockets.on('connection',async function (socket) {
             //updating online status and lastseen
             const results =  db.sequelize.query("UPDATE user SET online_status = '1', last_seen='" + last_seen + "' WHERE id = '" + room_data.sid + "'");
             console.log(soc,room_data.rid)
+            //check user privacy for show last seen and online
+            let online_status_value='';
+            let last_seen_value='';
+            let same_as_last_seen='';
+            let check_user_privacy_for_last_seen_and_online=await queries.check_user_privacy_for_last_seen_and_online(room_data.rid);
+            console.log(`user id ${room_data.rid}'s privacy `,check_user_privacy_for_last_seen_and_online,check_user_privacy_for_last_seen_and_online.length)
             if (soc[room_data.rid] != undefined) {
               console.log('user is online')
               //const results = db.sequelize.query("UPDATE user SET online_status = '1', last_seen='" + last_seen + "' WHERE id = '" + room_data.sid + "'");
               // old query var update_query = "update user set online_status='1',last_seen='" + last_seen + "' where id='" + room_data.sid + "'";
               //get online status to emit
               var online_s=await queries.select_online_status(room_data.rid);
-              console.log('140 in app.js',online_s)
+              //console.log('140 in app.js',online_s)
             // try{
                 console.log('online user', newRoom)
                 let data_array=[{
@@ -243,7 +249,126 @@ io.sockets.on('connection',async function (socket) {
                 }]
               //io.sockets.in(newRoom).emit('online_users', { "status": "true", "statuscode": "200", "message": "success", "online_status": online_s[0][0].online_status, "last_seen": online_s[0][0].last_seen });
               //io.sockets.in(newRoom+'_'+room_data.sid).emit('online_users', { "status": "true", "statuscode": "200", "message": "success", "data": online_s });
-              io.sockets.in(newRoom+'_'+room_data.sid).emit('online_users', { "status": "true", "statuscode": "200", "message": "success", "online_status": "1", "last_seen": online_s[0].last_seen});
+              if(check_user_privacy_for_last_seen_and_online.length){
+                if(check_user_privacy_for_last_seen_and_online.length==1){
+                  console.log('count 1')
+                  if(check_user_privacy_for_last_seen_and_online[0].type=='last_seen'){
+                    console.log('last seen exist')
+                    let options=check_user_privacy_for_last_seen_and_online[0].options;
+                      if(options==0){
+                        console.log('everyone')
+                        last_seen_value=online_s[0].last_seen;
+                        same_as_last_seen="1";
+                      }else if(options==1){
+                        console.log('my contact')
+                        let get_user_chat_list_data=await queries.user_chat_list_details(room_data.rid);
+                        console.log(get_user_chat_list_data)
+                        let check_user_exist_in_chat_list=await functions.check_user_data_exist_in_array(room_data.sid,get_user_chat_list_data);
+                        console.log(check_user_exist_in_chat_list)
+                        if(check_user_exist_in_chat_list){
+                          last_seen_value=online_s[0].last_seen;
+                          same_as_last_seen="1";
+                        }else{
+                          last_seen_value="";
+                          same_as_last_seen="";
+                        }
+                      }else if(options==2){
+                        console.log('my contact except')
+                        let except_users=check_user_privacy_for_last_seen_and_online[0].except_users;
+                        if(except_users!=''){
+                          except_users=JSON.parse(check_user_privacy_for_last_seen_and_online[0].except_users);
+                        }else{
+                          except_users=[];
+                        }
+                        if(except_users.includes(room_data.sid)){
+                          last_seen_value="";
+                          same_as_last_seen="";
+                        }else{
+                          last_seen_value=online_s[0].last_seen;
+                          same_as_last_seen="1";
+                        }
+                      }else if(options==3){
+                        console.log('nobody')
+                        last_seen_value="";
+                        same_as_last_seen="";
+                      }
+                  }else{
+                    console.log('last_seen else part')
+                    last_seen_value=online_s[0].last_seen;
+                  }
+                  if(check_user_privacy_for_last_seen_and_online[0].type=='online'){
+                    console.log('online exist')
+                    let options=check_user_privacy_for_last_seen_and_online[0].options;
+                      if(options==0){
+                        online_status_value="1"
+                      }else if(options==1){
+                        //same as last seen 
+                        online_status_value=same_as_last_seen;
+                      }
+                  }else{
+                    console.log('online else part')
+                    online_status_value="1";
+                  }
+                }else{
+                  for(var i=0; i<check_user_privacy_for_last_seen_and_online.length; i++){
+                    if(check_user_privacy_for_last_seen_and_online[i].type=='last_seen'){
+                      console.log('last seen ')
+                      let options=check_user_privacy_for_last_seen_and_online[i].options;
+                      if(options==0){
+                        console.log('everyone')
+                        last_seen_value=online_s[0].last_seen;
+                        same_as_last_seen="1";
+                      }else if(options==1){
+                        console.log('my contact')
+                        let get_user_chat_list_data=await queries.user_chat_list_details(room_data.rid);
+                        console.log(get_user_chat_list_data)
+                        let check_user_exist_in_chat_list=await functions.check_user_data_exist_in_array(room_data.sid,get_user_chat_list_data);
+                        console.log(check_user_exist_in_chat_list)
+                        if(check_user_exist_in_chat_list){
+                          last_seen_value=online_s[0].last_seen;
+                          same_as_last_seen="1";
+                        }else{
+                          last_seen_value="";
+                          same_as_last_seen="";
+                        }
+                      }else if(options==2){
+                        console.log('my contact except')
+                        let except_users=check_user_privacy_for_last_seen_and_online[i].except_users;
+                        if(except_users!=''){
+                          except_users=JSON.parse(check_user_privacy_for_last_seen_and_online[i].except_users);
+                        }else{
+                          except_users=[];
+                        }
+                        if(except_users.includes(room_data.sid)){
+                          last_seen_value="";
+                          same_as_last_seen="";
+                        }else{
+                          last_seen_value=online_s[0].last_seen;
+                          same_as_last_seen="1";
+                        }
+                      }else if(options==3){
+                        console.log('nobody')
+                        last_seen_value="";
+                        same_as_last_seen="";
+                      }
+                    }else if(check_user_privacy_for_last_seen_and_online[i].type=='online'){
+                      console.log('online')
+                      let options=check_user_privacy_for_last_seen_and_online[i].options;
+                      if(options==0){
+                        online_status_value="1"
+                      }else if(options==1){
+                        //same as last seen 
+                        online_status_value=same_as_last_seen;
+                      }
+                    }
+                  }
+                }
+              }else{
+                online_status_value="1";
+                last_seen_value=online_s[0].last_seen;
+              }
+              io.sockets.in(newRoom+'_'+room_data.sid).emit('online_users', { "status": "true", "statuscode": "200", "message": "success", "online_status": online_status_value, "last_seen": last_seen_value});
+              //io.sockets.in(newRoom+'_'+room_data.sid).emit('online_users', { "status": "true", "statuscode": "200", "message": "success", "online_status": "1", "last_seen": online_s[0].last_seen});
               // }catch(e){
               //   console.log('online_s ', e)
               // }
@@ -255,7 +380,126 @@ io.sockets.on('connection',async function (socket) {
                 last_seen: online_s[0].last_seen
               }]
               console.log(data_array)
-                io.sockets.in(newRoom+'_'+room_data.sid).emit('online_users', { "status": "true", "statuscode": "200", "message": "success", "online_status": "0", "last_seen": online_s[0].last_seen});
+              if(check_user_privacy_for_last_seen_and_online.length){
+                if(check_user_privacy_for_last_seen_and_online.length==1){
+                  console.log('count 1')
+                  if(check_user_privacy_for_last_seen_and_online[0].type=='last_seen'){
+                    console.log('last seen exist')
+                    let options=check_user_privacy_for_last_seen_and_online[0].options;
+                      if(options==0){
+                        console.log('everyone')
+                        last_seen_value=online_s[0].last_seen;
+                        same_as_last_seen="0";
+                      }else if(options==1){
+                        console.log('my contact')
+                        let get_user_chat_list_data=await queries.user_chat_list_details(room_data.rid);
+                        console.log(get_user_chat_list_data)
+                        let check_user_exist_in_chat_list=await functions.check_user_data_exist_in_array(room_data.sid,get_user_chat_list_data);
+                        console.log(check_user_exist_in_chat_list)
+                        if(check_user_exist_in_chat_list){
+                          last_seen_value=online_s[0].last_seen;
+                          same_as_last_seen="0";
+                        }else{
+                          last_seen_value="";
+                          same_as_last_seen="";
+                        }
+                      }else if(options==2){
+                        console.log('my contact except')
+                        let except_users=check_user_privacy_for_last_seen_and_online[0].except_users;
+                        if(except_users!=''){
+                          except_users=JSON.parse(check_user_privacy_for_last_seen_and_online[0].except_users);
+                        }else{
+                          except_users=[];
+                        }
+                        if(except_users.includes(room_data.sid)){
+                          last_seen_value="";
+                          same_as_last_seen="";
+                        }else{
+                          last_seen_value=online_s[0].last_seen;
+                          same_as_last_seen="0";
+                        }
+                      }else if(options==3){
+                        console.log('nobody')
+                        last_seen_value="";
+                        same_as_last_seen="";
+                      }
+                  }else{
+                    console.log('last_seen else part')
+                    last_seen_value=online_s[0].last_seen;
+                  }
+                  if(check_user_privacy_for_last_seen_and_online[0].type=='online'){
+                    console.log('online exist')
+                    let options=check_user_privacy_for_last_seen_and_online[0].options;
+                      if(options==0){
+                        online_status_value="0"
+                      }else if(options==1){
+                        //same as last seen 
+                        online_status_value=same_as_last_seen;
+                      }
+                  }else{
+                    console.log('online else part')
+                    online_status_value="0";
+                  }
+                }else{
+                  for(var i=0; i<check_user_privacy_for_last_seen_and_online.length; i++){
+                    if(check_user_privacy_for_last_seen_and_online[i].type=='last_seen'){
+                      console.log('last seen ')
+                      let options=check_user_privacy_for_last_seen_and_online[i].options;
+                      if(options==0){
+                        console.log('everyone')
+                        last_seen_value=online_s[0].last_seen;
+                        same_as_last_seen="0";
+                      }else if(options==1){
+                        console.log('my contact')
+                        let get_user_chat_list_data=await queries.user_chat_list_details(room_data.rid);
+                        console.log(get_user_chat_list_data)
+                        let check_user_exist_in_chat_list=await functions.check_user_data_exist_in_array(room_data.sid,get_user_chat_list_data);
+                        console.log(check_user_exist_in_chat_list)
+                        if(check_user_exist_in_chat_list){
+                          last_seen_value=online_s[0].last_seen;
+                          same_as_last_seen="0";
+                        }else{
+                          last_seen_value="";
+                          same_as_last_seen="";
+                        }
+                      }else if(options==2){
+                        console.log('my contact except')
+                        let except_users=check_user_privacy_for_last_seen_and_online[i].except_users;
+                        if(except_users!=''){
+                          except_users=JSON.parse(check_user_privacy_for_last_seen_and_online[i].except_users);
+                        }else{
+                          except_users=[];
+                        }
+                        if(except_users.includes(room_data.sid)){
+                          last_seen_value="";
+                          same_as_last_seen="";
+                        }else{
+                          last_seen_value=online_s[0].last_seen;
+                          same_as_last_seen="0";
+                        }
+                      }else if(options==3){
+                        console.log('nobody')
+                        last_seen_value="";
+                        same_as_last_seen="";
+                      }
+                    }else if(check_user_privacy_for_last_seen_and_online[i].type=='online'){
+                      console.log('online')
+                      let options=check_user_privacy_for_last_seen_and_online[i].options;
+                      if(options==0){
+                        online_status_value="0"
+                      }else if(options==1){
+                        //same as last seen 
+                        online_status_value=same_as_last_seen;
+                      }
+                    }
+                  }
+                }
+              }else{
+                online_status_value="0";
+                last_seen_value=online_s[0].last_seen;
+              }
+              io.sockets.in(newRoom+'_'+room_data.sid).emit('online_users', { "status": "true", "statuscode": "200", "message": "success", "online_status": online_status_value, "last_seen": last_seen_value});
+              //io.sockets.in(newRoom+'_'+room_data.sid).emit('online_users', { "status": "true", "statuscode": "200", "message": "success", "online_status": "0", "last_seen": online_s[0].last_seen});
             }
           }
         }else{
@@ -1084,12 +1328,22 @@ io.sockets.on('connection',async function (socket) {
         //update offline status to db 
         let update_offline_status=await queries.update_user_online_offline_status(input.s_id,last_seen,0)
 
+        //get data based on user privacy -- last_seen and online
+        let online_status_value='';
+        let last_seen_value='';
+        let same_as_last_seen='';
+        let check_user_privacy_for_last_seen_and_online=await queries.check_user_privacy_for_last_seen_and_online(input.s_id);
+        console.log('check_user_privacy_for_last_seen_and_online ',check_user_privacy_for_last_seen_and_online);
         //emit to other user's in the room when he/she disconnect
+        if(check_user_privacy_for_last_seen_and_online.length>0){
 
+        }else{
+
+        }
         if(online_user_room_data.length>0){
           console.log('user in the room', online_user_room_data)
           for(var i=0; i<online_user_room_data.length; i++){
-            console.log('initial loop',i)
+            //console.log('initial loop',i)
             let flag_status=false;
             console.log(online_user_room_data[i].sid+'--'+online_user_room_data[i].rid+'--'+online_user_room_data[i].room)
             if(input.s_id==online_user_room_data[i].rid || input.s_id==online_user_room_data[i].sid){
@@ -1102,7 +1356,8 @@ io.sockets.on('connection',async function (socket) {
               }]
               console.log(online_user_room_data[i].room+'_'+online_user_room_data[i].sid)
               if(input.s_id!=online_user_room_data[i].sid){
-                io.sockets.in(online_user_room_data[i].room+'_'+online_user_room_data[i].sid).emit('online_users',{"status": "true", "statuscode": "200", "message": "success", "online_status": "0", "last_seen": last_seen})
+                io.sockets.in(online_user_room_data[i].room+'_'+online_user_room_data[i].sid).emit('online_users',{"status": "true", "statuscode": "200", "message": "success", "online_status": online_status_value, "last_seen": last_seen_value});
+                //io.sockets.in(online_user_room_data[i].room+'_'+online_user_room_data[i].sid).emit('online_users',{"status": "true", "statuscode": "200", "message": "success", "online_status": "0", "last_seen": last_seen})
               }
               //io.sockets.in(online_user_room_data[i].room+'_'+online_user_room_data[i].sid).emit('online_users',{"status": "true", "statuscode": "200", "message": "success", "data": data_array})
               // online_user_room_data.splice(i,1);
