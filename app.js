@@ -1333,13 +1333,9 @@ io.sockets.on('connection',async function (socket) {
         let last_seen_value='';
         let same_as_last_seen='';
         let check_user_privacy_for_last_seen_and_online=await queries.check_user_privacy_for_last_seen_and_online(input.s_id);
+        let get_user_chat_list_data=await queries.user_chat_list_details(input.s_id);
         console.log('check_user_privacy_for_last_seen_and_online ',check_user_privacy_for_last_seen_and_online);
         //emit to other user's in the room when he/she disconnect
-        if(check_user_privacy_for_last_seen_and_online.length>0){
-
-        }else{
-
-        }
         if(online_user_room_data.length>0){
           console.log('user in the room', online_user_room_data)
           for(var i=0; i<online_user_room_data.length; i++){
@@ -1356,6 +1352,111 @@ io.sockets.on('connection',async function (socket) {
               }]
               console.log(online_user_room_data[i].room+'_'+online_user_room_data[i].sid)
               if(input.s_id!=online_user_room_data[i].sid){
+                if(check_user_privacy_for_last_seen_and_online.length>0){
+                  if(check_user_privacy_for_last_seen_and_online.length==1){
+                    console.log('1')
+                    if(check_user_privacy_for_last_seen_and_online[0].type=='last_seen'){
+                      console.log('last seen')
+                      let options=check_user_privacy_for_last_seen_and_online[0].options;
+                      console.log(options);
+                      if(options==0){
+                        same_as_last_seen="0";
+                        last_seen_value=last_seen;
+                      }else if (options==1){
+                        //get user chat_list
+                        console.log(get_user_chat_list_data)
+                        let check_user_exist_in_chat_list=await functions.check_user_data_exist_in_array(online_user_room_data[i].sid,get_user_chat_list_data);
+                        console.log(check_user_exist_in_chat_list);
+                        if(check_user_exist_in_chat_list){
+                          same_as_last_seen="0";
+                          last_seen_value=last_seen;
+                        }else{
+                          same_as_last_seen="";
+                          last_seen_value="";
+                        }
+                      }else if(options==2){
+                        let excepted_users=check_user_privacy_for_last_seen_and_online[0].except_users;
+                        if(excepted_users!=''){
+                          excepted_users=JSON.parse(check_user_privacy_for_last_seen_and_online[0].except_users);
+                        }else{
+                          excepted_users=[];
+                        }
+                        if(excepted_users.includes(online_user_room_data[i].sid)){
+                          same_as_last_seen="";
+                          last_seen_value="";
+                        }else{
+                          same_as_last_seen="0";
+                          last_seen_value=last_seen;
+                        }
+                      }else if(options==3){
+                        same_as_last_seen="";
+                        last_seen_value="";
+                      }
+                    }else{
+                      last_seen_value=last_seen;
+                    }
+
+                    if(check_user_privacy_for_last_seen_and_online[0].type=='online'){
+                      console.log('online')
+                      let options=check_user_privacy_for_last_seen_and_online[0].options;
+                      if(options==0){
+                        online_status_value="0";
+                      }else if(options==1){
+                        online_status_value=same_as_last_seen;
+                      }
+                    }else{
+                      online_status_value="0";
+                    }
+                  }else{
+                    console.log('greater than 1')
+                    for(var j=0; j<check_user_privacy_for_last_seen_and_online.length; j++){
+                      if(check_user_privacy_for_last_seen_and_online[j].type=='last_seen'){
+                        let options=check_user_privacy_for_last_seen_and_online[j].options;
+                        if(options==0){
+                          last_seen_value=last_seen;
+                          same_as_last_seen="0"
+                        }else if(options==1){
+                          let check_user_exist_in_chat_list=await functions.check_user_data_exist_in_array(online_user_room_data[i].sid,get_user_chat_list_data);
+                          //console.log(check_user_exist_in_chat_list);
+                          if(check_user_exist_in_chat_list){
+                            same_as_last_seen="0";
+                            last_seen_value=last_seen;
+                          }else{
+                            same_as_last_seen="";
+                            last_seen_value="";
+                          }
+                        }else if(options==2){
+                          let excepted_users=check_user_privacy_for_last_seen_and_online[j].except_users;
+                          if(excepted_users!=''){
+                            excepted_users=JSON.parse(check_user_privacy_for_last_seen_and_online[j].except_users);
+                          }else{
+                            excepted_users=[];
+                          }
+                          if(excepted_users.includes(online_user_room_data[i].sid)){
+                            same_as_last_seen="";
+                            last_seen_value="";
+                          }else{
+                            same_as_last_seen="0";
+                            last_seen_value=last_seen;
+                          }
+                        }else if(options==3){
+                          same_as_last_seen="";
+                          last_seen_value="";
+                        }
+                      }else if(check_user_privacy_for_last_seen_and_online[j].type=='online'){
+                        let options=check_user_privacy_for_last_seen_and_online[j].options;
+                        if(options==0){
+                          online_status_value="0";
+                        }else if(options==1){
+                          online_status_value=same_as_last_seen;
+                        }
+                      }
+                    }
+                  }
+                }else{
+                  online_status_value="0";
+                  last_seen_value=last_seen;
+                }
                 io.sockets.in(online_user_room_data[i].room+'_'+online_user_room_data[i].sid).emit('online_users',{"status": "true", "statuscode": "200", "message": "success", "online_status": online_status_value, "last_seen": last_seen_value});
                 //io.sockets.in(online_user_room_data[i].room+'_'+online_user_room_data[i].sid).emit('online_users',{"status": "true", "statuscode": "200", "message": "success", "online_status": "0", "last_seen": last_seen})
               }
@@ -1441,7 +1542,13 @@ io.sockets.on('connection',async function (socket) {
             
             io.sockets.in(input.user_id).emit('chat_list', get_recent_chat_response);
             console.log(soc)
-            
+            //get data based on user privacy -- last_seen and online
+            let online_status_value='';
+            let last_seen_value='';
+            let same_as_last_seen='';
+            let check_user_privacy_for_last_seen_and_online=await queries.check_user_privacy_for_last_seen_and_online(input.user_id);
+            let get_user_chat_list_data=await queries.user_chat_list_details(input.user_id);
+            //console.log('check_user_privacy_for_last_seen_and_online ',check_user_privacy_for_last_seen_and_online);
             
             //emit online_users -- to show user is online
             console.log(`online user's room `,online_user_room_data)
@@ -1452,7 +1559,112 @@ io.sockets.on('connection',async function (socket) {
                   //console.log('yes')
                   if(input.user_id!=online_user_room_data[i].sid){
                     //console.log('emit online user ',online_user_room_data[i].room+'_'+online_user_room_data[i].sid)
-                    io.sockets.in(online_user_room_data[i].room+'_'+online_user_room_data[i].sid).emit('online_users',{"status": "true", "statuscode": "200", "message": "success", "online_status": "1", "last_seen": datetime})
+                    if(check_user_privacy_for_last_seen_and_online.length>0){
+                      if(check_user_privacy_for_last_seen_and_online.length==1){
+                        if(check_user_privacy_for_last_seen_and_online[0].type=='last_seen'){
+                          console.log('last seen')
+                          let options=check_user_privacy_for_last_seen_and_online[0].options;
+                          console.log(options);
+                          if(options==0){
+                            same_as_last_seen="1";
+                            last_seen_value=datetime;
+                          }else if (options==1){
+                            //get user chat_list
+                            //console.log(get_user_chat_list_data)
+                            let check_user_exist_in_chat_list=await functions.check_user_data_exist_in_array(online_user_room_data[i].sid,get_user_chat_list_data);
+                            //console.log(check_user_exist_in_chat_list);
+                            if(check_user_exist_in_chat_list){
+                              same_as_last_seen="1";
+                              last_seen_value=datetime;
+                            }else{
+                              same_as_last_seen="";
+                              last_seen_value="";
+                            }
+                          }else if(options==2){
+                            let excepted_users=check_user_privacy_for_last_seen_and_online[0].except_users;
+                            if(excepted_users!=''){
+                              excepted_users=JSON.parse(check_user_privacy_for_last_seen_and_online[0].except_users);
+                            }else{
+                              excepted_users=[];
+                            }
+                            if(excepted_users.includes(online_user_room_data[i].sid)){
+                              same_as_last_seen="";
+                              last_seen_value="";
+                            }else{
+                              same_as_last_seen="1";
+                              last_seen_value=datetime;
+                            }
+                          }else if(options==3){
+                            same_as_last_seen="";
+                            last_seen_value="";
+                          }
+                        }else{
+                          last_seen_value=datetime;
+                        }
+    
+                        if(check_user_privacy_for_last_seen_and_online[0].type=='online'){
+                          console.log('online')
+                          let options=check_user_privacy_for_last_seen_and_online[0].options;
+                          if(options==0){
+                            online_status_value="1";
+                          }else if(options==1){
+                            online_status_value=same_as_last_seen;
+                          }
+                        }else{
+                          online_status_value="1"
+                        }
+                      }else{
+                        //console.log('greater than 1')
+                        for(var j=0; j<check_user_privacy_for_last_seen_and_online.length; j++){
+                          if(check_user_privacy_for_last_seen_and_online[j].type=='last_seen'){
+                            let options=check_user_privacy_for_last_seen_and_online[j].options;
+                            if(options==0){
+                              last_seen_value=datetime;
+                              same_as_last_seen="1"
+                            }else if(options==1){
+                              let check_user_exist_in_chat_list=await functions.check_user_data_exist_in_array(online_user_room_data[i].sid,get_user_chat_list_data);
+                              //console.log(check_user_exist_in_chat_list);
+                              if(check_user_exist_in_chat_list){
+                                same_as_last_seen="1";
+                                last_seen_value=datetime;
+                              }else{
+                                same_as_last_seen="";
+                                last_seen_value="";
+                              }
+                            }else if(options==2){
+                              let excepted_users=check_user_privacy_for_last_seen_and_online[j].except_users;
+                              if(excepted_users!=''){
+                                excepted_users=JSON.parse(check_user_privacy_for_last_seen_and_online[j].except_users);
+                              }else{
+                                excepted_users=[];
+                              }
+                              if(excepted_users.includes(online_user_room_data[i].sid)){
+                                same_as_last_seen="";
+                                last_seen_value="";
+                              }else{
+                                same_as_last_seen="1";
+                                last_seen_value=datetime;
+                              }
+                            }else if(options==3){
+                              same_as_last_seen="";
+                              last_seen_value="";
+                            }
+                          }else if(check_user_privacy_for_last_seen_and_online[j].type=='online'){
+                            let options=check_user_privacy_for_last_seen_and_online[j].options;
+                            if(options==0){
+                              online_status_value="1";
+                            }else if(options==1){
+                              online_status_value=same_as_last_seen;
+                            }
+                          }
+                        }
+                      }
+                    }else{
+                      online_status_value="1";
+                      last_seen_value=datetime;
+                    }
+                    io.sockets.in(online_user_room_data[i].room+'_'+online_user_room_data[i].sid).emit('online_users',{"status": "true", "statuscode": "200", "message": "success", "online_status": online_status_value, "last_seen": last_seen_value})
+                    //io.sockets.in(online_user_room_data[i].room+'_'+online_user_room_data[i].sid).emit('online_users',{"status": "true", "statuscode": "200", "message": "success", "online_status": "1", "last_seen": datetime})
                   }
                 }
               }
@@ -5591,7 +5803,10 @@ io.sockets.on('connection',async function (socket) {
       }catch{
         console.error(e)
       }
-    })
+    });
+    socket.on('delete_chat_list',async function(data){
+
+    });
   }catch(error){
       //console.log(error)
       console.error('error occurs ', error);
