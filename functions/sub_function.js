@@ -574,15 +574,30 @@ async function get_last_private_message(room_id,message_id,user_id,opponent_prof
     })
   }
 
-  function check_value_exist_in_archived_chat_list(room,archived_chat_list){
+//   function check_value_exist_in_archived_chat_list(room,archived_chat_list){
+//     return archived_chat_list.some(function(archived){
+//       return archived.room==room;
+//     });
+//   }
+
+  function check_value_exist_in_archived_chat_list(room,archived_chat_list,type){
     return archived_chat_list.some(function(archived){
-      return archived.room==room;
+      return archived.room==room && type=='archived';
     });
   }
+
+  function check_value_exist_in_deleted_chat_list(room,deleted_chat_list,type){
+    return deleted_chat_list.some(function(deleted){
+        return deleted.room==room && type=='deleted';
+    })
+  }
+
+  
 
   module.exports={
     get_last_private_message,
     get_last_group_message,
     send_firebase_notification,
-    check_value_exist_in_archived_chat_list
+    check_value_exist_in_archived_chat_list,
+    check_value_exist_in_deleted_chat_list
   }

@@ -558,7 +558,14 @@ io.sockets.on('connection',async function (socket) {
        
       if (data.room) {
         //group chat
-        
+        //check user room is exist in deleted chat list
+        let check_user_deleted_chat_list=await queries.get_user_deleted_chat_list(data.sid);
+        //console.log(check_user_deleted_chat_list)
+        if(check_user_deleted_chat_list.length>0){
+          //delete the room from deleted_chat_list
+          let delete_room_from_deleted_chat_list=await queries.delete_room_from_deleted_chat_list(data.sid,data.room);
+          //console.log(delete_room_from_deleted_chat_list)
+        }
         var current_date = new Date();
         var date = current_date.toISOString().slice(0, 10);
         var datetime = get_datetime();
@@ -863,9 +870,16 @@ io.sockets.on('connection',async function (socket) {
           room = '' + s_id + r_id;
           //console.log('room id in else', room);
         }
-
        
-
+        //check user deleted this room chat list
+        //console.log(data.sid)
+        let check_user_deleted_chat_list=await queries.get_user_deleted_chat_list(data.sid);
+        //console.log(check_user_deleted_chat_list)
+        if(check_user_deleted_chat_list.length>0){
+          //delete the room from deleted_chat_list
+          let delete_room_from_deleted_chat_list=await queries.delete_room_from_deleted_chat_list(data.sid,room);
+          //console.log(delete_room_from_deleted_chat_list)
+        }
         //check message_id exist for replay_id
         let message_id=0;
         if(data.message_id){
@@ -960,7 +974,7 @@ io.sockets.on('connection',async function (socket) {
             }
           }
         }
-        console.log(senter_read_receipt,receiver_read_receipt)  
+        //console.log(senter_read_receipt,receiver_read_receipt)  
         //exit ()    
           var group_status_data = [{
             "user_id": data.sid,
@@ -4287,6 +4301,7 @@ io.sockets.on('connection',async function (socket) {
           let user_id=data.user_id ? data.user_id : '';
           let accessToken=data.accessToken ? data.accessToken : '';
           let receiver_id=data.receiver_id ? data.receiver_id : '';
+          let clear_status=data.clear_status ? data.clear_status : 0;
           let datetime=get_datetime();
           if(user_id!='' && accessToken!='' && receiver_id!=''){
             socket.join(user_id+'_report_and_block_individual');
@@ -4309,68 +4324,11 @@ io.sockets.on('connection',async function (socket) {
                 if(check_user_already_blocked.length>0){
                   //you already blocked this person
                   console.log('data already block')
-                  //do clear chat
-                  let room_chat_list=await queries.room_chat_list(room);
-                  let clear_chat_update_row_count=0;
-                  if(room_chat_list.length>0){
-                    let set_query_case_data="";
-                    let query_where_id="";
-                    for(var i=0; i<room_chat_list.length; i++){
-                      let group_status=JSON.parse(room_chat_list[i].group_status);
-                      let message_id=room_chat_list[i].id;
-                      for(var j=0; j<group_status.length; j++){
-                        if(user_id==group_status[j].user_id){
-                          group_status[j].status=2;
-                        }
-                      }
-                      set_query_case_data=set_query_case_data+"when id='"+message_id+"' then '"+JSON.stringify(group_status)+"'";
-                      query_where_id=query_where_id+"'"+message_id+"'"+",";
-                      //console.log('new data ', message_id, group_status)
-                      //update to db
-                      //let update_clear_chat_data=await queries.update_clear_chat(message_id,JSON.stringify(group_status));
-                      //console.log('clear chat status',update_clear_chat_data);
-                      // if(update_clear_chat_data.affectedRows>0){
-                      //   clear_chat_update_row_count=clear_chat_update_row_count+1;
-                      // }
-                      
-                    }
-
-                    let query_case_data='case '+set_query_case_data+' end'
-                    let removed_comma=query_where_id.replace(/,(?=[^,]*$)/, '');
-                    let query="UPDATE chat_list SET group_status= ("+query_case_data+") where id in ("+removed_comma+")"
-                    //console.log('case data ',query)
-                    let update_clear_chat=await queries.update_clear_chat_with_single_query(query);
-                    //console.log(update_clear_chat)
-                    // if(update_clear_chat.affectedRows>0){
-                    //   status=true;
-                    // }
-                    //console.log('total affected row count ',clear_chat_update_row_count);
-
-                    //if(clear_chat_update_row_count>0){
-                      io.sockets.in(user_id+'_report_and_block_individual').emit('report_and_block_individual_chat',{ status: true, statuscode: 200, message: "success"});
-                      //emit individual chat list to user
-                      let sender_chat_list_data=await functions.get_individual_chat_list_response(user_id,receiver_id,room)
-                      io.sockets.in(room+'_'+user_id).emit('message',sender_chat_list_data);
-                      let recent_chat_list_data=await functions.get_recent_chat_list_response(user_id);
-                      io.sockets.in(user_id).emit('chat_list',recent_chat_list_data);
-                    // }else{
-                    //   io.sockets.in(user_id+'_report_and_block_individual').emit('report_and_block_individual_chat',{ status: false, statuscode: 400, message: "Not updated to db"});
-                    // }
-
-                  }else{
-                    //no message to clear
-                    io.sockets.in(user_id+'_report_and_block_individual').emit('report_and_block_individual_chat',{ status: false, statuscode: 200, message: "No message to clear"});
-                  }
-                }else{
-                  //block this user
-                  //save block data to the block_chat table
-                  let save_block_data=await queries.block_user_chat(user_id,receiver_id,room,datetime);
-                  //if(save_block_data>0){
-                    //save to chat list table
+                  if(clear_status==1){
                     //do clear chat
                     let room_chat_list=await queries.room_chat_list(room);
                     let clear_chat_update_row_count=0;
-                    //if(room_chat_list.length>0){
+                    if(room_chat_list.length>0){
                       let set_query_case_data="";
                       let query_where_id="";
                       for(var i=0; i<room_chat_list.length; i++){
@@ -4385,68 +4343,133 @@ io.sockets.on('connection',async function (socket) {
                         query_where_id=query_where_id+"'"+message_id+"'"+",";
                         //console.log('new data ', message_id, group_status)
                         //update to db
-                        // let update_clear_chat_data=await queries.update_clear_chat(message_id,JSON.stringify(group_status));
-                        // //console.log('clear chat status',update_clear_chat_data);
+                        //let update_clear_chat_data=await queries.update_clear_chat(message_id,JSON.stringify(group_status));
+                        //console.log('clear chat status',update_clear_chat_data);
                         // if(update_clear_chat_data.affectedRows>0){
                         //   clear_chat_update_row_count=clear_chat_update_row_count+1;
                         // }
+                        
                       }
+
                       let query_case_data='case '+set_query_case_data+' end'
                       let removed_comma=query_where_id.replace(/,(?=[^,]*$)/, '');
                       let query="UPDATE chat_list SET group_status= ("+query_case_data+") where id in ("+removed_comma+")"
                       //console.log('case data ',query)
                       let update_clear_chat=await queries.update_clear_chat_with_single_query(query);
-
+                      //console.log(update_clear_chat)
+                      // if(update_clear_chat.affectedRows>0){
+                      //   status=true;
+                      // }
                       //console.log('total affected row count ',clear_chat_update_row_count);
 
                       //if(clear_chat_update_row_count>0){
-                        // io.sockets.in(user_id+'_report_and_block_individual').emit('report_and_block_individual_chat',{ status: true, statuscode: 200, message: "success"});
-                        // //emit individual chat list to user
-                        // let sender_chat_list_data=await functions.get_individual_chat_list_response(user_id,receiver_id,room)
-                        // io.sockets.in(room+'_'+user_id).emit('message',sender_chat_list_data);
-                        //save block message to chat_list
-                        //set group status
-                        let group_status=[];
-                        group_status.push({
-                          user_id: user_id,
-                          username: await queries.get_username(data.user_id),
-                          datetime: datetime,
-                          message_status: 0,
-                          message_read_status: datetime,
-                          status: 1
-                        })
-                        group_status.push({
-                          user_id: receiver_id,
-                          username: await queries.get_username(data.receiver_id),
-                          datetime: datetime,
-                          message_status: 0,
-                          message_read_status: datetime,
-                          status: 1
-                        })
-                        //save block message in chat_list
-                        let save_block_message=await queries.save_block_message(datetime,user_id,receiver_id,'block','notification',room,0,1,0,0,JSON.stringify(group_status));
-                        if(save_block_message>0){
-                          console.log('user blocked')
-                          io.sockets.in(user_id+'_report_and_block_individual').emit('report_and_block_individual_chat',{ status: true, statuscode: 200, message: "success"});
-                          //emit message to room and chat_list  
-                          let individual_chat_response=await functions.get_individual_chat_list_response(user_id,receiver_id,room);
-                          //do here after
-                          io.sockets.in(room+'_'+user_id).emit('message', individual_chat_response);
-                          let recent_chat_list_response=await functions.get_recent_chat_list_response(user_id);
-                          io.sockets.in(user_id).emit('chat_list', recent_chat_list_response);
-                        // }else{
-                        //   io.sockets.in(user_id+'_report_and_block_individual').emit('report_and_block_individual_chat',{ status: false, statuscode: 400, message: "Not saved to db"});
-                        // }
+                        io.sockets.in(user_id+'_report_and_block_individual').emit('report_and_block_individual_chat',{ status: true, statuscode: 200, message: "success"});
+                        //emit individual chat list to user
+                        let sender_chat_list_data=await functions.get_individual_chat_list_response(user_id,receiver_id,room)
+                        io.sockets.in(room+'_'+user_id).emit('message',sender_chat_list_data);
+                        let recent_chat_list_data=await functions.get_recent_chat_list_response(user_id);
+                        io.sockets.in(user_id).emit('chat_list',recent_chat_list_data);
                       // }else{
                       //   io.sockets.in(user_id+'_report_and_block_individual').emit('report_and_block_individual_chat',{ status: false, statuscode: 400, message: "Not updated to db"});
                       // }
 
-                    // }else{
-                    //   //no message to clear
-                    //   io.sockets.in(user_id+'_report_and_block_individual').emit('report_and_block_individual_chat',{ status: false, statuscode: 200, message: "No message to clear"});
-                    // }
+                    }else{
+                      //no message to clear
+                      io.sockets.in(user_id+'_report_and_block_individual').emit('report_and_block_individual_chat',{ status: false, statuscode: 200, message: "No message to clear"});
+                    }
                   }else{
-                    io.sockets.in(user_id+'_report_and_block_individual').emit('clear_group_chat',{status: false, statuscode: 400, message: "Not saved to db"});
+                    io.sockets.in(user_id+'_report_and_block_individual').emit('report_and_block_individual_chat',{ status: true, statuscode: 200, message: "success"});
+                  }
+                }else{
+                  if(clear_status==1){
+                    //block this user
+                    //save block data to the block_chat table
+                    let save_block_data=await queries.block_user_chat(user_id,receiver_id,room,datetime);
+                    //if(save_block_data>0){
+                      //save to chat list table
+                      //do clear chat
+                      let room_chat_list=await queries.room_chat_list(room);
+                      let clear_chat_update_row_count=0;
+                      //if(room_chat_list.length>0){
+                        let set_query_case_data="";
+                        let query_where_id="";
+                        for(var i=0; i<room_chat_list.length; i++){
+                          let group_status=JSON.parse(room_chat_list[i].group_status);
+                          let message_id=room_chat_list[i].id;
+                          for(var j=0; j<group_status.length; j++){
+                            if(user_id==group_status[j].user_id){
+                              group_status[j].status=2;
+                            }
+                          }
+                          set_query_case_data=set_query_case_data+"when id='"+message_id+"' then '"+JSON.stringify(group_status)+"'";
+                          query_where_id=query_where_id+"'"+message_id+"'"+",";
+                          //console.log('new data ', message_id, group_status)
+                          //update to db
+                          // let update_clear_chat_data=await queries.update_clear_chat(message_id,JSON.stringify(group_status));
+                          // //console.log('clear chat status',update_clear_chat_data);
+                          // if(update_clear_chat_data.affectedRows>0){
+                          //   clear_chat_update_row_count=clear_chat_update_row_count+1;
+                          // }
+                        }
+                        let query_case_data='case '+set_query_case_data+' end'
+                        let removed_comma=query_where_id.replace(/,(?=[^,]*$)/, '');
+                        let query="UPDATE chat_list SET group_status= ("+query_case_data+") where id in ("+removed_comma+")"
+                        //console.log('case data ',query)
+                        let update_clear_chat=await queries.update_clear_chat_with_single_query(query);
+
+                        //console.log('total affected row count ',clear_chat_update_row_count);
+
+                        //if(clear_chat_update_row_count>0){
+                          // io.sockets.in(user_id+'_report_and_block_individual').emit('report_and_block_individual_chat',{ status: true, statuscode: 200, message: "success"});
+                          // //emit individual chat list to user
+                          // let sender_chat_list_data=await functions.get_individual_chat_list_response(user_id,receiver_id,room)
+                          // io.sockets.in(room+'_'+user_id).emit('message',sender_chat_list_data);
+                          //save block message to chat_list
+                          //set group status
+                          let group_status=[];
+                          group_status.push({
+                            user_id: user_id,
+                            username: await queries.get_username(data.user_id),
+                            datetime: datetime,
+                            message_status: 0,
+                            message_read_status: datetime,
+                            status: 1
+                          })
+                          group_status.push({
+                            user_id: receiver_id,
+                            username: await queries.get_username(data.receiver_id),
+                            datetime: datetime,
+                            message_status: 0,
+                            message_read_status: datetime,
+                            status: 1
+                          })
+                          //save block message in chat_list
+                          let save_block_message=await queries.save_block_message(datetime,user_id,receiver_id,'block','notification',room,0,1,0,0,JSON.stringify(group_status));
+                          if(save_block_message>0){
+                            console.log('user blocked')
+                            io.sockets.in(user_id+'_report_and_block_individual').emit('report_and_block_individual_chat',{ status: true, statuscode: 200, message: "success"});
+                            //emit message to room and chat_list  
+                            let individual_chat_response=await functions.get_individual_chat_list_response(user_id,receiver_id,room);
+                            //do here after
+                            io.sockets.in(room+'_'+user_id).emit('message', individual_chat_response);
+                            let recent_chat_list_response=await functions.get_recent_chat_list_response(user_id);
+                            io.sockets.in(user_id).emit('chat_list', recent_chat_list_response);
+                          // }else{
+                          //   io.sockets.in(user_id+'_report_and_block_individual').emit('report_and_block_individual_chat',{ status: false, statuscode: 400, message: "Not saved to db"});
+                          // }
+                        // }else{
+                        //   io.sockets.in(user_id+'_report_and_block_individual').emit('report_and_block_individual_chat',{ status: false, statuscode: 400, message: "Not updated to db"});
+                        // }
+
+                      // }else{
+                      //   //no message to clear
+                      //   io.sockets.in(user_id+'_report_and_block_individual').emit('report_and_block_individual_chat',{ status: false, statuscode: 200, message: "No message to clear"});
+                      // }
+                    }else{
+                      io.sockets.in(user_id+'_report_and_block_individual').emit('clear_group_chat',{status: false, statuscode: 400, message: "Not saved to db"});
+                    }
+                  }else{
+                    io.sockets.in(user_id+'_report_and_block_individual').emit('report_and_block_individual_chat',{ status: true, statuscode: 200, message: "success"});
                   }
                 }
               }else{
@@ -5795,17 +5818,118 @@ io.sockets.on('connection',async function (socket) {
           }else{
             socket.join(data.user_id+'_mark_as_unread');
             io.sockets.in(data.user_id+'_mark_as_unread').emit('mark_as_unread',{status: false, statuscode: 200, message: "Data is empty"});
-            socket.leave(data.user_id);
+            socket.leave(data.user_id+'_mark_as_unread');
           }
         }else{
           console.error('Input type is string');
         }
-      }catch{
+      }catch(e){
         console.error(e)
       }
     });
     socket.on('delete_chat_list',async function(data){
-
+      //console.log('deleted chat list');
+      //{"user_id":"50","accessToken":"2a0c12a980ecfea89d91de250a1074fb","room":"550,group_202303141437479924"}
+      try{
+        if(typeof(data)=='object'){
+          let user_id=data.user_id ? data.user_id : '';
+          let accessToken=data.accessToken ? data.accessToken : '';
+          let room=data.room ? data.room : '';
+          let datetime=get_datetime();
+          if(user_id!='' && accessToken!='' && room!=''){
+            socket.join(user_id+'_delete_chat_list');
+            //console.log('not empty')
+            //user user data is valid
+            let check_user_data=await queries.check_user_valid(user_id,accessToken);
+            if(check_user_data.length>0){
+              //console.log('user is valid');
+              //split room data
+              let split_room=room.split(',');
+              //get all user's all deleted chat list rooms
+              let get_user_deleted_chat_list=await queries.get_user_deleted_chat_list(user_id);
+              console.log('deleted data ',get_user_deleted_chat_list);
+              //exit ()
+              //console.log(split_room)
+              let room_query='';
+              if(split_room.length>0){
+                let total_count=0;
+                for(var i=0; i<split_room.length; i++){
+                  //console.log(split_room[i]);
+                  //check room already saved in db
+                  let check_user_room_exist_in_array=await functions.check_user_room_exist_in_array(split_room[i],get_user_deleted_chat_list)
+                  if(!check_user_room_exist_in_array){
+                    let save_data_to_deleted_chat_list=await queries.save_deleted_chat_list(user_id,split_room[i],datetime);
+                    //console.log('response ',save_data_to_deleted_chat_list);
+                    if(save_data_to_deleted_chat_list>0){
+                      total_count=total_count+1;
+                      room_query=room_query+"'"+split_room[i]+"', "
+                    }
+                  }else{
+                    console.log('already exist ')
+                  }
+                }
+                if(total_count>0){
+                  //clear room chat message
+                  //SELECT * FROM `chat_list` where room in ('550','group_20221003093352') and JSON_CONTAINS(JSON_EXTRACT(group_status, '$[*].user_id'), '"5"', '$') ORDER BY `id` DESC;
+                  console.log(room_query)
+                  room_query=room_query.replace(/,(?=[^,]*$)/, '');
+                  let set_user_id='"'+user_id+'"';
+                  let query="SELECT * FROM `chat_list` where room in ("+room_query+") and JSON_CONTAINS(JSON_EXTRACT(group_status, '$[*].user_id'), '"+set_user_id+"', '$') ORDER BY `id` DESC";
+                  console.log(query)
+                  let room_user_messages=await queries.room_user_messages(query);
+                  console.log(room_user_messages.length);
+                  //exit ()
+                  let total_uncleared_message=0;
+                  for(var j=0; j<room_user_messages.length; j++){
+                    let update_clear_chat_status=false;
+                    let message_id=room_user_messages[j].id;
+                    let group_status=room_user_messages[j].group_status;
+                    if(group_status!=''){
+                      group_status=JSON.parse(room_user_messages[j].group_status);
+                    }else{
+                      group_status=[];
+                    }
+                    for(var k=0; k<group_status.length; k++){
+                      if(group_status[k].user_id==user_id && group_status[k].status!=2){
+                        group_status[k].status=2;
+                        update_clear_chat_status=true;
+                      }
+                    }
+                    if(update_clear_chat_status){
+                      //set case query to update chat messages
+                      total_uncleared_message=total_uncleared_message+1;
+                    }
+                  }
+                  if(total_uncleared_message>0){
+                    //update the clear chat message to db
+                    console.log(total_uncleared_message)
+                    //exit ()
+                  }
+                  io.sockets.in(user_id+'_delete_chat_list').emit('delete_chat_list',{status: false, statuscode:200,message: "success"});
+                  //emit chat_list to the user_id
+                  // let recent_chat_list_response=await functions.get_recent_chat_list_response(user_id);
+                  // io.sockets.in(user_id).emit('chat_list', recent_chat_list_response);
+                }else{
+                  io.sockets.in(user_id+'_delete_chat_list').emit('delete_chat_list',{status: false, statuscode:200,message: "Not saved to db"});
+                }
+              }else{
+                io.sockets.in(user_id+'_delete_chat_list').emit('delete_chat_list',{status: false, statuscode:200,message: "No room data found"});
+              }
+            }else{
+              io.sockets.in(user_id+'_delete_chat_list').emit('delete_chat_list',{status: false, statuscode:200,message: "No user data found"});
+            }
+            socket.leave(user_id+'_delete_chat_list');
+          }else{
+            socket.join(data.user_id+'_delete_chat_list');
+            io.sockets.in(data.user_id+'_delete_chat_list').emit('delete_chat_list',{status: false, statuscode: 200, message: "Data is empty"});
+            socket.leave(data.user_id+'_delete_chat_list');
+          }
+        }else{
+          console.error('Input type is string');
+        }
+      }catch(e){
+        console.error(e)
+      }
     });
   }catch(error){
       //console.log(error)

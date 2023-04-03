@@ -2642,6 +2642,7 @@ async function get_recent_chat_list_response(user_id){
   let chat_list_data=[];
   //get current datetime
   let archived_chat_list=await queries.archived_chat_list_details(user_id);
+  let get_archived_and_deleted_chat_list=await queries.archived_and_deleted_chat_list(user_id);
   let current_datetime=get_datetime();
   if(get_recent_chat.length>0){
     for(var i=0; i<get_recent_chat.length; i++){
@@ -3458,15 +3459,31 @@ async function get_recent_chat_list_response(user_id){
     //set response based on archived_chat_list
     archived_list=[];
     //console.log('before',chat_list_data.length,chat_list_data)
-    if(archived_chat_list.length>0){
+    //if(archived_chat_list.length>0){
+    if(get_archived_and_deleted_chat_list.length>0){
       for(var k=0; k<chat_list_data.length; k++){
-        let check_value_exist_in_archived_chat_list=await sub_function.check_value_exist_in_archived_chat_list(chat_list_data[k].room,archived_chat_list);
-        //console.log(check_value_exist_in_archived_chat_list)
-        if(check_value_exist_in_archived_chat_list){
-          //remove from the array
-          archived_list.push(chat_list_data[k]);
+        //check chat_list is deleted or not
+        console.log(chat_list_data.length)
+        let check_value_exist_in_deleted_chat_list=await sub_function.check_value_exist_in_deleted_chat_list(chat_list_data[k].room,get_archived_and_deleted_chat_list,'deleted');
+        if(check_value_exist_in_deleted_chat_list){
+          console.log('remove deleted')
+          console.log(k)
           chat_list_data.splice(k, 1);
           k--;
+        }
+        console.log(k)
+        console.log(chat_list_data.length)
+        if(k>0){
+          //let check_value_exist_in_archived_chat_list=await sub_function.check_value_exist_in_archived_chat_list(chat_list_data[k].room,archived_chat_list);
+          let check_value_exist_in_archived_chat_list=await sub_function.check_value_exist_in_archived_chat_list(chat_list_data[k].room,get_archived_and_deleted_chat_list,'archived');
+          //console.log(check_value_exist_in_archived_chat_list)
+          if(check_value_exist_in_archived_chat_list){
+            //remove from the array
+            //console.log('remove archived')
+            archived_list.push(chat_list_data[k]);
+            chat_list_data.splice(k, 1);
+            k--;
+          }
         }
       }
     }
@@ -3947,6 +3964,12 @@ async function update_mark_as_unread_status(user_id,room){
   
 }
 
+function check_user_room_exist_in_array(room, user_array){
+  return user_array.some(function(user){
+    return user.room == room
+  })
+}
+
 
 module.exports={
     get_individual_chat_list_response,
@@ -3960,5 +3983,6 @@ module.exports={
     isUrl,
     get_group_info,
     check_user_data_exist_in_array,
-    update_mark_as_unread_status
+    update_mark_as_unread_status,
+    check_user_room_exist_in_array
 }

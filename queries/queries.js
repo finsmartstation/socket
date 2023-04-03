@@ -569,6 +569,31 @@ async function remove_mark_as_unread(message_id,group_status){
     return results[0];
 }
 
+async function save_deleted_chat_list(user_id,room,datetime){
+    const results=await db.sequelize.query("INSERT INTO `deleted_chat_list`(`user_id`, `deleted_datetime`, `room`) VALUES ('"+user_id+"','"+datetime+"','"+room+"')");
+    return results[0];
+}
+
+async function archived_and_deleted_chat_list(user_id){
+    const results=await db.sequelize.query("SELECT *, 'archived' as type FROM `archived_chat_list` where user_id='"+user_id+"' UNION SELECT *, 'deleted' as type FROM `deleted_chat_list` where user_id='"+user_id+"'");
+    return results[0];
+}
+
+async function get_user_deleted_chat_list(user_id){
+    const results=await db.sequelize.query("select * from deleted_chat_list where user_id='"+user_id+"'");
+    return results[0];
+}
+
+async function delete_room_from_deleted_chat_list(user_id,room){
+    const results=await db.sequelize.query("delete from `deleted_chat_list` where user_id='"+user_id+"' and room='"+room+"'");
+    return results[0];
+}
+
+async function room_user_messages(query){
+    const results=await db.sequelize.query(query);
+    return results[0];
+}
+
 module.exports = {
     update_online_status,
     select_online_status,
@@ -673,5 +698,10 @@ module.exports = {
     mark_as_unread,
     get_room_last_message,
     remove_mark_as_unread,
-    check_user_privacy_for_last_seen_and_online
+    check_user_privacy_for_last_seen_and_online,
+    save_deleted_chat_list,
+    archived_and_deleted_chat_list,
+    get_user_deleted_chat_list,
+    delete_room_from_deleted_chat_list,
+    room_user_messages
 }
