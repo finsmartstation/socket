@@ -3941,7 +3941,8 @@ async function update_mark_as_unread_status(user_id,room){
   let group_status=get_room_last_message[0].group_status;
   if(group_status!=''){
     let check_mark_as_unread_exist=false;
-    group_status=JSON.parse(get_room_last_message[0].group_status);
+    group_status=JSON.parse(get_room_last_message[0].group_status) || [];
+    console.log(group_status)
     for(var i=0; i<group_status.length; i++){
       if(user_id==group_status[i].user_id && 'mark_as_unread' in group_status[i]){
         if(group_status[i].mark_as_unread==1){

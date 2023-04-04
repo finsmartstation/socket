@@ -43,6 +43,12 @@ async function post_video_message(datetime, s_id, message, room, member_json_dat
     const results = await db.sequelize.query("INSERT INTO chat_list(date,senter_id,receiver_id,replay_id,message,message_type,optional_text,thumbnail,room,message_status,private_group,group_status,duration) VALUES ('" + datetime + "','" + s_id + "','0','"+message_id+"','" + message + "','video','"+optional_text+"','"+thumbnail+"','" + room + "','1','1','" + member_json_data + "','" + duration + "')");
     return results;
 }
+
+async function group_location_msg(datetime, s_id, message, room, member_json_data, duration, message_id,optional_text,thumbnail){
+    const results = await db.sequelize.query("INSERT INTO chat_list(date,senter_id,receiver_id,replay_id,message,message_type,optional_text,thumbnail,room,message_status,private_group,group_status,duration) VALUES ('" + datetime + "','" + s_id + "','0','"+message_id+"','" + message + "','location','"+optional_text+"','"+thumbnail+"','" + room + "','1','1','" + member_json_data + "','" + duration + "')");
+    return results[0];
+}
+
 async function get_group_u(room) {
     const results = await db.sequelize.query("SELECT * FROM `group_list` WHERE group_id='" + room + "'");
     //return results;
@@ -80,6 +86,11 @@ async function individual_video_msg(datetime, sid, rid, message, room, group_sta
     const results = await db.sequelize.query("INSERT INTO chat_list( date,senter_id,receiver_id,replay_id,message,message_type,optional_text,thumbnail,room,message_status,group_status,duration) VALUES ('" + datetime + "','" + sid + "','" + rid + "','"+message_id+"','" + message + "','video','"+optional_text+"','"+thumbnail+"','" + room + "','1','" + group_status_json_data + "','" + duration + "')");
     return results;
 }
+
+async function individual_location_msg(datetime, sid, rid, message, room, group_status_json_data, duration, message_id, optional_text, thumbnail){
+    const results=await db.sequelize.query("INSERT INTO chat_list( date,senter_id,receiver_id,replay_id,message,message_type,optional_text,thumbnail,room,message_status,group_status,duration) VALUES ('" + datetime + "','" + sid + "','" + rid + "','"+message_id+"','" + message + "','location','"+optional_text+"','"+thumbnail+"','" + room + "','1','" + group_status_json_data + "','" + duration + "')");
+}
+
 async function send_indv_message(rid, room){
     //const results = await db.sequelize.query("SELECT t1.id,DATE_FORMAT(t1.date,'%Y-%m-%d %H:%i:%s') as date,t1.senter_id,t1.receiver_id,t1.message,t1.message_type,t1.message_status,t1.room,t1.duration, IF(t1.receiver_id='" + rid + "', 'sent', 'receive') as type FROM `chat_list` t1 JOIN `user` t2 on t2.id='" + rid + "' WHERE room='" + room + "' and t1.status='1'");
     const results = await db.sequelize.query("SELECT t1.id,DATE_FORMAT(t1.date,'%Y-%m-%d %H:%i:%s') as date,t1.senter_id,t1.receiver_id,t1.replay_id,t1.forward_id,t1.message,t1.message_type,t1.optional_text,t1.thumbnail,t1.duration,t1.message_status,t1.room, IF(t1.receiver_id='"+rid+"', 'sent', 'receive') as type,t1.group_status  FROM `chat_list` t1 JOIN `user` t2 on t2.id='"+rid+"' where room='"+room+"' and message_type!='date' order by id asc");
@@ -594,6 +605,11 @@ async function room_user_messages(query){
     return results[0];
 }
 
+async function update_clear_chat_query(query){
+    const results=await db.sequelize.query(query);
+    return results[0];
+}
+
 module.exports = {
     update_online_status,
     select_online_status,
@@ -703,5 +719,8 @@ module.exports = {
     archived_and_deleted_chat_list,
     get_user_deleted_chat_list,
     delete_room_from_deleted_chat_list,
-    room_user_messages
+    room_user_messages,
+    update_clear_chat_query,
+    individual_location_msg,
+    group_location_msg
 }
