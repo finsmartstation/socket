@@ -2242,7 +2242,7 @@ async function get_recent_chat_list_response_old(user_id){
         if(check_group_mute_notification.length>0){
           if(check_group_mute_notification[0].type!='always' && check_group_mute_notification[0].end_datetime!='0000-00-00 00:00:00'){
             //let get_mute_notification=await queries.get_mute_notification(user_id,get_recent_chat[i].receiver_id);
-            console.log('sss inner loop',current_datetime,check_group_mute_notification[0].end_datetime)
+            //console.log('sss inner loop',current_datetime,check_group_mute_notification[0].end_datetime)
             if(current_datetime<=check_group_mute_notification[0].end_datetime){
               mute_status=1;
               mute_message='mute';
@@ -2653,6 +2653,7 @@ async function get_recent_chat_list_response(user_id){
       
      
       if(get_recent_chat[i].private_group==0){
+        //console.log(get_recent_chat[i].id)
         //private chat message
         let get_unread_message_count=await queries.get_unread_message_count(user_id,get_recent_chat[i].room)
         //console.log(user_id,get_recent_chat[i].room,'get unread msg count',get_unread_message_count)
@@ -2670,7 +2671,7 @@ async function get_recent_chat_list_response(user_id){
         //console.log('mute data', get_mute_notification);
         //if(get_mute_notification.length>0){
         if(get_recent_chat[i].mute_id!=null){
-          console.log('ss',get_recent_chat[i])
+          //console.log('ss',get_recent_chat[i])
           
           if(get_recent_chat[i].mute_type!='always' && get_recent_chat[i].mute_end_datetime!='0000-00-00 00:00:00'){
             //console.log('sss inner loop',current_datetime,get_mute_notification[0].end_datetime)
@@ -2705,7 +2706,7 @@ async function get_recent_chat_list_response(user_id){
           //opponent_data=await queries.get_user_profile(get_recent_chat[i].receiver_id);
           //console.log('current user ',opponent_data);
           //if(opponent_data.length>0){
-            opponent_id=get_recent_chat[i].receiver_id;
+            opponent_id=get_recent_chat[i].opponent_id;
             opponent_name=get_recent_chat[i].opponent_name;
             //check who can see user profile pic
             //console.log(get_recent_chat[i].receiver_id)
@@ -2978,6 +2979,7 @@ async function get_recent_chat_list_response(user_id){
                 }
               }
             }
+            
             //push object to array chat list 
             chat_list_data.push({
               id: get_recent_chat[i].id.toString(),
@@ -2998,6 +3000,10 @@ async function get_recent_chat_list_response(user_id){
               optional_text: get_recent_chat[i].optional_text,
               mark_as_unread: mark_as_unread.toString()
             })
+            // if(get_recent_chat[i].id==650){
+            //   console.log(get_recent_chat[i].message,get_recent_chat[i].message_type,chat_list_data)
+            //   exit ()
+            // }
           }else if(group_status[j].user_id==user_id && group_status[j].status==2){
             //console.log('message is cleared')
             //get last private message
@@ -3461,7 +3467,9 @@ async function get_recent_chat_list_response(user_id){
     //console.log('before',chat_list_data.length,chat_list_data)
     //if(archived_chat_list.length>0){
     if(get_archived_and_deleted_chat_list.length>0){
+      //console.log(chat_list_data.length)
       for(var k=0; k<chat_list_data.length; k++){
+        console.log('loop '+k+' - '+chat_list_data[k].id)
         //check chat_list is deleted or not
         console.log(chat_list_data.length)
         let check_value_exist_in_deleted_chat_list=await sub_function.check_value_exist_in_deleted_chat_list(chat_list_data[k].room,get_archived_and_deleted_chat_list,'deleted');
@@ -3474,9 +3482,13 @@ async function get_recent_chat_list_response(user_id){
         console.log(k)
         console.log(chat_list_data.length)
         if(k>0){
+          
           //let check_value_exist_in_archived_chat_list=await sub_function.check_value_exist_in_archived_chat_list(chat_list_data[k].room,archived_chat_list);
           let check_value_exist_in_archived_chat_list=await sub_function.check_value_exist_in_archived_chat_list(chat_list_data[k].room,get_archived_and_deleted_chat_list,'archived');
-          //console.log(check_value_exist_in_archived_chat_list)
+          //console.log(check_value_exist_in_archived_chat_list,get_archived_and_deleted_chat_list,chat_list_data[k].room,chat_list_data[k].id)
+          console.log('if '+chat_list_data[k].id)
+          
+          
           if(check_value_exist_in_archived_chat_list){
             //remove from the array
             //console.log('remove archived')

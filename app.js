@@ -213,7 +213,7 @@ io.sockets.on('connection',async function (socket) {
               //   }
               // }
               let check_user_room_data=check_online_user_room_data(room_data.sid,room_data.rid,room);
-              console.log('check ',check_user_room_data);
+              //console.log('check ',check_user_room_data);
               if(check_user_room_data==false){
                 online_user_room_data.push(room_user_data);
               }
@@ -605,7 +605,7 @@ io.sockets.on('connection',async function (socket) {
           console.log(get_group_users)
           let set_query="SELECT * FROM `user_chat_privacy` where user_id in ("+get_group_users+") and type='read_receipts' and options='1'";
           //replace(/(^,)|(,$)/g, "")
-          console.log(set_query)
+          //console.log(set_query)
           //exit ()
           let check_group_chat_read_receipts=await queries.check_group_chat_read_receipts(set_query);
           console.log(check_group_chat_read_receipts);
