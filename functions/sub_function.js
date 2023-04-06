@@ -200,7 +200,7 @@ async function get_last_private_message(room_id,message_id,user_id,opponent_prof
                         }else{
                             mark_as_unread=0;
                         }
-                        console.log('message is cleared')
+                        //console.log('message is cleared')
                         last_message_array=[{
                             id: last_message_data[i].id.toString(),
                             date: last_message_data[i].date,
@@ -320,7 +320,8 @@ async function get_last_private_message(room_id,message_id,user_id,opponent_prof
                                     message: last_message_data[i].message,
                                     room: last_message_data[i].room,
                                     message_type:last_message_data[i].message_type,
-                                    chat_type: 'group'
+                                    chat_type: 'group',
+                                    mark_as_unread: mark_as_unread
                                   }];
                                   last_message_available=true;
                             }else if(last_message_data[i].message=='admin'){
@@ -348,7 +349,8 @@ async function get_last_private_message(room_id,message_id,user_id,opponent_prof
                                     message: last_message_data[i].message,
                                     room: last_message_data[i].room,
                                     message_type:last_message_data[i].message_type,
-                                    chat_type: 'group'
+                                    chat_type: 'group',
+                                    mark_as_unread: mark_as_unread
                                   }];
                             }else if(last_message_data[i].message=='left'){
                                 let left_msg='';
@@ -371,7 +373,8 @@ async function get_last_private_message(room_id,message_id,user_id,opponent_prof
                                     message: last_message_data[i].message,
                                     room: last_message_data[i].room,
                                     message_type:last_message_data[i].message_type,
-                                    chat_type: 'group'
+                                    chat_type: 'group',
+                                    mark_as_unread: mark_as_unread
                                   }];
                                 last_message_available=true;
                             }else if(last_message_data[i].message=='removed'){
@@ -482,7 +485,8 @@ async function get_last_private_message(room_id,message_id,user_id,opponent_prof
                                     message: last_message_data[i].message,
                                     room: last_message_data[i].room,
                                     message_type:last_message_data[i].message_type,
-                                    chat_type: 'group'
+                                    chat_type: 'group',
+                                    mark_as_unread: mark_as_unread
                                   }];
                                 last_message_available=true;
                             }
@@ -499,7 +503,8 @@ async function get_last_private_message(room_id,message_id,user_id,opponent_prof
                                 message: last_message_data[i].message,
                                 room: last_message_data[i].room,
                                 message_type:last_message_data[i].message_type,
-                                chat_type: 'group'
+                                chat_type: 'group',
+                                mark_as_unread: mark_as_unread
                               }];
                             last_message_available=true;
                         }else if(last_message_data[i].message_type=='video' || last_message_data[i].message_type=='voice' || last_message_data[i].message_type=='doc' || last_message_data[i].message_type=='image'){
@@ -510,6 +515,18 @@ async function get_last_private_message(room_id,message_id,user_id,opponent_prof
                                 last_message_data[i].message=await queries.get_username(last_message_data[i].senter_id)+': ';
                             }
 
+                            last_message_array=[{
+                                id: last_message_data[i].id.toString(),
+                                date: last_message_data[i].date,
+                                message: last_message_data[i].message,
+                                room: last_message_data[i].room,
+                                message_type:last_message_data[i].message_type,
+                                chat_type: 'group',
+                                mark_as_unread: mark_as_unread
+                              }];
+                            last_message_available=true;
+                        }else if(last_message_data[i].message_type=='location' ){
+                            //console.log('other message');
                             last_message_array=[{
                                 id: last_message_data[i].id.toString(),
                                 date: last_message_data[i].date,
@@ -582,13 +599,13 @@ async function get_last_private_message(room_id,message_id,user_id,opponent_prof
 
   function check_value_exist_in_archived_chat_list(room,archived_chat_list,type){
     return archived_chat_list.some(function(archived){
-      return archived.room==room && type=='archived';
+      return archived.room==room && archived.type=='archived';
     });
   }
 
   function check_value_exist_in_deleted_chat_list(room,deleted_chat_list,type){
     return deleted_chat_list.some(function(deleted){
-        return deleted.room==room && type=='deleted';
+        return deleted.room==room && deleted.type=='deleted';
     })
   }
 

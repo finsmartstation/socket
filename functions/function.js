@@ -6,6 +6,7 @@ const BASE_URL=process.env.BASE_URL;
 async function get_individual_chat_list_response(sid,rid,room){
   //let current_datetime=get_datetime()
     var result= await queries.send_indv_message(rid,room);
+    //console.log(result)
     let check_private_chat_read_receipts=await queries.check_private_chat_read_receipts(sid,rid);
     let default_read_receipt=0;
     console.log(check_private_chat_read_receipts,check_private_chat_read_receipts.length)
@@ -159,7 +160,8 @@ async function get_individual_chat_list_response(sid,rid,room){
                             date: result[0][i].date,
                             senter_id: result[0][i].senter_id,
                             receiver_id: result[0][i].receiver_id,
-                            message: block_msg,
+                            //message: block_msg,
+                            message: result[0][i]['message'],
                             message_type:"notification",
                             duration: result[0][i].duration.toString(),
                             message_status:result[0][i].message_status,
@@ -217,7 +219,8 @@ async function get_individual_chat_list_response(sid,rid,room){
                             date: result[0][i].date,
                             senter_id: result[0][i].senter_id,
                             receiver_id: result[0][i].receiver_id,
-                            message: block_msg,
+                            //message: block_msg,
+                            message: result[0][i]['message'],
                             message_type:"notification",
                             duration: result[0][i].duration.toString(),
                             message_status:result[0][i].message_status,
@@ -253,7 +256,8 @@ async function get_individual_chat_list_response(sid,rid,room){
                             date: result[0][i].date,
                             senter_id: result[0][i].senter_id,
                             receiver_id: result[0][i].receiver_id,
-                            message: unblock_msg,
+                            //message: unblock_msg,
+                            message: result[0][i]['message'],
                             message_type:"notification",
                             duration: result[0][i].duration.toString(),
                             message_status:result[0][i].message_status,
@@ -310,7 +314,8 @@ async function get_individual_chat_list_response(sid,rid,room){
                             date: result[0][i].date,
                             senter_id: result[0][i].senter_id,
                             receiver_id: result[0][i].receiver_id,
-                            message: unblock_msg,
+                            //message: unblock_msg,
+                            message: result[0][i]['message'],
                             message_type:"notification",
                             duration: result[0][i].duration.toString(),
                             message_status:result[0][i].message_status,
@@ -334,6 +339,104 @@ async function get_individual_chat_list_response(sid,rid,room){
                           })
                          // console.log('inside data array data', date_array)
                         }
+                      }
+                    }else{
+                      if(result[0][i]['message']=='phone_number_changed'){
+                        console.log('phone number changed');
+
+                        let number_changed_msg=await queries.get_username(result[0][i]['senter_id'])+" changed their phone number. You're currently chatting with their new number. Tap to add it to your contacts.";
+                        console.log(number_changed_msg)
+                        
+                        if(date_array.includes(split_date[0])){
+                          // console.log('yes date exist')
+                          message_list_response.push({
+                            id: result[0][i].id.toString(),
+                            date: result[0][i].date,
+                            senter_id: result[0][i].senter_id,
+                            receiver_id: result[0][i].receiver_id,
+                            //message: number_changed_msg,
+                            message: result[0][i]['message'],
+                            message_type:"notification",
+                            duration: result[0][i].duration.toString(),
+                            message_status:result[0][i].message_status,
+                            room:result[0][i].room,
+                            type:"notification",
+                            status:group_status_json[j].status.toString(),
+                            replay_id:(result[0][i].replay_id ? result[0][i].replay_id : ''),
+                            replay_message:(result[0][i].reply_message ? result[0][i].reply_message : ''),
+                            replay_message_type:(result[0][i].reply_message_type ? result[0][i].reply_message_type : ''),
+                            replay_senter:(result[0][i].reply_senter ? result[0][i].reply_senter : ''),
+                            //replay_duration:(result[0][i].reply_duration ? result[0][i].replay_duration : ''),
+                            replay_duration: result[0][i].reply_duration ? result[0][i].reply_duration.toString() : '0',
+                            forward_id : result[0][i].forward_id.toString(),
+                            forward_count : result[0][i].forward_count.toString(),
+                            forward_message_status : result[0][i].forward_message_status,
+                            delete_status : "1",
+                            starred_status: starred_status.toString(),
+                            read_receipt: read_receipt.toString(),
+                            optional_text: result[0][i].optional_text,
+                            thumbnail: ''
+                          })
+                        }else{
+                          //console.log('not exist')
+                          date_array.push(split_date[0]);
+                          message_list_response.push({
+                            id: "",
+                            date: result[0][i].date,
+                            senter_id: "",
+                            receiver_id: "",
+                            message: "",
+                            message_type:"date",
+                            duration: "",
+                            message_status:"0",
+                            room:"",
+                            type:"date",
+                            status:"",
+                            replay_id:"",
+                            replay_message:"",
+                            replay_message_type:"",
+                            replay_senter:"",
+                            replay_duration:"",
+                            forward_id : "",
+                            forward_count : "",
+                            forward_message_status : "",
+                            delete_status : "",
+                            starred_status: "",
+                            read_receipt: "",
+                            optional_text: "",
+                            thumbnail: ""
+                          })
+                          //add block message data entry
+                          message_list_response.push({
+                            id: result[0][i].id.toString(),
+                            date: result[0][i].date,
+                            senter_id: result[0][i].senter_id,
+                            receiver_id: result[0][i].receiver_id,
+                            //message: number_changed_msg,
+                            message: result[0][i]['message'],
+                            message_type:"notification",
+                            duration: result[0][i].duration.toString(),
+                            message_status:result[0][i].message_status,
+                            room:result[0][i].room,
+                            type:"notification",
+                            status:group_status_json[j].status.toString(),
+                            replay_id:(result[0][i].replay_id ? result[0][i].replay_id : ''),
+                            replay_message:(result[0][i].reply_message ? result[0][i].reply_message : ''),
+                            replay_message_type:(result[0][i].reply_message_type ? result[0][i].reply_message_type : ''),
+                            replay_senter:(result[0][i].reply_senter ? result[0][i].reply_senter : ''),
+                            //replay_duration:(result[0][i].reply_duration ? result[0][i].replay_duration : ''),
+                            replay_duration: result[0][i].reply_duration ? result[0][i].reply_duration.toString() : '0',
+                            forward_id : result[0][i].forward_id.toString(),
+                            forward_count : result[0][i].forward_count.toString(),
+                            forward_message_status : result[0][i].forward_message_status,
+                            delete_status : "1",
+                            starred_status: starred_status.toString(),
+                            read_receipt: read_receipt.toString(),
+                            optional_text: result[0][i].optional_text,
+                            thumbnail: ''
+                          })
+                        }
+                        //exit ()
                       }
                     }
                   }else{
@@ -642,7 +745,106 @@ async function get_individual_chat_list_response(sid,rid,room){
                             thumbnail: ''
                           })
                           //console.log('inside data array data', date_array)
+                          
                         }
+                      }
+                    }else{
+                      //opponent user
+                      //receiver side notification meesage
+                      if(result[0][i]['message']=='phone_number_changed'){
+                        console.log('phone number changed');
+
+                        let number_changed_msg=await queries.get_username(result[0][i]['senter_id'])+" changed their phone number. You're currently chatting with their new number. Tap to add it to your contacts.";
+                        console.log(number_changed_msg)
+                        
+                        if(date_array.includes(split_date[0])){
+                          // console.log('yes date exist')
+                          message_list_response.push({
+                            id: result[0][i].id.toString(),
+                            date: result[0][i].date,
+                            senter_id: result[0][i].senter_id,
+                            receiver_id: result[0][i].receiver_id,
+                            message: number_changed_msg,
+                            message_type:"notification",
+                            duration: result[0][i].duration.toString(),
+                            message_status:result[0][i].message_status,
+                            room:result[0][i].room,
+                            type:"notification",
+                            status:group_status_json[j].status.toString(),
+                            replay_id:(result[0][i].replay_id ? result[0][i].replay_id : ''),
+                            replay_message:(result[0][i].reply_message ? result[0][i].reply_message : ''),
+                            replay_message_type:(result[0][i].reply_message_type ? result[0][i].reply_message_type : ''),
+                            replay_senter:(result[0][i].reply_senter ? result[0][i].reply_senter : ''),
+                            //replay_duration:(result[0][i].reply_duration ? result[0][i].replay_duration : ''),
+                            replay_duration: result[0][i].reply_duration ? result[0][i].reply_duration.toString() : '0',
+                            forward_id : result[0][i].forward_id.toString(),
+                            forward_count : result[0][i].forward_count.toString(),
+                            forward_message_status : result[0][i].forward_message_status,
+                            delete_status : "1",
+                            starred_status: starred_status.toString(),
+                            read_receipt: read_receipt.toString(),
+                            optional_text: result[0][i].optional_text,
+                            thumbnail: ''
+                          })
+                        }else{
+                          //console.log('not exist')
+                          date_array.push(split_date[0]);
+                          message_list_response.push({
+                            id: "",
+                            date: result[0][i].date,
+                            senter_id: "",
+                            receiver_id: "",
+                            message: "",
+                            message_type:"date",
+                            duration: "",
+                            message_status:"0",
+                            room:"",
+                            type:"date",
+                            status:"",
+                            replay_id:"",
+                            replay_message:"",
+                            replay_message_type:"",
+                            replay_senter:"",
+                            replay_duration:"",
+                            forward_id : "",
+                            forward_count : "",
+                            forward_message_status : "",
+                            delete_status : "",
+                            starred_status: "",
+                            read_receipt: "",
+                            optional_text: "",
+                            thumbnail: ""
+                          })
+                          //add block message data entry
+                          message_list_response.push({
+                            id: result[0][i].id.toString(),
+                            date: result[0][i].date,
+                            senter_id: result[0][i].senter_id,
+                            receiver_id: result[0][i].receiver_id,
+                            message: number_changed_msg,
+                            message_type:"notification",
+                            duration: result[0][i].duration.toString(),
+                            message_status:result[0][i].message_status,
+                            room:result[0][i].room,
+                            type:"notification",
+                            status:group_status_json[j].status.toString(),
+                            replay_id:(result[0][i].replay_id ? result[0][i].replay_id : ''),
+                            replay_message:(result[0][i].reply_message ? result[0][i].reply_message : ''),
+                            replay_message_type:(result[0][i].reply_message_type ? result[0][i].reply_message_type : ''),
+                            replay_senter:(result[0][i].reply_senter ? result[0][i].reply_senter : ''),
+                            //replay_duration:(result[0][i].reply_duration ? result[0][i].replay_duration : ''),
+                            replay_duration: result[0][i].reply_duration ? result[0][i].reply_duration.toString() : '0',
+                            forward_id : result[0][i].forward_id.toString(),
+                            forward_count : result[0][i].forward_count.toString(),
+                            forward_message_status : result[0][i].forward_message_status,
+                            delete_status : "1",
+                            starred_status: starred_status.toString(),
+                            read_receipt: read_receipt.toString(),
+                            optional_text: result[0][i].optional_text,
+                            thumbnail: ''
+                          })
+                        }
+                        //exit ()
                       }
                     }
                   }else if(result[0][i]['message_type']=='image' || result[0][i]['message_type']=='video' || result[0][i]['message_type']=='voice' || result[0][i]['message_type']=='doc'){
@@ -1250,7 +1452,7 @@ async function get_group_chat_list_response(user_id,group_id){
                 get_all_group_messages[i].message_type='';
                 get_all_group_messages[i].type='notification';
               }else if(get_all_group_messages[i].message=='removed'){
-                console.log('removed message');
+                //console.log('removed message');
                 let removed_user_msg='';
                 let removed_by='';
                 let removed_user='';
@@ -1384,6 +1586,19 @@ async function get_group_chat_list_response(user_id,group_id){
                 get_all_group_messages[i].message=subject_message;
                 get_all_group_messages[i].message_type='';
                 get_all_group_messages[i].type='notification';
+              }else if(get_all_group_messages[i].message=='phone_number_changed'){
+                exit ()
+                if(get_all_group_messages[i].senter_id==user_id){
+                  //not need
+                  get_all_group_messages.splice(i, 1);
+                  i--;
+                }else{
+                  let get_numbers=get_all_group_messages[i].optional_text.split(',');
+                  let change_number_msg=get_numbers[0]+' changed to '+get_numbers[1];
+                  get_all_group_messages[i].message=change_number_msg;
+                  get_all_group_messages[i].message_type='';
+                  get_all_group_messages[i].type='notification';
+                }
               }
             }else if(get_all_group_messages[i].message_type=='text'){
               //console.log('message')
@@ -2641,7 +2856,7 @@ async function get_recent_chat_list_response(user_id){
     //console.log('testing')
   let chat_list_data=[];
   //get current datetime
-  let archived_chat_list=await queries.archived_chat_list_details(user_id);
+  //let archived_chat_list=await queries.archived_chat_list_details(user_id);
   let get_archived_and_deleted_chat_list=await queries.archived_and_deleted_chat_list(user_id);
   let current_datetime=get_datetime();
   if(get_recent_chat.length>0){
@@ -3414,7 +3629,7 @@ async function get_recent_chat_list_response(user_id){
             }else if(group_status[j].user_id==user_id && group_status[j].status==2){
               //needed to find last message of the group
               let get_last_group_message=await sub_function.get_last_group_message(get_recent_chat[i].room,get_recent_chat[i].id,user_id,group_members,group_current_members,group_left_members,group_removed_members,subject_history);
-              console.log(get_last_group_message);
+              //console.log(get_last_group_message);
               if(get_last_group_message==false){
                 chat_list_data.push({
                   id: get_recent_chat[0].id.toString(),
@@ -3436,6 +3651,7 @@ async function get_recent_chat_list_response(user_id){
                   mark_as_unread: '0'
                 });
               }else{
+                //console.log(get_last_group_message);
                 chat_list_data.push({
                   id: get_last_group_message[0].id.toString(),
                   date: get_last_group_message[0].date,
@@ -3469,26 +3685,28 @@ async function get_recent_chat_list_response(user_id){
     if(get_archived_and_deleted_chat_list.length>0){
       //console.log(chat_list_data.length)
       for(var k=0; k<chat_list_data.length; k++){
-        console.log('loop '+k+' - '+chat_list_data[k].id)
+        
         //check chat_list is deleted or not
-        console.log(chat_list_data.length)
+        // console.log(chat_list_data.length)
+        // console.log(chat_list_data[k].room,get_archived_and_deleted_chat_list)
         let check_value_exist_in_deleted_chat_list=await sub_function.check_value_exist_in_deleted_chat_list(chat_list_data[k].room,get_archived_and_deleted_chat_list,'deleted');
+        
+        //console.log(check_value_exist_in_deleted_chat_list);
         if(check_value_exist_in_deleted_chat_list){
-          console.log('remove deleted')
-          console.log(k)
+          // console.log('remove deleted');
+          // console.log(k)
           chat_list_data.splice(k, 1);
           k--;
         }
-        console.log(k)
-        console.log(chat_list_data.length)
-        if(k>0){
+        // console.log(k)
+        // console.log(chat_list_data.length)
+      
+        if(k>=0){
           
           //let check_value_exist_in_archived_chat_list=await sub_function.check_value_exist_in_archived_chat_list(chat_list_data[k].room,archived_chat_list);
           let check_value_exist_in_archived_chat_list=await sub_function.check_value_exist_in_archived_chat_list(chat_list_data[k].room,get_archived_and_deleted_chat_list,'archived');
           //console.log(check_value_exist_in_archived_chat_list,get_archived_and_deleted_chat_list,chat_list_data[k].room,chat_list_data[k].id)
-          console.log('if '+chat_list_data[k].id)
-          
-          
+          //console.log('if '+chat_list_data[k].id)
           if(check_value_exist_in_archived_chat_list){
             //remove from the array
             //console.log('remove archived')

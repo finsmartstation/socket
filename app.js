@@ -860,7 +860,7 @@ io.sockets.on('connection',async function (socket) {
         // //emit chat_list to the senter
         // let get_recent_chat_response_senter=await functions.get_recent_chat_list_response(data.sid);
         // io.sockets.in(data.sid).emit('chat_list',get_recent_chat_response_senter);
-        console.log(io.sockets.adapter.rooms)
+        //console.log(io.sockets.adapter.rooms)
         //send push notification
         //console.log('group_current_members', group_current_members)
         let group_chat_push_notification= await functions.group_chat_push_notification(data.sid,data.room,group_current_members,data.message,data.type);
