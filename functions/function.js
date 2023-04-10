@@ -749,14 +749,15 @@ async function get_individual_chat_list_response(sid,rid,room){
                         }
                       }
                     }else{
+                      console.log('sssss')
+                      
                       //opponent user
                       //receiver side notification meesage
                       if(result[0][i]['message']=='phone_number_changed'){
                         console.log('phone number changed');
-
                         let number_changed_msg=await queries.get_username(result[0][i]['senter_id'])+" changed their phone number. You're currently chatting with their new number. Tap to add it to your contacts.";
                         console.log(number_changed_msg)
-                        
+
                         if(date_array.includes(split_date[0])){
                           // console.log('yes date exist')
                           message_list_response.push({
@@ -844,7 +845,7 @@ async function get_individual_chat_list_response(sid,rid,room){
                             thumbnail: ''
                           })
                         }
-                        //exit ()
+                        //console.log(message_list_response)
                       }
                     }
                   }else if(result[0][i]['message_type']=='image' || result[0][i]['message_type']=='video' || result[0][i]['message_type']=='voice' || result[0][i]['message_type']=='doc'){
@@ -1587,7 +1588,7 @@ async function get_group_chat_list_response(user_id,group_id){
                 get_all_group_messages[i].message_type='';
                 get_all_group_messages[i].type='notification';
               }else if(get_all_group_messages[i].message=='phone_number_changed'){
-                exit ()
+                
                 if(get_all_group_messages[i].senter_id==user_id){
                   //not need
                   get_all_group_messages.splice(i, 1);
@@ -2852,8 +2853,8 @@ async function get_recent_chat_list_response_old(user_id){
 async function get_recent_chat_list_response(user_id){
   let get_recent_chat=await queries.get_recent_chat(user_id);
 
-   //console.log('recent chat ',get_recent_chat);
-    //console.log('testing')
+  //console.log('recent chat ',get_recent_chat);
+  //console.log('testing')
   let chat_list_data=[];
   //get current datetime
   //let archived_chat_list=await queries.archived_chat_list_details(user_id);
@@ -3191,6 +3192,33 @@ async function get_recent_chat_list_response(user_id){
                     //   chat_type: 'private'
                     // })
                   }
+                }
+              }else if(get_recent_chat[i].message=='phone_number_changed'){
+                console.log('phone_number_changed')
+                
+                if(user_id==get_recent_chat[i].senter_id){
+                  //get last message
+                  //console.log('get last messasge')
+                  //console.log(get_recent_chat[i].room,get_recent_chat[i].id,user_id,opponent_profile,opponent_phone)
+                  //get last private message
+                  let get_last_private_message=await sub_function.get_last_private_message(get_recent_chat[i].room,get_recent_chat[i].id,user_id,opponent_profile,opponent_phone);
+                  //console.log(get_last_private_message)
+                  if(get_last_private_message==false){
+                    //console.log('last message data not available')
+                    get_recent_chat[i].message='';
+                  }else{
+                    get_recent_chat[i].id=get_last_private_message[0].id;
+                    get_recent_chat[i].date=get_last_private_message[0].date;
+                    get_recent_chat[i].message=get_last_private_message[0].message
+                    get_recent_chat[i].message_type=get_last_private_message[0].message_type
+                    //console.log('last message data available')
+                  }
+                  // console.log(get_recent_chat[i].message)
+                  // exit ()
+                }else{
+                  //console.log('show phone number change message')
+                  get_recent_chat[i].message=await queries.get_username(get_recent_chat[i].senter_id)+" changed their phone number. You're currently chatting with their new number. Tap to add it to your contacts.";;
+                  //exit ()
                 }
               }
             }
@@ -3592,6 +3620,29 @@ async function get_recent_chat_list_response(user_id){
                     }
                   }
                   get_recent_chat[i].message=subject_message;
+                }else if(get_recent_chat[i].message=='phone_number_changed'){
+                  //console.log('group user phone_number_changed')
+                  
+                  if(get_recent_chat[i].senter_id==user_id){
+                    //get last group chat message of the room
+                    let get_last_group_message=await sub_function.get_last_group_message(get_recent_chat[i].room,get_recent_chat[i].id,user_id,group_members,group_current_members,group_left_members,group_removed_members);
+                    //console.log(get_last_group_message);
+                    if(get_last_group_message==false){
+                      get_recent_chat[i].message= '';
+                    }else{
+                      get_recent_chat[i].id= get_last_group_message[0].id;
+                      get_recent_chat[i].date= get_last_group_message[0].date;
+                      get_recent_chat[i].message= get_last_group_message[0].message;
+                      get_recent_chat[i].message_type= get_last_group_message[0].message_type;
+                    }
+                  }else{
+                    //show phone number changed message to user
+                    console.log(get_recent_chat[i]);
+                    let get_numbers=get_recent_chat[i].optional_text.split(',');
+                    get_recent_chat[i].message=get_numbers[0]+' changed to '+get_numbers[1];
+                  }
+                  // console.log('ssss',get_recent_chat[i].message);
+                  // exit ()
                 }
               }else if(get_recent_chat[i].message_type=='text'){
                 if(get_recent_chat[i].senter_id==user_id){

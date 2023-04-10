@@ -175,6 +175,14 @@ async function get_last_private_message(room_id,message_id,user_id,opponent_prof
                                   }];
                                 last_message_available=false;
                                 }
+                            }else if(last_message_data[i].message=='phone_number_changed'){
+                                console.log('phone number changed');
+                                //exit ();
+                                if(last_message_data[i].senter_id==user_id){
+                                    //not needed to show
+                                }else{
+                                    //needed to show
+                                }
                             }
                         }else{
                             last_message_array=[{
