@@ -983,8 +983,20 @@ io.sockets.on('connection',async function (socket) {
           }
         }
         //console.log(senter_read_receipt,receiver_read_receipt)  
-        //exit ()    
-          var group_status_data = [{
+        //exit ()  
+        let group_status_data=[];
+        if(data.sid==data.rid){
+          group_status_data=[{
+            "user_id": data.sid,
+            "username": "",
+            "datetime": datetime,
+            "message_status": 0,
+            "message_read_datetime": datetime,
+            "read_receipt": senter_read_receipt,
+            "status": 1
+          }]
+        }else{
+          group_status_data = [{
             "user_id": data.sid,
             "username": "",
             "datetime": datetime,
@@ -1000,8 +1012,10 @@ io.sockets.on('connection',async function (socket) {
             "message_read_datetime": "",
             "read_receipt": receiver_read_receipt,
             "status": 1
-          }]
-          console.log(group_status_data)
+          }];
+        } 
+          
+          //console.log(group_status_data)
           //exit ()
           var group_status_json_data = JSON.stringify(group_status_data);
           if (individual_Date.length > 0) {
@@ -1745,7 +1759,7 @@ io.sockets.on('connection',async function (socket) {
       let datetime=get_datetime();
       let send_forward_message_status=false;
       try{
-        console.log(typeof(input))
+        //console.log(typeof(input))
         if(typeof(input)=='object'){
           if(input.message_ids!=''){
             let message_ids=input.message_ids.split(',')
@@ -1783,21 +1797,33 @@ io.sockets.on('connection',async function (socket) {
                       room=receiver_id+input.sid;
                     }
                     console.log(room)
-                    let group_status_data = [{
-                      "user_id": input.sid,
-                      "username": "",
-                      "datetime": datetime,
-                      "message_status": 0,
-                      "message_read_datetime": datetime,
-                      "status": 1
-                    }, {
-                      "user_id": receiver_id,
-                      "username": "",
-                      "datetime": datetime,
-                      "message_status": 0,
-                      "message_read_datetime": "",
-                      "status": 1
-                    }]
+                    let group_status_data=[];
+                    if(input.sid==receiver_id){
+                      group_status_data=[{
+                        "user_id": input.sid,
+                        "username": "",
+                        "datetime": datetime,
+                        "message_status": 0,
+                        "message_read_datetime": datetime,
+                        "status": 1
+                      }];
+                    }else{
+                      group_status_data = [{
+                        "user_id": input.sid,
+                        "username": "",
+                        "datetime": datetime,
+                        "message_status": 0,
+                        "message_read_datetime": datetime,
+                        "status": 1
+                      }, {
+                        "user_id": receiver_id,
+                        "username": "",
+                        "datetime": datetime,
+                        "message_status": 0,
+                        "message_read_datetime": "",
+                        "status": 1
+                      }]
+                    }
                     var group_status_json_data = JSON.stringify(group_status_data);
                     //console.log(group_status_json_data);
                     //save forward message
@@ -1879,9 +1905,9 @@ io.sockets.on('connection',async function (socket) {
                         // let group_chat_response_data_for_sender=await functions.get_group_chat_list_response(input.sid,data.room);
                         // //io.sockets.in(data.room+'_'+data.sid).emit('message', group_chat_response_data_for_sender);   
                         // io.in(data.room+'_'+data.sid).emit('message', group_chat_response_data_for_sender);
-                        console.log('success')
+                        //console.log('success')
                         
-                      console.log('after success ',emit_users)
+                      //console.log('after success ',emit_users)
                       }else{
 
                       }
@@ -2470,22 +2496,33 @@ io.sockets.on('connection',async function (socket) {
                   let private_group=0;
                   //set group status
                   let group_status=[];
-                  group_status.push({
-                    user_id: data.user_id,
-                    username: await queries.get_username(data.user_id),
-                    datetime: datetime,
-                    message_status: 0,
-                    message_read_status: datetime,
-                    status: 1
-                  })
-                  group_status.push({
-                    user_id: data.receiver_id,
-                    username: await queries.get_username(data.receiver_id),
-                    datetime: datetime,
-                    message_status: 0,
-                    message_read_status: datetime,
-                    status: 1
-                  })
+                  if(data.user_id==data.receiver_id){
+                    group_status.push({
+                      user_id: data.user_id,
+                      username: await queries.get_username(data.user_id),
+                      datetime: datetime,
+                      message_status: 0,
+                      message_read_status: datetime,
+                      status: 1
+                    });
+                  }else{
+                    group_status.push({
+                      user_id: data.user_id,
+                      username: await queries.get_username(data.user_id),
+                      datetime: datetime,
+                      message_status: 0,
+                      message_read_status: datetime,
+                      status: 1
+                    });
+                    group_status.push({
+                      user_id: data.receiver_id,
+                      username: await queries.get_username(data.receiver_id),
+                      datetime: datetime,
+                      message_status: 0,
+                      message_read_status: datetime,
+                      status: 1
+                    });
+                  }
                   //save block message in chat_list
                   let save_block_message=await queries.save_block_message(datetime,data.user_id,data.receiver_id,message,message_type,room,message_status,status,online_status,private_group,JSON.stringify(group_status));
                   console.log(save_block_message)
@@ -2567,22 +2604,33 @@ io.sockets.on('connection',async function (socket) {
                   let private_group=0;
                   //set group status
                   let group_status=[];
-                  group_status.push({
-                    user_id: data.user_id,
-                    username: await queries.get_username(data.user_id),
-                    datetime: date_time,
-                    message_status: 0,
-                    message_read_status: date_time,
-                    status: 1
-                  })
-                  group_status.push({
-                    user_id: data.receiver_id,
-                    username: await queries.get_username(data.receiver_id),
-                    datetime: date_time,
-                    message_status: 0,
-                    message_read_status: date_time,
-                    status: 1
-                  })
+                  if(data.user_id==data.receiver_id){
+                    group_status.push({
+                      user_id: data.user_id,
+                      username: await queries.get_username(data.user_id),
+                      datetime: date_time,
+                      message_status: 0,
+                      message_read_status: date_time,
+                      status: 1
+                    });
+                  }else{
+                    group_status.push({
+                      user_id: data.user_id,
+                      username: await queries.get_username(data.user_id),
+                      datetime: date_time,
+                      message_status: 0,
+                      message_read_status: date_time,
+                      status: 1
+                    });
+                    group_status.push({
+                      user_id: data.receiver_id,
+                      username: await queries.get_username(data.receiver_id),
+                      datetime: date_time,
+                      message_status: 0,
+                      message_read_status: date_time,
+                      status: 1
+                    });
+                  }
                   //save unblock message in chat_list
                   let save_unblock_message=await queries.save_block_message(date_time,data.user_id,data.receiver_id,message,message_type,room,message_status,status,online_status,private_group,JSON.stringify(group_status));
                   console.log(save_unblock_message);
@@ -4443,22 +4491,33 @@ io.sockets.on('connection',async function (socket) {
                           //save block message to chat_list
                           //set group status
                           let group_status=[];
-                          group_status.push({
-                            user_id: user_id,
-                            username: await queries.get_username(data.user_id),
-                            datetime: datetime,
-                            message_status: 0,
-                            message_read_status: datetime,
-                            status: 1
-                          })
-                          group_status.push({
-                            user_id: receiver_id,
-                            username: await queries.get_username(data.receiver_id),
-                            datetime: datetime,
-                            message_status: 0,
-                            message_read_status: datetime,
-                            status: 1
-                          })
+                          if(user_id==receiver_id){
+                            group_status.push({
+                              user_id: user_id,
+                              username: await queries.get_username(data.user_id),
+                              datetime: datetime,
+                              message_status: 0,
+                              message_read_status: datetime,
+                              status: 1
+                            })
+                          }else{
+                            group_status.push({
+                              user_id: user_id,
+                              username: await queries.get_username(data.user_id),
+                              datetime: datetime,
+                              message_status: 0,
+                              message_read_status: datetime,
+                              status: 1
+                            })
+                            group_status.push({
+                              user_id: receiver_id,
+                              username: await queries.get_username(data.receiver_id),
+                              datetime: datetime,
+                              message_status: 0,
+                              message_read_status: datetime,
+                              status: 1
+                            })
+                          }
                           //save block message in chat_list
                           let save_block_message=await queries.save_block_message(datetime,user_id,receiver_id,'block','notification',room,0,1,0,0,JSON.stringify(group_status));
                           if(save_block_message>0){

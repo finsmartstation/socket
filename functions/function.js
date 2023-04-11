@@ -3130,6 +3130,7 @@ async function get_recent_chat_list_response(user_id){
                     get_recent_chat[i].date=get_last_private_message[0].date;
                     get_recent_chat[i].message=get_last_private_message[0].message
                     get_recent_chat[i].message_type=get_last_private_message[0].message_type
+                    get_recent_chat[i].optional_text=get_last_private_message[0].optional_text;
                     // chat_list_data.push({
                     //   id: get_last_private_message[0].id,
                     //   date: get_last_private_message[0].date,
@@ -3176,6 +3177,7 @@ async function get_recent_chat_list_response(user_id){
                     get_recent_chat[i].date=get_last_private_message[0].date;
                     get_recent_chat[i].message=get_last_private_message[0].message
                     get_recent_chat[i].message_type=get_last_private_message[0].message_type
+                    get_recent_chat[i].optional_text=get_last_private_message[0].optional_text
                     // chat_list_data.push({
                     //   id: get_last_private_message[0].id,
                     //   date: get_last_private_message[0].date,
@@ -3209,8 +3211,9 @@ async function get_recent_chat_list_response(user_id){
                   }else{
                     get_recent_chat[i].id=get_last_private_message[0].id;
                     get_recent_chat[i].date=get_last_private_message[0].date;
-                    get_recent_chat[i].message=get_last_private_message[0].message
-                    get_recent_chat[i].message_type=get_last_private_message[0].message_type
+                    get_recent_chat[i].message=get_last_private_message[0].message;
+                    get_recent_chat[i].message_type=get_last_private_message[0].message_type;
+                    get_recent_chat[i].optional_text=get_last_private_message[0].optional_text;
                     //console.log('last message data available')
                   }
                   // console.log(get_recent_chat[i].message)
@@ -3270,7 +3273,8 @@ async function get_recent_chat_list_response(user_id){
                 chat_type: 'private',
                 pin_status: get_recent_chat[i].pin_status.toString(),
                 device_token: get_recent_chat[i].device_token,
-                optional_text: get_recent_chat[i].optional_text,
+                //optional_text: get_recent_chat[i].optional_text,
+                optional_text: '',
                 mark_as_unread: "0"
               })
             }else{
@@ -3290,7 +3294,7 @@ async function get_recent_chat_list_response(user_id){
                 chat_type: 'private',
                 pin_status: get_recent_chat[i].pin_status.toString(),
                 device_token: get_recent_chat[i].device_token,
-                optional_text: get_recent_chat[i].optional_text,
+                optional_text: get_last_private_message[0].optional_text,
                 mark_as_unread: get_last_private_message[0].mark_as_unread.toString()
               })
             }
@@ -3634,10 +3638,11 @@ async function get_recent_chat_list_response(user_id){
                       get_recent_chat[i].date= get_last_group_message[0].date;
                       get_recent_chat[i].message= get_last_group_message[0].message;
                       get_recent_chat[i].message_type= get_last_group_message[0].message_type;
+                      get_recent_chat[i].optional_text=get_last_group_message[0].optional_text;
                     }
                   }else{
                     //show phone number changed message to user
-                    console.log(get_recent_chat[i]);
+                    //console.log(get_recent_chat[i]);
                     let get_numbers=get_recent_chat[i].optional_text.split(',');
                     get_recent_chat[i].message=get_numbers[0]+' changed to '+get_numbers[1];
                   }
@@ -3719,7 +3724,7 @@ async function get_recent_chat_list_response(user_id){
                   chat_type: 'group',
                   pin_status: get_recent_chat[i].pin_status.toString(),
                   device_token: get_recent_chat[i].device_token,
-                  optional_text: get_recent_chat[i].optional_text,
+                  optional_text: get_last_group_message[0].optional_text,
                   mark_as_unread: get_last_group_message[0].mark_as_unread.toString()
                 });
               }
@@ -3790,8 +3795,6 @@ async function get_recent_chat_list_response(user_id){
     }
     return setresponse;
   }
-  
-  
 } 
 
 
@@ -4224,6 +4227,7 @@ async function update_mark_as_unread_status(user_id,room){
     let check_mark_as_unread_exist=false;
     group_status=JSON.parse(get_room_last_message[0].group_status) || [];
     console.log(group_status)
+    //exit ()
     for(var i=0; i<group_status.length; i++){
       if(user_id==group_status[i].user_id && 'mark_as_unread' in group_status[i]){
         if(group_status[i].mark_as_unread==1){
