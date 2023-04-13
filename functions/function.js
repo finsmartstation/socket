@@ -3225,7 +3225,9 @@ async function get_recent_chat_list_response(user_id){
                 }
               }
             }
-            
+            console.log(get_recent_chat[i].id);
+             console.log('opponent ',opponent_id,typeof(opponent_id),opponent_name,unread_count)
+            // exit ()
             //push object to array chat list 
             chat_list_data.push({
               id: get_recent_chat[i].id.toString(),
@@ -4236,6 +4238,8 @@ async function update_mark_as_unread_status(user_id,room){
         }
       }
     }
+    console.log(check_mark_as_unread_exist);
+    
     if(check_mark_as_unread_exist){
       //update to db
       let update_mark_as_unread_status=await queries.remove_mark_as_unread(get_room_last_message[0].id,JSON.stringify(group_status));
