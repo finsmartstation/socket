@@ -40,13 +40,15 @@ async function get_individual_chat_list_response(sid,rid,room){
                 // console.log('first ', result[i].type)
               }
 
-              //result[i].data='12'
+              //result[i].data='12's
               //get reply message data
               if(result[0][i]['replay_id']!=0 && result[0][i]['replay_id']!=''){
-                //console.log('msg has reply msg')
+                console.log('msg has reply msg',result[0][i]['replay_id'])
+                
                 //write reply msg query to get reply msg details
                 let reply_message_details=await queries.reply_message_details(result[0][i]['replay_id']);
                 console.log(reply_message_details[0]);
+                //exit ()
                 //console.log('reply msg', reply_message_details[0][0].message)
                 result[0][i]['reply_message']=reply_message_details[0][0].message;
                 result[0][i]['reply_message_type']=reply_message_details[0][0].message_type,
@@ -54,6 +56,25 @@ async function get_individual_chat_list_response(sid,rid,room){
                 result[0][i]['reply_duration']=reply_message_details[0][0].duration;
                 console.log('id s',reply_message_details[0][0].id)
                 result[0][i]['replay_id']=reply_message_details[0][0].id.toString();
+                //reply_message type -- video
+                
+                if(result[0][i]['reply_message_type']=='video'){
+                  console.log('thumb data',reply_message_details[0][0]['thumbnail'])
+                  if(reply_message_details[0][0]['thumbnail']!=''){
+                    result[0][i]['reply_message']=BASE_URL+reply_message_details[0][0]['thumbnail'];
+                    //console.log(result[0][i]['thumbnail'])
+                    
+                  }
+                  // exit ();
+                  // console.log(result[0][i]['reply_message'])
+                  
+                }
+                //reply_message type -- image
+                if(result[0][i]['reply_message_type']=='image'){
+                  if(result[0][i]['reply_message']!=''){
+                    result[0][i]['reply_message']=BASE_URL+result[0][i]['reply_message']
+                  }
+                }
                 //senter
                 if(sid==result[0][i]['senter_id']){
                   result[0][i]['reply_senter']='You';
