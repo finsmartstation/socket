@@ -652,26 +652,75 @@ async function get_last_private_message(room_id,message_id,user_id,opponent_prof
     return last_message_array;
   }
 
-  async function send_firebase_notification(device_token, title, body){
+  async function send_firebase_notification(user_id,device_token, title, body, type,profile_pic,message_type){
+    //console.log(device_token, title, body, type,profile_pic,message_type)
+    //exit ()
     const message={
       to: device_token,
+      //registration_ids: device_token,
       collapse_key: 'Testing',
       notification: {
         title: title,
         body: body,
       },
       data: {  //you can send only notification or only data(or include both)
-        my_key: 'my value',
-        my_another_key: 'my another value'
+        // my_key: 'my value',
+        // my_another_key: 'my another value',
+         user_id: user_id,
+         title: title,
+         type: type,
+         message: body,
+         profile_pic: profile_pic,
+         message_format: message_type
     }
     }
-    fcm.send(message,function(err, response){
-      if (err) {
-          console.log("Something has gone wrong!");
-      } else {
-          console.log("Successfully sent with response: ", response);
-      }
-    })
+    //console.log(message)
+    try{
+        fcm.send(message,function(err, response){
+            console.log(err)
+          if (err) {
+              console.log("Something has gone wrong!");
+          } else {
+              console.log("Successfully sent with response: ", response);
+          }
+        })
+    }catch(fc){
+        console.log(fc)
+    }
+    
+  }
+
+  async function send_firebase_notification_group(group_id,device_token, title, body, type,group_profile_pic,message_type){
+    //console.log(device_token, title, body, type,group_profile_pic,message_type)
+    //exit ()
+    const message={
+      to: device_token,
+      //registration_ids: device_token,
+      collapse_key: 'Testing',
+      notification: {
+        title: title,
+        body: body,
+      },
+      data: {  //you can send only notification or only data(or include both)
+        // my_key: 'my value',
+        // my_another_key: 'my another value',
+         user_id: group_id,
+         title: title,
+         type: type,
+         message: body,
+         profile_pic: group_profile_pic,
+         message_format: message_type
+    }
+    }
+    
+        fcm.send(message,function(err, response){
+            //console.log(err)
+          if (err) {
+              console.log("Something has gone wrong!");
+          } else {
+              console.log("Successfully sent with response: ", response);
+          }
+        })
   }
 
 //   function check_value_exist_in_archived_chat_list(room,archived_chat_list){
@@ -692,6 +741,62 @@ async function get_last_private_message(room_id,message_id,user_id,opponent_prof
     })
   }
 
+  async function check_profile_pic_privacy(user_id,receiver_id){
+    //let profile_pic=BASE_URL+'uploads/default/profile.png';
+    let show_profile_pic_status=0;
+    //0 -- not show profile pic to user && 1 -- show profile pic to user
+    if(user_id!='' && receiver_id!=''){
+      //check who can see your profile pic
+      
+      let check_privacy_profile_pic=await queries.check_user_privacy(user_id,'profile_pic');
+      //console.log(check_privacy_profile_pic)
+      
+      if(check_privacy_profile_pic.length>0){
+        let profile_options=check_privacy_profile_pic[0].options;
+        //var_dump(profile_options)
+        if(profile_options==0){
+            show_profile_pic_status=1;
+        }else if(profile_options==1){
+            //check user is member of users chat_list
+            let get_user_chat_list_data=await queries.user_chat_list_details(user_id);
+            let check_user_exist_in_chat_list=check_user_data_exist_in_array(receiver_id,get_user_chat_list_data);
+            if(check_user_exist_in_chat_list){
+                show_profile_pic_status=1;
+            }else{
+                show_profile_pic_status=0;
+            }
+        }else if(profile_options==2){
+            let excepted_users=check_privacy_profile_pic[0].options;
+            //console.log(excepted_users)
+            if(excepted_users!=''){
+                excepted_users=JSON.parse(check_privacy_profile_pic[0].except_users);
+            }else{
+                excepted_users=[];
+            }
+            
+            if(excepted_users.includes(receiver_id)){
+                show_profile_pic_status=0;
+            }else{
+                show_profile_pic_status=1;
+            }
+        }else if(profile_options==3){
+            show_profile_pic_status=0;
+        }
+      }else{
+        show_profile_pic_status=1;
+      }
+    }
+    //console.log(show_profile_pic_status);
+    //exit ()
+    return show_profile_pic_status;
+  }
+
+  function check_user_data_exist_in_array(user_id, user_array){
+    return user_array.some(function(user){
+      return user.user_id == user_id
+    })
+  }
+
   
 
   module.exports={
@@ -699,5 +804,8 @@ async function get_last_private_message(room_id,message_id,user_id,opponent_prof
     get_last_group_message,
     send_firebase_notification,
     check_value_exist_in_archived_chat_list,
-    check_value_exist_in_deleted_chat_list
+    check_value_exist_in_deleted_chat_list,
+    check_profile_pic_privacy,
+    check_user_data_exist_in_array,
+    send_firebase_notification_group
   }

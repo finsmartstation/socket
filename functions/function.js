@@ -1134,6 +1134,7 @@ async function get_individual_chat_list_response(sid,rid,room){
                 "profile": user_details[0].profile_pic,
                 "id": rid,
                 "user_block_status":block_status,
+                "phone_number": user_details[0].phone,
                 //"list": result[0]
                 "list":message_list_response
               }
@@ -1880,11 +1881,13 @@ async function get_group_chat_list_response(user_id,group_id){
                   //console.log('date is not exist')
                 }
 
-                
-                if(get_all_group_messages[i].new_profile_pic!='' && get_all_group_messages[i].previous_profile_pic!=''){
+                //console.log(get_all_group_messages[i].new_profile_pic,get_all_group_messages[i].previous_profile_pic)
+                if(get_all_group_messages[i].new_profile_pic!='' && get_all_group_messages[i].new_profile_pic!=undefined && get_all_group_messages[i].previous_profile_pic!='' && get_all_group_messages[i].previous_profile_pic!=undefined){
                   //let last_index=group_messages.length;
                   // console.log(i)
-                  // console.log(group_messages[i].id)
+                  // console.log(get_all_group_messages[i].id)
+                  // console.log(group_messages,i)
+                  //  console.log(group_messages[i])
                   // exit ()
                   //add two index for group_created_date and group_name
                   let index_i=i+group_profile_history_index;
@@ -3830,8 +3833,6 @@ async function get_recent_chat_list_response(user_id){
   }
 } 
 
-
-
 async function individual_chat_push_notification(user_id,receiver_id,room,message,message_type){
   //console.log(user_id,room,message,message_type)
   let current_datetime=get_datetime();
@@ -3853,20 +3854,29 @@ async function individual_chat_push_notification(user_id,receiver_id,room,messag
         if(current_datetime>end_datetime){
           //send push notification
           let device_token=receiver_mute_status[0].deviceToken;
-          let title=await queries.get_username(user_id);
+          //let title=await queries.get_username(user_id);
           console.log('device token', device_token)
+          let check_profile_pic_privacy=await sub_function.check_profile_pic_privacy(user_id,receiver_id);
+          //console.log('profile ',profile_pic)
+          let get_user_profile_details=await queries.get_user_details(user_id)
+          let title=get_user_profile_details[0].name;
+          //console.log(get_user_profile_details)
+          let profile_pic=BASE_URL+'uploads/default/profile.png';
+          if(check_profile_pic_privacy==1){
+            profile_pic=BASE_URL+get_user_profile_details[0].profile_pic;
+          }
           if(message_type=='text'){
-            let send_notification=await sub_function.send_firebase_notification(device_token,title,message);
+            let send_notification=await sub_function.send_firebase_notification(user_id,device_token,title,message,'individual',profile_pic,message_type);
           }else if(message_type=='image'){
-            let send_notification=await sub_function.send_firebase_notification(device_token,title,'Photo');
+            let send_notification=await sub_function.send_firebase_notification(user_id,device_token,title,'Photo','individual',profile_pic,message_type);
           }else if(message_type=='pdf'){
-            let send_notification=await sub_function.send_firebase_notification(device_token,title,'File');
+            let send_notification=await sub_function.send_firebase_notification(user_id,device_token,title,'File','individual',profile_pic,message_type);
           }else if(message_type=='doc'){
-            let send_notification=await sub_function.send_firebase_notification(device_token,title,'File');
+            let send_notification=await sub_function.send_firebase_notification(user_id,device_token,title,'File','individual',profile_pic,message_type);
           }else if(message_type=='voice'){
-            let send_notification=await sub_function.send_firebase_notification(device_token,title,'Audio');
+            let send_notification=await sub_function.send_firebase_notification(user_id,device_token,title,'Audio','individual',profile_pic,message_type);
           }else if(message_type=='video'){
-            let send_notification=await sub_function.send_firebase_notification(device_token,title,'File');
+            let send_notification=await sub_function.send_firebase_notification(user_id,device_token,title,'File','individual',profile_pic,message_type);
           }
 
         }else{
@@ -3874,22 +3884,32 @@ async function individual_chat_push_notification(user_id,receiver_id,room,messag
         }
       }
     }else{
+      
       //not muted
       let device_token=receiver_mute_status[0].deviceToken;
-      let title=await queries.get_username(user_id);
+      //let title=await queries.get_username(user_id);
+      let check_profile_pic_privacy=await sub_function.check_profile_pic_privacy(user_id,receiver_id);
+      //console.log('profile ',profile_pic)
+      let get_user_profile_details=await queries.get_user_details(user_id)
+      let title=get_user_profile_details[0].name;
+      //console.log(get_user_profile_details)
+      let profile_pic=BASE_URL+'uploads/default/profile.png';
+      if(check_profile_pic_privacy==1){
+        profile_pic=BASE_URL+get_user_profile_details[0].profile_pic;
+      }
       //console.log('device token', device_token)
       if(message_type=='text'){
-        let send_notification=await sub_function.send_firebase_notification(device_token,title,message);
+        let send_notification=await sub_function.send_firebase_notification(user_id,device_token,title,message,'individual',profile_pic,message_type);
       }else if(message_type=='image'){
-        let send_notification=await sub_function.send_firebase_notification(device_token,title,'Photo');
+        let send_notification=await sub_function.send_firebase_notification(user_id,device_token,title,'Photo','individual',profile_pic,message_type);
       }else if(message_type=='pdf'){
-        let send_notification=await sub_function.send_firebase_notification(device_token,title,'File');
+        let send_notification=await sub_function.send_firebase_notification(user_id,device_token,title,'File','individual',profile_pic,message_type);
       }else if(message_type=='doc'){
-        let send_notification=await sub_function.send_firebase_notification(device_token,title,'File');
+        let send_notification=await sub_function.send_firebase_notification(user_id,device_token,title,'File','individual',profile_pic,message_type);
       }else if(message_type=='voice'){
-        let send_notification=await sub_function.send_firebase_notification(device_token,title,'Audio');
+        let send_notification=await sub_function.send_firebase_notification(user_id,device_token,title,'Audio','individual',profile_pic,message_type);
       }else if(message_type=='video'){
-        let send_notification=await sub_function.send_firebase_notification(device_token,title,'File');
+        let send_notification=await sub_function.send_firebase_notification(user_id,device_token,title,'File','individual',profile_pic,message_type);
       }
     }
   }
@@ -3898,6 +3918,14 @@ async function individual_chat_push_notification(user_id,receiver_id,room,messag
 async function group_chat_push_notification(user_id='',room='',group_current_members=[],message='',message_type=''){
   // console.log('push notification ',user_id,room,group_current_members,message,message_type)
   // console.log(group_current_members.length)
+  //get group data
+  let get_group_data=await queries.get_group_basic_details(room);
+  let group_profile_pic=get_group_data[0].group_profile;
+  if(group_profile_pic!=''){
+    group_profile_pic=BASE_URL+get_group_data[0].group_profile;
+  }else{
+    group_profile_pic='uploads/default/group_profile.png'
+  }
   if(group_current_members.length>0){
     let current_datetime=get_datetime();
     for(var i=0; i<group_current_members.length; i++){
@@ -3919,22 +3947,23 @@ async function group_chat_push_notification(user_id='',room='',group_current_mem
               console.log('end datetime', end_datetime)
               if(current_datetime>end_datetime){
                 let device_token=receiver_mute_status[0].deviceToken;
-                let title=await queries.get_username(user_id);
+                //let title=await queries.get_username(user_id);
+                let title=get_group_data[0].group_name;
                 if(device_token!=''){
                   if(message_type=='text'){
-                    let send_notification=await sub_function.send_firebase_notification(device_token,title,message);
+                    let send_notification=await sub_function.send_firebase_notification_group(room,device_token,title,message,'group',group_profile_pic,message_type);
                   }else if(message_type=='image'){
-                    let send_notification=await sub_function.send_firebase_notification(device_token,title,'Photo');
+                    let send_notification=await sub_function.send_firebase_notification_group(room,device_token,title,'Photo','group',group_profile_pic,message_type);
                   }else if(message_type=='pdf'){
-                    let send_notification=await sub_function.send_firebase_notification(device_token,title,'File');
+                    let send_notification=await sub_function.send_firebase_notification_group(room,device_token,title,'File','group',group_profile_pic,message_type);
                   }else if(message_type=='doc'){
-                    let send_notification=await sub_function.send_firebase_notification(device_token,title,'File');
+                    let send_notification=await sub_function.send_firebase_notification_group(room,device_token,title,'File','group',group_profile_pic,message_type);
                   }else if(message_type=='voice'){
-                    let send_notification=await sub_function.send_firebase_notification(device_token,title,'Audio');
+                    let send_notification=await sub_function.send_firebase_notification_group(room,device_token,title,'Audio','group',group_profile_pic,message_type);
                   }else if(message_type=='video'){
-                    let send_notification=await sub_function.send_firebase_notification(device_token,title,'File');
+                    let send_notification=await sub_function.send_firebase_notification_group(room,device_token,title,'File','group',group_profile_pic,message_type);
                   }else if(message_type=='changed_group_icon'){
-                    let send_notification=await sub_function.send_firebase_notification(device_token,title,message);
+                    let send_notification=await sub_function.send_firebase_notification_group(room,device_token,title,message,'group',group_profile_pic,message_type);
                   }
                 }else{
                   console.log('device token is empty')
@@ -3948,19 +3977,19 @@ async function group_chat_push_notification(user_id='',room='',group_current_mem
             let title=await queries.get_username(user_id);
             if(device_token!=''){
               if(message_type=='text'){
-                let send_notification=await sub_function.send_firebase_notification(device_token,title,message);
+                let send_notification=await sub_function.send_firebase_notification_group(room,device_token,title,message,'group',group_profile_pic,message_type);
               }else if(message_type=='image'){
-                let send_notification=await sub_function.send_firebase_notification(device_token,title,'Photo');
+                let send_notification=await sub_function.send_firebase_notification_group(room,device_token,title,'Photo','group',group_profile_pic,message_type);
               }else if(message_type=='pdf'){
-                let send_notification=await sub_function.send_firebase_notification(device_token,title,'File');
+                let send_notification=await sub_function.send_firebase_notification_group(room,device_token,title,'File','group',group_profile_pic,message_type);
               }else if(message_type=='doc'){
-                let send_notification=await sub_function.send_firebase_notification(device_token,title,'File');
+                let send_notification=await sub_function.send_firebase_notification_group(room,device_token,title,'File','group',group_profile_pic,message_type);
               }else if(message_type=='voice'){
-                let send_notification=await sub_function.send_firebase_notification(device_token,title,'Audio');
+                let send_notification=await sub_function.send_firebase_notification_group(room,device_token,title,'Audio','group',group_profile_pic,message_type);
               }else if(message_type=='video'){
-                let send_notification=await sub_function.send_firebase_notification(device_token,title,'File');
+                let send_notification=await sub_function.send_firebase_notification_group(room,device_token,title,'File','group',group_profile_pic,message_type);
               }else if(message_type=='changed_group_icon'){
-                let send_notification=await sub_function.send_firebase_notification(device_token,title,message);
+                let send_notification=await sub_function.send_firebase_notification_group(room,device_token,title,message,'group',group_profile_pic,message_type);
               }
             }else{
               console.log('device token is empty')
