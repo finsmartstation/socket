@@ -3834,7 +3834,8 @@ async function get_recent_chat_list_response(user_id){
 } 
 
 async function individual_chat_push_notification(user_id,receiver_id,room,message,message_type){
-  //console.log(user_id,room,message,message_type)
+  console.log(user_id,room,message,message_type)
+  
   let current_datetime=get_datetime();
   let receiver_mute_status=await queries.receiver_mute_status(receiver_id);
   //console.log(receiver_mute_status);
@@ -3877,6 +3878,8 @@ async function individual_chat_push_notification(user_id,receiver_id,room,messag
             let send_notification=await sub_function.send_firebase_notification(user_id,device_token,title,'Audio','individual',profile_pic,message_type);
           }else if(message_type=='video'){
             let send_notification=await sub_function.send_firebase_notification(user_id,device_token,title,'File','individual',profile_pic,message_type);
+          }else if(message_type=='location'){
+            let send_notification=await sub_function.send_firebase_notification(user_id,device_token,title,'Location','individual',profile_pic,message_type);
           }
 
         }else{
@@ -3884,7 +3887,6 @@ async function individual_chat_push_notification(user_id,receiver_id,room,messag
         }
       }
     }else{
-      
       //not muted
       let device_token=receiver_mute_status[0].deviceToken;
       //let title=await queries.get_username(user_id);
@@ -3910,13 +3912,16 @@ async function individual_chat_push_notification(user_id,receiver_id,room,messag
         let send_notification=await sub_function.send_firebase_notification(user_id,device_token,title,'Audio','individual',profile_pic,message_type);
       }else if(message_type=='video'){
         let send_notification=await sub_function.send_firebase_notification(user_id,device_token,title,'File','individual',profile_pic,message_type);
+      }else if(message_type=='location'){
+        let send_notification=await sub_function.send_firebase_notification(user_id,device_token,title,'Location','individual',profile_pic,message_type);
       }
     }
   }
 }
 
 async function group_chat_push_notification(user_id='',room='',group_current_members=[],message='',message_type=''){
-  // console.log('push notification ',user_id,room,group_current_members,message,message_type)
+   console.log('push notification ',user_id,room,group_current_members,message,message_type)
+   
   // console.log(group_current_members.length)
   //get group data
   let get_group_data=await queries.get_group_basic_details(room);
@@ -3931,8 +3936,9 @@ async function group_chat_push_notification(user_id='',room='',group_current_mem
     for(var i=0; i<group_current_members.length; i++){
       console.log('user ',group_current_members[i].user_id)
       if(user_id!=group_current_members[i].user_id){
-        console.log(user_id,group_current_members[i].user_id);
+        //console.log(user_id,group_current_members[i].user_id);
         //get receiver firebase_accessToken from user table
+        //console.log(group_current_members[i].user_id)
         let receiver_mute_status=await queries.receiver_mute_status(group_current_members[i].user_id);
         if(receiver_mute_status.length>0){
           //check mute_chat_notification table
@@ -3964,6 +3970,8 @@ async function group_chat_push_notification(user_id='',room='',group_current_mem
                     let send_notification=await sub_function.send_firebase_notification_group(room,device_token,title,'File','group',group_profile_pic,message_type);
                   }else if(message_type=='changed_group_icon'){
                     let send_notification=await sub_function.send_firebase_notification_group(room,device_token,title,message,'group',group_profile_pic,message_type);
+                  }else if(message_type=='location'){
+                    let send_notification=await sub_function.send_firebase_notification_group(room,device_token,title,'Location','group',group_profile_pic,message_type);
                   }
                 }else{
                   console.log('device token is empty')
@@ -3990,6 +3998,8 @@ async function group_chat_push_notification(user_id='',room='',group_current_mem
                 let send_notification=await sub_function.send_firebase_notification_group(room,device_token,title,'File','group',group_profile_pic,message_type);
               }else if(message_type=='changed_group_icon'){
                 let send_notification=await sub_function.send_firebase_notification_group(room,device_token,title,message,'group',group_profile_pic,message_type);
+              }else if(message_type=='location'){
+                let send_notification=await sub_function.send_firebase_notification_group(room,device_token,title,'Location','group',group_profile_pic,message_type);
               }
             }else{
               console.log('device token is empty')
@@ -4320,6 +4330,25 @@ function check_user_room_exist_in_array(room, user_array){
   })
 }
 
+function convert_datetime_format(datetime){
+  console.log('function ',datetime)
+  var date = datetime.toISOString().slice(0, 10);
+  console.log(date)
+  var hours = datetime.getHours();
+  var minute = datetime.getMinutes();
+  var second = datetime.getSeconds();
+  var hr_str = "" + hours;
+  var min_str = "" + minute;
+  var sec_str = "" + second;
+  var pad = "00"
+  var hr = pad.substring(0, pad.length - hr_str.length) + hr_str;
+  var min = pad.substring(0, pad.length - min_str.length) + min_str;
+  var sec = pad.substring(0, pad.length - sec_str.length) + sec_str;
+  var time = hr + ":" + min + ":" + sec;
+  var set_datetime_format = date + " " + time;
+  return set_datetime_format;
+}
+
 
 module.exports={
     get_individual_chat_list_response,
@@ -4334,5 +4363,6 @@ module.exports={
     get_group_info,
     check_user_data_exist_in_array,
     update_mark_as_unread_status,
-    check_user_room_exist_in_array
+    check_user_room_exist_in_array,
+    convert_datetime_format
 }
