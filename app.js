@@ -6321,6 +6321,10 @@ io.sockets.on('connection',async function (socket) {
           console.log(user_id,accessToken,room,receiver_id)
           if(user_id!='' && accessToken!='' && room!='' && receiver_id!=''){
             socket.join(user_id+'_mute_chat_list');
+            let rooms=room.split(',');
+            let receive_ids=receiver_id.split(',');
+            let muted_count=0;
+            let not_saved_count=0;
             //check user data
             let check_user_data=await queries.check_user_valid(user_id,accessToken);
             if(check_user_data.length>0){
@@ -6329,25 +6333,92 @@ io.sockets.on('connection',async function (socket) {
               console.log(datetime)
               let current_datetime=new Date(datetime);
               console.log('start',current_datetime)
-              let convert_datetime_format='';
-              current_datetime.setHours(current_datetime.getHours()+8);
-              console.log('end',current_datetime)
-              exit ()
+              let end_datetime='';
+              // console.log('--',current_datetime.getHours(),current_datetime.getHours()+15)
+              // current_datetime.setHours(25);
+              
+              // //console.log('date',current_datetime.getDate())
+              // console.log('end',current_datetime)
+              // convert_datetime_format=await functions.convert_datetime_format(current_datetime);
+              //   console.log('converted ',convert_datetime_format)
+              // exit ()
               
               if(type=='8_hours'){
-                current_datetime.setHours(current_datetime.getHours()+8)
-                console.log('after added ',current_datetime);
-                convert_datetime_format=await functions.convert_datetime_format(current_datetime);
-                console.log('converted ',convert_datetime_format)
+                let day=current_datetime.getDate() + 1;
+                console.log(day)
+                //exit ()
+                let hours=current_datetime.getHours()+8;
+                
+                if(hours>=24){
+                  //console.log('yes 24 hrs')
+                  //add one day
+                  
+                  current_datetime.setDate(day);
+                  current_datetime.setHours(hours);
+                  //console.log('day',day,current_datetime)
+                }else{
+                  //console.log('not ')
+                  current_datetime.setHours(hours)
+                }
+                
+                //console.log('after added ',current_datetime);
+                end_datetime=await functions.convert_datetime_format(current_datetime);
+                console.log('converted ',end_datetime)
               }else if(type=='1_week'){
                 //1 week = 7 * 24 =168 hrs
                 current_datetime.setHours(current_datetime.getHours()+168)
-                convert_datetime_format=await functions.convert_datetime_format(current_datetime);
-                console.log('converted ',convert_datetime_format)
+                end_datetime=await functions.convert_datetime_format(current_datetime);
+                console.log('converted ',end_datetime)
               }else if(type=='always'){
-                convert_datetime_format='';
+                end_datetime='';
               }
+              //check room is already muted
+              let set_rooms='';
+              for(var i=0; i<rooms.length; i++){
+                set_rooms=set_rooms+"'"+rooms[i]+"',"
+              }
+              set_rooms=set_rooms.replace(/,(?=[^,]*$)/, '')
               
+              let set_query="SELECT *,DATE_FORMAT(start_datetime,'%Y-%m-%d %H:%i:%s') as start_datetime, DATE_FORMAT(end_datetime,'%Y-%m-%d %H:%i:%s') as end_datetime FROM `mute_chat_notification` where user_id='"+user_id+"' and room in ("+set_rooms+")";
+              console.log(set_query)
+              //exit ()
+              let user_muted_rooms=await queries.mute_user_chat_list(set_query);
+              console.log(user_muted_rooms)
+              for(var j=0; j<rooms.length; j++){
+                //console.log(rooms[j])
+                let check_data_exit_in_array=await functions.check_user_room_exist_in_array(rooms[j],user_muted_rooms);
+                //console.log(check_data_exit_in_array)
+                if(check_data_exit_in_array){
+                  //update
+                  let update_mute_user_chat_list=await queries.update_mute_user_chat_list(user_id,receive_ids[j],rooms[j],datetime,end_datetime,show_notification,type);
+                  console.log(update_mute_user_chat_list)
+                  if(update_mute_user_chat_list.affectedRows>0){
+                    muted_count=muted_count+1;
+                  }else{
+                    not_saved_count=not_saved_count+1;
+                  }
+                }else{
+                  //insert
+                  let save_mute_user_chat_list=await queries.save_mute_user_chat_list(user_id,receive_ids[j],rooms[j],datetime,end_datetime,show_notification,type);
+                  console.log('saved ',save_mute_user_chat_list);
+                  if(save_mute_user_chat_list>0){
+                    muted_count=muted_count+1;
+                  }else{
+                    not_saved_count=not_saved_count+1;
+                  }
+                }
+              }
+              if(muted_count>0){
+                //send success message
+                io.sockets.in(user_id+'_mute_chat_list').emit('mute_chat_list',{status: true, statuscode: 200, message: "success"});
+                //emit to user chat list
+                let recent_chat_list=await functions.get_recent_chat_list_response(user_id);
+                io.sockets.in(user_id).emit('chat_list', recent_chat_list);
+              }
+              if(not_saved_count>0){
+                //send failure message
+                io.sockets.in(user_id+'_mute_chat_list').emit('mute_chat_list',{status: false, statuscode: 400, message: "Not saved to db"});
+              }
             }else{
               io.sockets.in(user_id+'_mute_chat_list').emit('mute_chat_list',{status: false, statuscode: 200, message: "No user data found"});
             }
@@ -6363,7 +6434,85 @@ io.sockets.on('connection',async function (socket) {
       }catch(e){
         console.error(e);
       }
-    })
+    });
+    //unmute chat list
+    socket.on('unmute_chat_list',async function(data){
+      try{
+        if(typeof(data)=='object'){
+          let user_id=data.user_id ? data.user_id : '';
+          let accessToken=data.accessToken ? data.accessToken : '';
+          let receiver_id=data.receiver_id ? data.receiver_id : '';
+          let room=data.room ? data.room : '';
+          let type=data.type ? data.type : '';
+          //type = 8_hours, 1_week, always
+          let show_notification=data.show_notification ? data.show_notification : 0;
+          let datetime=get_datetime();
+          console.log(user_id,accessToken,room,receiver_id)
+          socket.join(user_id+'_unmute_chat_list');
+          if(user_id!='' && accessToken!='' && room!='' && receiver_id!=''){
+            socket.join(user_id+'_mute_chat_list');
+            let rooms=room.split(',');
+            let receive_ids=receiver_id.split(',');
+            let muted_count=0;
+            let not_saved_count=0;
+            //check user data
+            let check_user_data=await queries.check_user_valid(user_id,accessToken);
+            if(check_user_data.length>0){
+              //check room is already muted
+              let set_rooms='';
+              for(var i=0; i<rooms.length; i++){
+                set_rooms=set_rooms+"'"+rooms[i]+"',"
+              }
+              set_rooms=set_rooms.replace(/,(?=[^,]*$)/, '')
+              
+              let set_query="SELECT *,DATE_FORMAT(start_datetime,'%Y-%m-%d %H:%i:%s') as start_datetime, DATE_FORMAT(end_datetime,'%Y-%m-%d %H:%i:%s') as end_datetime FROM `mute_chat_notification` where user_id='"+user_id+"' and room in ("+set_rooms+")";
+              console.log(set_query)
+              //exit ()
+              let user_muted_rooms=await queries.mute_user_chat_list(set_query);
+              for(var j=0;j<rooms.length; j++){
+                let check_data_exit_in_array=await functions.check_user_room_exist_in_array(rooms[j],user_muted_rooms);
+                //console.log(check_data_exit_in_array)
+                if(check_data_exit_in_array){
+                  console.log('yes muted')
+                  let unmute_user_chat_list=await queries.unmute_user_chat_list(user_id,receive_ids[j],rooms[j]);
+                  console.log('delete',unmute_user_chat_list)
+                  if(unmute_user_chat_list.affectedRows>0){
+                    muted_count=muted_count+1;
+                  }else{
+                    not_saved_count=not_saved_count+1;
+                  }
+                }
+              }
+              if(user_muted_rooms.length==0){
+                io.sockets.in(user_id+'_unmute_chat_list').emit('unmute_chat_list',{status: false, statuscode: 200, message: "No chat list to unmute"});
+              }
+              if(muted_count>0){
+                //send success message
+                io.sockets.in(user_id+'_mute_chat_list').emit('mute_chat_list',{status: true, statuscode: 200, message: "success"});
+                //emit to user chat list
+                let recent_chat_list=await functions.get_recent_chat_list_response(user_id);
+                io.sockets.in(user_id).emit('chat_list', recent_chat_list);
+              }
+              if(not_saved_count>0){
+                //send failure message
+                io.sockets.in(user_id+'_mute_chat_list').emit('mute_chat_list',{status: false, statuscode: 400, message: "Not saved to db"});
+              }
+            }else{
+              io.sockets.in(data.user_id+'_unmute_chat_list').emit('unmute_chat_list',{status: false, statuscode: 200, message: "No user data found"});
+            }
+            socket.leave(user_id+'_unmute_chat_list');
+          }else{
+            socket.join(data.user_id+'_unmute_chat_list');
+            io.sockets.in(data.user_id+'_unmute_chat_list').emit('unmute_chat_list',{status: false, statuscode: 200, message: "Data is empty"});
+            socket.leave(data.user_id+'_unmute_chat_list');
+          }
+        }else{
+          console.error('Input type is string');
+        }
+      }catch(e){
+        console.error(e);
+      }
+    });
     socket.on('test_changes',async function(data){
       socket.join('test_changes');
       io.sockets.in('test_changes').emit('test_changes',{status: true, statuscode: 200, message: "last change affected upto 08-05-2023"});

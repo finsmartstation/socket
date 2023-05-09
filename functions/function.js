@@ -2887,7 +2887,8 @@ async function get_recent_chat_list_response_old(user_id){
 async function get_recent_chat_list_response(user_id){
   let get_recent_chat=await queries.get_recent_chat(user_id);
 
-  //console.log('recent chat ',get_recent_chat);
+  console.log('recent chat ',get_recent_chat);
+  //exit ()
   //console.log('testing')
   let chat_list_data=[];
   //get current datetime
@@ -4329,6 +4330,7 @@ function check_user_room_exist_in_array(room, user_array){
     return user.room == room
   })
 }
+
 
 function convert_datetime_format(datetime){
   console.log('function ',datetime)
