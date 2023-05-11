@@ -6308,6 +6308,7 @@ io.sockets.on('connection',async function (socket) {
     //mute chat list
     socket.on('mute_chat_list',async function(data){
       //console.log('mute chat list called');
+      //{"user_id":"50","accessToken":"50","receiver_id":"5,52","room":"550,5052","type":"8_hours","show_notification":"1"}
       try{
         if(typeof(data)=='object'){
           let user_id=data.user_id ? data.user_id : '';
@@ -6319,7 +6320,7 @@ io.sockets.on('connection',async function (socket) {
           let show_notification=data.show_notification ? data.show_notification : 0;
           let datetime=get_datetime();
           console.log(user_id,accessToken,room,receiver_id)
-          if(user_id!='' && accessToken!='' && room!='' && receiver_id!=''){
+          if(user_id!='' && accessToken!='' && room!='' && receiver_id!='' && type!=''){
             socket.join(user_id+'_mute_chat_list');
             let rooms=room.split(',');
             let receive_ids=receiver_id.split(',');
@@ -6438,14 +6439,12 @@ io.sockets.on('connection',async function (socket) {
     //unmute chat list
     socket.on('unmute_chat_list',async function(data){
       try{
+        //input -- {"user_id":"50","accessToken":"7520ff1679b65593200acf473d159e5f","receiver_id":"6","room":"1"}
         if(typeof(data)=='object'){
           let user_id=data.user_id ? data.user_id : '';
           let accessToken=data.accessToken ? data.accessToken : '';
           let receiver_id=data.receiver_id ? data.receiver_id : '';
           let room=data.room ? data.room : '';
-          let type=data.type ? data.type : '';
-          //type = 8_hours, 1_week, always
-          let show_notification=data.show_notification ? data.show_notification : 0;
           let datetime=get_datetime();
           console.log(user_id,accessToken,room,receiver_id)
           socket.join(user_id+'_unmute_chat_list');
@@ -6515,7 +6514,7 @@ io.sockets.on('connection',async function (socket) {
     });
     socket.on('test_changes',async function(data){
       socket.join('test_changes');
-      io.sockets.in('test_changes').emit('test_changes',{status: true, statuscode: 200, message: "last change affected upto 08-05-2023"});
+      io.sockets.in('test_changes').emit('test_changes',{status: true, statuscode: 200, message: "last changes affected upto 10-05-2023"});
       socket.leave('test_changes');
     });
   }catch(error){
