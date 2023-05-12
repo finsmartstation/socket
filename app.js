@@ -986,7 +986,12 @@ io.sockets.on('connection',async function (socket) {
         //console.log(senter_read_receipt,receiver_read_receipt)  
         //exit ()  
         let group_status_data=[];
-        if(data.sid==data.rid){
+        //check receiver blocked this user 
+        let blocked_status=false;
+        let check_receiver_blocked_me=await queries.check_receiver_blocked_me(data.sid,data.rid,room);
+        if(check_receiver_blocked_me.length>0){
+          //console.log('yes user blocked this receiver');
+          blocked_status=true;
           group_status_data=[{
             "user_id": data.sid,
             "username": "",
@@ -995,26 +1000,39 @@ io.sockets.on('connection',async function (socket) {
             "message_read_datetime": datetime,
             "read_receipt": senter_read_receipt,
             "status": 1
-          }]
-        }else{
-          group_status_data = [{
-            "user_id": data.sid,
-            "username": "",
-            "datetime": datetime,
-            "message_status": 0,
-            "message_read_datetime": datetime,
-            "read_receipt": senter_read_receipt,
-            "status": 1
-          }, {
-            "user_id": data.rid,
-            "username": "",
-            "datetime": datetime,
-            "message_status": 1,
-            "message_read_datetime": "",
-            "read_receipt": receiver_read_receipt,
-            "status": 1
           }];
-        } 
+        }else{
+          if(data.sid==data.rid){
+            group_status_data=[{
+              "user_id": data.sid,
+              "username": "",
+              "datetime": datetime,
+              "message_status": 0,
+              "message_read_datetime": datetime,
+              "read_receipt": senter_read_receipt,
+              "status": 1
+            }];
+          }else{
+            group_status_data = [{
+              "user_id": data.sid,
+              "username": "",
+              "datetime": datetime,
+              "message_status": 0,
+              "message_read_datetime": datetime,
+              "read_receipt": senter_read_receipt,
+              "status": 1
+            }, {
+              "user_id": data.rid,
+              "username": "",
+              "datetime": datetime,
+              "message_status": 1,
+              "message_read_datetime": "",
+              "read_receipt": receiver_read_receipt,
+              "status": 1
+            }];
+          } 
+        }
+        
           
           //console.log(group_status_data)
           //exit ()
@@ -1213,44 +1231,53 @@ io.sockets.on('connection',async function (socket) {
 
           //emit message
           //io.sockets.in(room).emit('message', setresponse);
-          let individual_chat_list_response_sender=await functions.get_individual_chat_list_response(data.sid,data.rid,room);
-          io.sockets.in(room+'_'+data.sid).emit('message',individual_chat_list_response_sender);
-          let individual_chat_list_response_receiver=await functions.get_individual_chat_list_response(data.rid,data.sid,room);
-          //console.log(sockets,socket.id)
-          //io.sockets.sockets[0].emit('message',sender_function_test_data)
-          //socket.to(room).emit('message',sender_function_test_data);
+          if(blocked_status){
+            console.log('yes blocked')
+            let individual_chat_list_response_sender=await functions.get_individual_chat_list_response(data.sid,data.rid,room);
+            io.sockets.in(room+'_'+data.sid).emit('message',individual_chat_list_response_sender);
+            let get_recent_chat_response_senter=await functions.get_recent_chat_list_response(data.sid);
+            io.sockets.in(data.sid).emit('chat_list', get_recent_chat_response_senter);
+          }else{
+            console.log('not blocked')
+            let individual_chat_list_response_sender=await functions.get_individual_chat_list_response(data.sid,data.rid,room);
+            io.sockets.in(room+'_'+data.sid).emit('message',individual_chat_list_response_sender);
+            let individual_chat_list_response_receiver=await functions.get_individual_chat_list_response(data.rid,data.sid,room);
+            //console.log(sockets,socket.id)
+            //io.sockets.sockets[0].emit('message',sender_function_test_data)
+            //socket.to(room).emit('message',sender_function_test_data);
 
-          //io.sockets.in(room).emit('message',individual_chat_list_response);
-          //io.sockets.connected[socketid]
-          //io.sockets.socket.id.emit('message','hello')
-          //let receiver_function_test_data=await functions.get_individual_chat_list_response(data.rid,data.sid,room)
-          //io.sockets.in(room).emit('message', individual_chat_list_response);
-          
-          io.sockets.in(room+'_'+data.rid).emit('message',individual_chat_list_response_receiver);
-          //chat_list
-          // var results= await queries.get_recent_chat_accessToken(data.rid);
-          // var accessToken=results[0][0].accessToken;
-          // console.log('access token ',accessToken)
-          // var get_user=await queries.get_user(data.rid,accessToken);
-          // console.log('receiver data', get_user);
-          // if(get_user !=''){
-          //   var get_recent_chat=await queries.get_recent_chat(data.rid);
-          //   io.sockets.in(data.rid).emit('chat_list', get_recent_chat)
-          //   io.sockets.in(room).emit('chat_list', get_recent_chat);
-          // }
-          let get_recent_chat_response_senter=await functions.get_recent_chat_list_response(data.sid);
-          //io.sockets.in(room+'_'+data.sid).emit('chat_list', get_recent_chat_response_senter);
-          io.sockets.in(data.sid).emit('chat_list', get_recent_chat_response_senter);
-          //get recent chat response
-          let get_recent_chat_response_receiver=await functions.get_recent_chat_list_response(data.rid);
-          //io.sockets.in(room+'_'+data.rid).emit('chat_list', get_recent_chat_response_receiver)
-          io.sockets.in(data.rid).emit('chat_list', get_recent_chat_response_receiver)
-          
-          //push notification
-          //get receiver device token
-          //let receiver_devicetoken=await queries.get_device_token(data.rid);
-      
-          let send_push_notification=await functions.individual_chat_push_notification(data.sid,data.rid,room,data.message,data.type);
+            //io.sockets.in(room).emit('message',individual_chat_list_response);
+            //io.sockets.connected[socketid]
+            //io.sockets.socket.id.emit('message','hello')
+            //let receiver_function_test_data=await functions.get_individual_chat_list_response(data.rid,data.sid,room)
+            //io.sockets.in(room).emit('message', individual_chat_list_response);
+            
+            io.sockets.in(room+'_'+data.rid).emit('message',individual_chat_list_response_receiver);
+            //chat_list
+            // var results= await queries.get_recent_chat_accessToken(data.rid);
+            // var accessToken=results[0][0].accessToken;
+            // console.log('access token ',accessToken)
+            // var get_user=await queries.get_user(data.rid,accessToken);
+            // console.log('receiver data', get_user);
+            // if(get_user !=''){
+            //   var get_recent_chat=await queries.get_recent_chat(data.rid);
+            //   io.sockets.in(data.rid).emit('chat_list', get_recent_chat)
+            //   io.sockets.in(room).emit('chat_list', get_recent_chat);
+            // }
+            let get_recent_chat_response_senter=await functions.get_recent_chat_list_response(data.sid);
+            //io.sockets.in(room+'_'+data.sid).emit('chat_list', get_recent_chat_response_senter);
+            io.sockets.in(data.sid).emit('chat_list', get_recent_chat_response_senter);
+            //get recent chat response
+            let get_recent_chat_response_receiver=await functions.get_recent_chat_list_response(data.rid);
+            //io.sockets.in(room+'_'+data.rid).emit('chat_list', get_recent_chat_response_receiver)
+            io.sockets.in(data.rid).emit('chat_list', get_recent_chat_response_receiver)
+            
+            //push notification
+            //get receiver device token
+            //let receiver_devicetoken=await queries.get_device_token(data.rid);
+        
+            let send_push_notification=await functions.individual_chat_push_notification(data.sid,data.rid,room,data.message,data.type);
+          }
         //let individual_push_notification_data = { user_id: data.sid, accessToken: data.accessToken, receiver_id: data.rid, message: message, message_type: data.type }
         // axios({
         //   method: 'post',
@@ -6514,7 +6541,7 @@ io.sockets.on('connection',async function (socket) {
     });
     socket.on('test_changes',async function(data){
       socket.join('test_changes');
-      io.sockets.in('test_changes').emit('test_changes',{status: true, statuscode: 200, message: "last changes affected upto 10-05-2023"});
+      io.sockets.in('test_changes').emit('test_changes',{status: true, statuscode: 200, message: "last changes affected upto 11-05-2023"});
       socket.leave('test_changes');
     });
   }catch(error){

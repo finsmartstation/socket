@@ -633,6 +633,11 @@ async function unmute_user_chat_list(user_id,receive_id,room){
     return results[0];
 }
 
+async function check_receiver_blocked_me(user_id,receiver_id,room){
+    const results=await db.sequelize.query("select * from `block_chat` where user_id='"+receiver_id+"' and receiver_id='"+user_id+"' and room='"+room+"'");
+    return results[0];
+}
+
 module.exports = {
     update_online_status,
     select_online_status,
@@ -749,5 +754,6 @@ module.exports = {
     mute_user_chat_list,
     update_mute_user_chat_list,
     save_mute_user_chat_list,
-    unmute_user_chat_list
+    unmute_user_chat_list,
+    check_receiver_blocked_me
 }

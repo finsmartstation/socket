@@ -6,8 +6,29 @@ const BASE_URL=process.env.BASE_URL;
 async function get_individual_chat_list_response(sid,rid,room){
   //let current_datetime=get_datetime()
     var result= await queries.send_indv_message(rid,room);
+    var get_current_datetime=get_datetime()
     //console.log(result)
+    let mute_status="0";
     let check_private_chat_read_receipts=await queries.check_private_chat_read_receipts(sid,rid);
+    let check_mute_chat_list=await queries.get_mute_notification(sid,rid);
+    console.log(check_mute_chat_list);
+    
+    if(check_mute_chat_list.length>0){
+      //console.log(check_mute_chat_list[0].type,check_mute_chat_list[0].end_datetime)
+      if(check_mute_chat_list[0].type!='always' && check_mute_chat_list[0].end_datetime!='0000-00-00 00:00:00'){
+        console.log(get_current_datetime,'-',check_mute_chat_list[0].end_datetime);
+        if(get_current_datetime<=check_mute_chat_list[0].end_datetime){
+          mute_status="1";
+        }else{
+          mute_status="0";
+        }
+      }else{
+        mute_status="0";
+      }
+    }else{
+      mute_status="0";
+    }
+    // console.log(mute_status,get_current_datetime)
     let default_read_receipt=0;
     //console.log(check_private_chat_read_receipts,check_private_chat_read_receipts.length)
     let read_receipt_datetime='';
@@ -1135,7 +1156,7 @@ async function get_individual_chat_list_response(sid,rid,room){
                 "id": rid,
                 "user_block_status":block_status,
                 "phone_number": user_details[0].phone,
-                //"list": result[0]
+                "mute_status": mute_status,
                 "list":message_list_response
               }
             }
@@ -1149,8 +1170,27 @@ async function get_group_chat_list_response(user_id,group_id){
   let group_messages=[];
   let set_user_id='"'+user_id+'"';
   let date_array=[];
+  let get_current_datetime=get_datetime();
+  let mute_status="0";
   //check user is member of the group
   let check_user_in_group=await queries.check_user_and_group_data(set_user_id,group_id);
+  let check_mute_chat_list=await queries.check_group_mute_notification(user_id,group_id);
+  if(check_mute_chat_list.length>0){
+    if(check_mute_chat_list[0].type!='always' && check_mute_chat_list[0].end_datetime!='0000-00-00 00:00:00'){
+      console.log(get_current_datetime,'-',check_mute_chat_list[0].end_datetime);
+      if(get_current_datetime<=check_mute_chat_list[0].end_datetime){
+        //console.log('yes')
+        mute_status="1";
+      }else{
+        mute_status="0";
+      }
+    }else{
+      mute_status="0";
+    }
+  }else{
+    mute_status="0";
+  }
+  //console.log(mute_status);
   //console.log('data ',check_user_in_group);
   if(check_user_in_group.length>0){
     let group_created_date=check_user_in_group[0].created_datetime;
@@ -1433,15 +1473,22 @@ async function get_group_chat_list_response(user_id,group_id){
                 if(group_members.length>0){
                   //console.log('entered into loop',get_all_group_messages[i].date, group_members)
                   for(var group_members_admin=0; group_members_admin<group_members.length; group_members_admin++){
+                    //console.log(get_all_group_messages[i].id,get_all_group_messages[i].date,'-',group_members[group_members_admin].datetime)
+                    
                     if(get_all_group_messages[i].date==group_members[group_members_admin].datetime){
+                      
                       //show message only to admin
                       //console.log('yes condition true')
+                      //console.log(user_id,group_members[group_members_admin].user_id)
+                      
                       if(user_id==group_members[group_members_admin].user_id){
                         admin_notification_msg="You're now an admin";
-                        //console.log('ssss',group_members_admin)
+                        //console.log('ssss')
                         break;
                       }else{
+                        
                         admin_notification_msg_status=true;
+                        //console.log('nnnn')
                       }
                     }else{
                       admin_notification_msg_status=true;
@@ -1452,20 +1499,36 @@ async function get_group_chat_list_response(user_id,group_id){
                   //exit ();
                 }
                 console.log('admin notification data ',admin_notification_msg,admin_notification_msg_status)
+                
                 //exit 
                 if(admin_notification_msg!=''){
                   get_all_group_messages[i].message=admin_notification_msg;
                   get_all_group_messages[i].message_type='';
                   get_all_group_messages[i].type='notification';
+                  //console.log(get_all_group_messages[i].id)
                 }else{
+                  
                   if(admin_notification_msg_status){
                     //remove the array index from array
+                    
+                    //console.log('before removed ',get_all_group_messages.length,get_all_group_messages)
+                    console.log('before removed index ', i)
                     get_all_group_messages.splice(i, 1);
                     i--;
-                    //console.log('balance ',get_all_group_messages)
+                    console.log('after removed index ', i)
+                    console.log(get_all_group_messages[i].id)
+                    
+                    // console.log('balance ',get_all_group_messages.length,get_all_group_messages)
+                    // console.log(get_all_group_messages[i],admin_notification_msg_status)
+                    // if(get_all_group_messages[i].id==3157){
+                    //   console.log(get_all_group_messages[i],admin_notification_msg_status)
+                    //   exit ()
+                    // }
+                    //
                     //break;
                   }
                 }
+                
               }else if(get_all_group_messages[i].message=='left'){
                 let left_user_msg='';
                 if(group_left_members.length>0){
@@ -1647,7 +1710,12 @@ async function get_group_chat_list_response(user_id,group_id){
                 get_all_group_messages[i].thumbnail=BASE_URL+get_all_group_messages[i]['thumbnail'];
               }
             }
-
+            // if(get_all_group_messages[i].id==3150){
+            //   console.log('testing loop')
+            //   console.log(get_all_group_messages[i].id)
+            //   console.log(get_all_group_messages[i].message)
+            //   //exit ()
+            // }
         //get group_status
         //console.log('error testing ',get_all_group_messages[i])
         if(get_all_group_messages[i]!=undefined){
@@ -1779,6 +1847,7 @@ async function get_group_chat_list_response(user_id,group_id){
               }else if(group_status_json[j].status==1 && group_status_json[j].user_id==user_id){
                 //console.log('not deleted')
                 //check read receipt 
+                console.log('not deleted id ',get_all_group_messages[i].id)
                 if('read_receipt' in group_status_json[j]){
                   read_receipt=group_status_json[j].read_receipt
                 }else{
@@ -1930,6 +1999,7 @@ async function get_group_chat_list_response(user_id,group_id){
         "group_profile":group_profile,
         "created_datetime":group_created_date,
         "user_left_status":user_left_status,
+        "mute_status":mute_status,
         "list":group_messages
       }
     }
