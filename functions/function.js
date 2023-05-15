@@ -1526,6 +1526,7 @@ async function get_group_chat_list_response(user_id,group_id){
                     // }
                     //
                     //break;
+                    continue;
                   }
                 }
                 
@@ -1685,9 +1686,11 @@ async function get_group_chat_list_response(user_id,group_id){
               }else if(get_all_group_messages[i].message=='phone_number_changed'){
                 
                 if(get_all_group_messages[i].senter_id==user_id){
+                  //exit ()
                   //not need
                   get_all_group_messages.splice(i, 1);
                   i--;
+                  continue;
                 }else{
                   let get_numbers=get_all_group_messages[i].optional_text.split(',');
                   let change_number_msg=get_numbers[0]+' changed to '+get_numbers[1];
@@ -3860,6 +3863,7 @@ async function get_recent_chat_list_response(user_id){
           // console.log(k)
           chat_list_data.splice(k, 1);
           k--;
+          continue;
         }
         // console.log(k)
         // console.log(chat_list_data.length)
@@ -3876,6 +3880,7 @@ async function get_recent_chat_list_response(user_id){
             archived_list.push(chat_list_data[k]);
             chat_list_data.splice(k, 1);
             k--;
+            continue;
           }
         }
       }

@@ -5017,7 +5017,7 @@ io.sockets.on('connection',async function (socket) {
               let get_total_pin_chat_count=await queries.total_pin_chat_count(user_id);
               //already pinned + new pinned chat list
               let total_pin_chat=get_total_pin_chat_count.length+receiver_ids.length;
-              if(total_pin_chat<3){
+              if(total_pin_chat<=3){
                 //check room user is pinned or not
                 for(var i=0; i<receiver_ids.length; i++){
                   //console.log(receiver_ids[i])
@@ -6539,9 +6539,13 @@ io.sockets.on('connection',async function (socket) {
         console.error(e);
       }
     });
+    socket.on('receiver_acknowledgement',async function(data){
+      console.log('received acknowledgement ',data)
+      //input -- {"user_id":"50","accessToken":"",""}
+    });
     socket.on('test_changes',async function(data){
       socket.join('test_changes');
-      io.sockets.in('test_changes').emit('test_changes',{status: true, statuscode: 200, message: "last changes affected upto 11-05-2023"});
+      io.sockets.in('test_changes').emit('test_changes',{status: true, statuscode: 200, message: "last changes affected upto 15-05-2023 (2)"});
       socket.leave('test_changes');
     });
   }catch(error){
