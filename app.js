@@ -6539,13 +6539,36 @@ io.sockets.on('connection',async function (socket) {
         console.error(e);
       }
     });
-    socket.on('receiver_acknowledgement',async function(data){
-      console.log('received acknowledgement ',data)
+    socket.on('message_delivered',async function(data){
+      console.log('message delivered ',data);
       //input -- {"user_id":"50","accessToken":"",""}
+      try{
+        if(typeof(data)=='object'){
+          let user_id=data.user_id ? data.user_id : '';
+          let accessToken=data.accessToken ? data.accessToken : '';
+          let room=data.room ? data.room : '';
+          if(user_id!='' && accessToken!='' && room!=''){
+            socket.join(user_id+'_message_delivered');
+            //check user data is valid
+            socket.leave(user_id+'_message_delivered');
+          }else{
+            socket.join(data.user_id+'_message_delivered');
+            io.sockets.in(data.user_id+'_message_delivered').emit('message_delivered',{status: false, statuscode: 200, message: "Data is empty"});
+            socket.leave(data.user_id+'_message_delivered');
+          }
+        }else{
+          console.error('Input type is string');
+        }
+      }catch(e){
+        console.error(e);
+      }
     });
+    socket.on('message_delivered_for_group',async function(data){
+      console.log('message_delivered_for_group');
+    })
     socket.on('test_changes',async function(data){
       socket.join('test_changes');
-      io.sockets.in('test_changes').emit('test_changes',{status: true, statuscode: 200, message: "last changes affected upto 15-05-2023 (2)"});
+      io.sockets.in('test_changes').emit('test_changes',{status: true, statuscode: 200, message: "last changes affected upto 16-05-2023 (2)"});
       socket.leave('test_changes');
     });
   }catch(error){

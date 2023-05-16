@@ -2959,8 +2959,7 @@ async function get_recent_chat_list_response_old(user_id){
 
 async function get_recent_chat_list_response(user_id){
   let get_recent_chat=await queries.get_recent_chat(user_id);
-
-  console.log('recent chat ',get_recent_chat);
+  //console.log('recent chat ',get_recent_chat);
   //exit ()
   //console.log('testing')
   let chat_list_data=[];
@@ -2974,8 +2973,6 @@ async function get_recent_chat_list_response(user_id){
       let mute_status=0;
       let mute_message='unmute';
       //console.log('group status',group_status)
-      
-     
       if(get_recent_chat[i].private_group==0){
         //console.log(get_recent_chat[i].id)
         //private chat message
@@ -3016,7 +3013,6 @@ async function get_recent_chat_list_response(user_id){
             mute_message='mute';
           }
         }else{
-          
           mute_status=0;
           mute_message='unmute';
         }
@@ -3353,7 +3349,7 @@ async function get_recent_chat_list_response(user_id){
               chat_type: 'private',
               pin_status: get_recent_chat[i].pin_status.toString(),
               device_token: get_recent_chat[i].device_token,
-              optional_text: get_recent_chat[i].optional_text,
+              optional_text: get_recent_chat[i].optional_text ? get_recent_chat[i].optional_text : '',
               mark_as_unread: mark_as_unread.toString()
             })
             // if(get_recent_chat[i].id==650){
@@ -3404,7 +3400,7 @@ async function get_recent_chat_list_response(user_id){
                 chat_type: 'private',
                 pin_status: get_recent_chat[i].pin_status.toString(),
                 device_token: get_recent_chat[i].device_token,
-                optional_text: get_last_private_message[0].optional_text,
+                optional_text: get_last_private_message[0].optional_text ? get_last_private_message[0].optional_text : '',
                 mark_as_unread: get_last_private_message[0].mark_as_unread.toString()
               })
             }
@@ -3552,7 +3548,7 @@ async function get_recent_chat_list_response(user_id){
                 chat_type: 'group',
                 pin_status: get_recent_chat[i].pin_status.toString(),
                 device_token: get_recent_chat[i].device_token,
-                optional_text: get_recent_chat[i].optional_text,
+                optional_text: get_recent_chat[i].optional_text ? get_recent_chat[i].optional_text : '',
                 mark_as_unread: mark_as_unread.toString()
               });
             }else if(group_status[j].user_id==user_id && group_status[j].status==1){
@@ -3629,7 +3625,7 @@ async function get_recent_chat_list_response(user_id){
                           if(get_last_group_message==false){
                             
                             
-                            get_recent_chat[0].message= '';
+                            get_recent_chat[i].message= '';
                           
                             
                           }else{
@@ -3789,33 +3785,38 @@ async function get_recent_chat_list_response(user_id){
                 chat_type: 'group',
                 pin_status: get_recent_chat[i].pin_status.toString(),
                 device_token: get_recent_chat[i].device_token,
-                optional_text: get_recent_chat[i].optional_text,
+                optional_text: get_recent_chat[i].optional_text ? get_recent_chat[i].optional_text : '',
                 mark_as_unread: mark_as_unread.toString()
               });
             }else if(group_status[j].user_id==user_id && group_status[j].status==2){
+              console.log(get_recent_chat[i].room,get_recent_chat[i].id)
+              
               //needed to find last message of the group
               let get_last_group_message=await sub_function.get_last_group_message(get_recent_chat[i].room,get_recent_chat[i].id,user_id,group_members,group_current_members,group_left_members,group_removed_members,subject_history);
-              //console.log(get_last_group_message);
+              console.log(get_last_group_message);
+              console.log(chat_list_data,get_recent_chat[i].room,get_recent_chat[i].id)
               if(get_last_group_message==false){
+                //console.log(chat_list_data,get_recent_chat[i].room,get_recent_chat[i].id,group_name)
                 chat_list_data.push({
-                  id: get_recent_chat[0].id.toString(),
-                  date: get_recent_chat[0].date,
+                  id: get_recent_chat[i].id.toString(),
+                  date: get_recent_chat[i].date,
                   message: '',
                   unread_message: unread_count.toString(),
-                  userid: get_recent_chat[0].room.toString(),
+                  userid: get_recent_chat[i].room.toString(),
                   name: group_name,
                   profile: group_profile,
                   phone: '',
                   mute_status: mute_status.toString(),
                   mute_message: mute_message,
-                  room: get_recent_chat[0].room,
-                  message_type:get_recent_chat[0].message_type,
+                  room: get_recent_chat[i].room,
+                  message_type:get_recent_chat[i].message_type,
                   chat_type: 'group',
                   pin_status: get_recent_chat[i].pin_status.toString(),
                   device_token: get_recent_chat[i].device_token,
-                  optional_text: get_recent_chat[i].optional_text,
+                  optional_text: get_recent_chat[i].optional_text ? get_recent_chat[i].optional_text : '',
                   mark_as_unread: '0'
                 });
+                
               }else{
                 //console.log(get_last_group_message);
                 chat_list_data.push({
@@ -3834,10 +3835,11 @@ async function get_recent_chat_list_response(user_id){
                   chat_type: 'group',
                   pin_status: get_recent_chat[i].pin_status.toString(),
                   device_token: get_recent_chat[i].device_token,
-                  optional_text: get_last_group_message[0].optional_text,
+                  optional_text: get_last_group_message[0].optional_text ? get_last_group_message[0].optional_text : '',
                   mark_as_unread: get_last_group_message[0].mark_as_unread.toString()
                 });
               }
+              
               
             }
           }
@@ -3849,16 +3851,20 @@ async function get_recent_chat_list_response(user_id){
     //console.log('before',chat_list_data.length,chat_list_data)
     //if(archived_chat_list.length>0){
     if(get_archived_and_deleted_chat_list.length>0){
-      //console.log(chat_list_data.length)
+       console.log(chat_list_data.length,chat_list_data)
+      // console.log('deleted list', get_archived_and_deleted_chat_list)
+      //exit ()
       for(var k=0; k<chat_list_data.length; k++){
         
         //check chat_list is deleted or not
         // console.log(chat_list_data.length)
         // console.log(chat_list_data[k].room,get_archived_and_deleted_chat_list)
+        console.log('room - ',chat_list_data[k].room)
         let check_value_exist_in_deleted_chat_list=await sub_function.check_value_exist_in_deleted_chat_list(chat_list_data[k].room,get_archived_and_deleted_chat_list,'deleted');
         
         //console.log(check_value_exist_in_deleted_chat_list);
         if(check_value_exist_in_deleted_chat_list){
+          console.log('deleted ')
           // console.log('remove deleted');
           // console.log(k)
           chat_list_data.splice(k, 1);
@@ -3869,7 +3875,7 @@ async function get_recent_chat_list_response(user_id){
         // console.log(chat_list_data.length)
       
         if(k>=0){
-          
+          console.log('archieved list');
           //let check_value_exist_in_archived_chat_list=await sub_function.check_value_exist_in_archived_chat_list(chat_list_data[k].room,archived_chat_list);
           let check_value_exist_in_archived_chat_list=await sub_function.check_value_exist_in_archived_chat_list(chat_list_data[k].room,get_archived_and_deleted_chat_list,'archived');
           //console.log(check_value_exist_in_archived_chat_list,get_archived_and_deleted_chat_list,chat_list_data[k].room,chat_list_data[k].id)
@@ -4340,12 +4346,14 @@ async function get_group_info(user_id,accessToken,group_id){
         mute_status=0;
         mute_end_datetime='';
       }
+      let group_created_by_name=await queries.get_username(check_group_data[0].created_by)
       let response={
         status: true,
         statuscode: 200,
         message: 'success',
         group_name: check_group_data[0].group_name,
         group_profile: BASE_URL+check_group_data[0].group_profile,
+        created_by: group_created_by_name,
         number_of_members: current_group_users.length,
         created_datetime: check_group_data[0].created_datetime,
         description: check_group_data[0].group_description,
