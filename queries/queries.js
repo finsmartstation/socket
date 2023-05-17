@@ -638,6 +638,23 @@ async function check_receiver_blocked_me(user_id,receiver_id,room){
     return results[0];
 }
 
+async function get_undelivered_messages(user_id,room){
+    //SELECT * FROM `chat_list` where room='550' and delivered_status='1' and JSON_CONTAINS(JSON_EXTRACT(group_status, '$[*].user_id'), '"50"', '$');
+    const set_user_id='"'+user_id+'"';
+    const results=await db.sequelize.query("SELECT * FROM `chat_list` where room='"+room+"' and delivered_status='1' and JSON_CONTAINS(JSON_EXTRACT(group_status, '$[*].user_id'), '"+set_user_id+"', '$')");
+    return results[0];
+}
+
+async function update_private_delivered_message(query){
+    const results=await db.sequelize.query(query);
+    return results[0];
+}
+
+async function update_group_delivered_message(query){
+    const results=await db.sequelize.query(query);
+    return results[0];
+}
+
 module.exports = {
     update_online_status,
     select_online_status,
@@ -755,5 +772,8 @@ module.exports = {
     update_mute_user_chat_list,
     save_mute_user_chat_list,
     unmute_user_chat_list,
-    check_receiver_blocked_me
+    check_receiver_blocked_me,
+    get_undelivered_messages,
+    update_private_delivered_message,
+    update_group_delivered_message
 }
