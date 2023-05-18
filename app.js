@@ -615,9 +615,13 @@ io.sockets.on('connection',async function (socket) {
             //console.log('user id',group_current_members[group_user].user_id)
             let message_read_datetime='';
             let message_status=1;
+            let delivered_status=1;
+            let delivered_datetime='';
             if(data.sid==group_current_members[group_user].user_id){
               message_read_datetime=datetime;
               message_status=0;
+              delivered_status=0;
+              delivered_datetime=datetime;
             }
             let read_receipt_status=0;
             //console.log('count ',check_group_chat_read_receipts.length)
@@ -629,7 +633,7 @@ io.sockets.on('connection',async function (socket) {
               }
             }
             //exit ()
-            group_status_array.push({ user_id: group_current_members[group_user].user_id, username: group_current_members[group_user].username, datetime: datetime, message_status: message_status, message_read_datetime: message_read_datetime, read_receipt: read_receipt_status, status: 1 })
+            group_status_array.push({ user_id: group_current_members[group_user].user_id, username: group_current_members[group_user].username, datetime: datetime, delivered_status: delivered_status, delivered_datetime: delivered_datetime, message_status: message_status, message_read_datetime: message_read_datetime, read_receipt: read_receipt_status, status: 1 })
           }
 
           // console.log(group_status_array)
@@ -996,6 +1000,8 @@ io.sockets.on('connection',async function (socket) {
             "user_id": data.sid,
             "username": "",
             "datetime": datetime,
+            "delivered_status":0,
+            "delivered_datetime":datetime,
             "message_status": 0,
             "message_read_datetime": datetime,
             "read_receipt": senter_read_receipt,
@@ -1007,6 +1013,8 @@ io.sockets.on('connection',async function (socket) {
               "user_id": data.sid,
               "username": "",
               "datetime": datetime,
+              "delivered_status":0,
+              "delivered_datetime":datetime,
               "message_status": 0,
               "message_read_datetime": datetime,
               "read_receipt": senter_read_receipt,
@@ -1017,6 +1025,8 @@ io.sockets.on('connection',async function (socket) {
               "user_id": data.sid,
               "username": "",
               "datetime": datetime,
+              "delivered_status":0,
+              "delivered_datetime":datetime,
               "message_status": 0,
               "message_read_datetime": datetime,
               "read_receipt": senter_read_receipt,
@@ -1025,6 +1035,8 @@ io.sockets.on('connection',async function (socket) {
               "user_id": data.rid,
               "username": "",
               "datetime": datetime,
+              "delivered_status":1,
+              "delivered_datetime":"",
               "message_status": 1,
               "message_read_datetime": "",
               "read_receipt": receiver_read_receipt,
@@ -6629,6 +6641,70 @@ io.sockets.on('connection',async function (socket) {
                   }
                 }else if(room_type==1){
                   //group
+                  let group_status_case='';
+                  let delivererd_status_case='';
+                  let ids='';
+                  for(var i=0; i<get_undelivered_message.length; i++){
+                    //console.log('ids',get_undelivered_message[i].id)
+                    let group_message_json=get_undelivered_message[i].group_status;
+                    if(group_message_json!=''){
+                      group_message_json=JSON.parse(get_undelivered_message[i].group_status);
+                    }else{
+                      group_message_json=[];
+                    }
+                    //get message sender id
+                    let message_sender_id=get_undelivered_message[i].senter_id;
+                    let undelivered_message_count=0;
+                    for(var undelivered=0; undelivered<group_message_json.length; undelivered++){
+                      if(group_message_json[undelivered].user_id!=message_sender_id && group_message_json[undelivered].delivered_status==1){
+                        undelivered_message_count=undelivered_message_count+1;
+                      }
+                    }
+                    console.log('message sender id',message_sender_id)
+                    console.log('message id',get_undelivered_message[i].id)
+                    console.log('undelivered message',undelivered_message_count)
+                    for(var j=0; j<group_message_json.length; j++){
+                      console.log(group_message_json[j].user_id)
+                      //if(group_message_json[j].)
+                      if(group_message_json[j].user_id==user_id){
+                        if('delivered_status' in group_message_json[j]){
+                          if(group_message_json[j].delivered_status==1){
+                            //console.log('value is one')
+                            group_message_json[j].delivered_status=0;
+                            group_message_json[j].delivered_datetime=datetime;
+                          }
+                        }else{
+                          //console.log('no')
+                          group_message_json[j].delivered_status=0;
+                          group_message_json[j].delivered_datetime=datetime;
+                        }
+                      }
+                    }
+                    if(undelivered_message_count==1){
+                      //update both delivered_status and group_status
+                      group_status_case=group_status_case+"when id='"+get_undelivered_message[i].id+"' then '"+JSON.stringify(get_undelivered_message[i].group_status)+"' ";
+                      delivererd_status_case=delivererd_status_case+"when id='"+get_undelivered_message[i].id+"' then '1' ";
+                      ids=ids+"'"+get_undelivered_message[i].id+"',"
+                    }else{
+                      //update only group_status
+                      group_status_case=group_status_case+"when id='"+get_undelivered_message[i].id+"' then '"+JSON.stringify(get_undelivered_message[i].group_status)+"' ";
+                      ids=ids+"'"+get_undelivered_message[i].id+"',"
+                    }
+                  }
+                  ids=ids.replace(/(^,)|(,$)/g, "");
+                  console.log('group case ',group_status_case);
+                  console.log('delivererd status case',delivererd_status_case)
+                  console.log('ids',ids)
+
+                  let query="UPDATE chat_list set group_status=(case "+group_status_case+" end), delivered_status=(case "+delivererd_status_case+" end) where id in ("+ids+")";
+                  console.log(query)
+                  //save to db
+                  let update_group_delivered_message=await queries.update_group_delivered_message(query);
+                  if(update_group_delivered_message.affectedRows>0){
+                    console.log('success')
+                  }else{
+                    console.log('not saved to db')
+                  }
                 }
               }else{
                 io.sockets.in(user_id+'_message_delivered').emit('message_delivered',{status: true, statuscode: 200, message: "No message to update"});
