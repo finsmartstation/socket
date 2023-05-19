@@ -3412,6 +3412,7 @@ async function get_recent_chat_list_response(user_id){
         let get_unread_message_count_for_group=await queries.get_unread_message_count_for_group(user_id,get_recent_chat[i].room);
         //console.log('group unread count ',get_unread_message_count_for_group);
         if(get_unread_message_count_for_group.length>0){
+          console.log('---',get_unread_message_count_for_group[0].group_status,get_recent_chat[i].id);
           let group_unread_message_status=JSON.parse(get_unread_message_count_for_group[0].group_status);
           if(get_unread_message_count_for_group[0].message_status==1){
             for(var k=0; k<group_unread_message_status; k++){
