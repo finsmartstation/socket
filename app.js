@@ -1,5 +1,6 @@
 //const { Console, count } = require('console');
-// const { getAudioDurationInSeconds } = require('get-audio-duration');
+ const getAudioDurationInSeconds  = require('get-audio-duration');
+ const fs = require('fs-extra')
 // const { getVideoDurationInSeconds } = require('get-video-duration')
 //const { response } = require('express');
 //const { dashLogger } = require("./logger");
@@ -6772,6 +6773,7 @@ io.sockets.on('connection',async function (socket) {
           let accessToken=data.accessToken ? data.accessToken : '';
           let receiver_id=data.receiver_id ? data.receiver_id : '';
           let datetime=get_datetime();
+          let room='';
           //console.log(user_id,accessToken,room,receiver_id)
           socket.join(user_id+'_private_chat_export_data');
           if(user_id!='' && accessToken!='' && receiver_id!=''){
@@ -6780,13 +6782,48 @@ io.sockets.on('connection',async function (socket) {
             let check_user_data=await queries.check_user_valid(user_id,accessToken);
             if(check_user_data.length>0){
               //create room
+              if (Number(user_id) > Number(receiver_id)) {
+                
+                room = '' + receiver_id + user_id;
+                //console.log('room id in if' + room);
+              } else {
+                room = '' + user_id + receiver_id;
+                //console.log('room id in else', room);
+              }
+              console.log('room',room)
+              let set_user_id='"'+user_id+'"';
+              //console.log('user is valided')
+              let exports_private_chat_list=await queries.exports_private_chat_list(set_user_id,room);
+              console.log(exports_private_chat_list)
+              let response_data=[];
+              if(exports_private_chat_list.length>0){
+                for(var i=0; i<exports_private_chat_list.length; i++){
+                  let group_status=exports_private_chat_list[i].group_status;
+                  if(group_status!=''){
+                    group_status=JSON.parse(exports_private_chat_list[i].group_status)
+                  }else{
+                    group_status=[];
+                  }
+                  for(var j=0; j<group_status.length; j++){
+                    if(group_status[j].user_id==user_id && group_status[j].status==1){
+                      response_data.push({
+                        datetime: exports_private_chat_list[i].date,
+                        message: exports_private_chat_list[i].name+": "+exports_private_chat_list[i].message
+                      })
+                    }
+                  }
+                }
+                io.sockets.in(data.user_id+'_private_chat_export_data').emit('private_chat_export_data',{status: true, statuscode: 200, message: "success", data: response_data});
+              }else{
+                io.sockets.in(data.user_id+'_private_chat_export_data').emit('private_chat_export_data',{status: true, statuscode: 200, message: "No data found", data:[]});
+              }
             }else{
-              io.sockets.in(data.user_id+'_private_chat_export_data').emit('private_chat_export_data',{status: false, statuscode: 200, message: "No user data found"});
+              io.sockets.in(data.user_id+'_private_chat_export_data').emit('private_chat_export_data',{status: false, statuscode: 200, message: "No user data found", data:[]});
             }
             socket.leave(user_id+'_private_chat_export_data');
           }else{
             socket.join(data.user_id+'_private_chat_export_data');
-            io.sockets.in(data.user_id+'_private_chat_export_data').emit('private_chat_export_data',{status: false, statuscode: 200, message: "Data is empty"});
+            io.sockets.in(data.user_id+'_private_chat_export_data').emit('private_chat_export_data',{status: false, statuscode: 200, message: "Data is empty", data:[]});
             socket.leave(data.user_id+'_private_chat_export_data');
           }
         }else{
@@ -6795,6 +6832,71 @@ io.sockets.on('connection',async function (socket) {
       }catch(e){
         console.error(e);
       }
+    })
+
+    socket.on('group_chat_export_data',async function(data){
+      try{
+        //input -- {"user_id":"50","accessToken":"7520ff1679b65593200acf473d159e5f","receiver_id":"6"}
+        if(typeof(data)=='object'){
+          let user_id=data.user_id ? data.user_id : '';
+          let accessToken=data.accessToken ? data.accessToken : '';
+          let room=data.room ? data.room : '';
+          let datetime=get_datetime();
+          //console.log(user_id,accessToken,room,receiver_id)
+          socket.join(user_id+'_group_chat_export_data');
+          if(user_id!='' && accessToken!='' && room!=''){
+            socket.join(user_id+'_group_chat_export_data');
+            //check user data
+            let check_user_data=await queries.check_user_valid(user_id,accessToken);
+            if(check_user_data.length>0){
+              let set_user_id='"'+user_id+'"';
+              //console.log('user is valided')
+              let exports_private_chat_list=await queries.exports_private_chat_list(set_user_id,room);
+              //console.log(exports_private_chat_list)
+              let response_data=[];
+              if(exports_private_chat_list.length>0){
+                for(var i=0; i<exports_private_chat_list.length; i++){
+                  let group_status=exports_private_chat_list[i].group_status;
+                  if(group_status!=''){
+                    group_status=JSON.parse(exports_private_chat_list[i].group_status)
+                  }else{
+                    group_status=[];
+                  }
+                  for(var j=0; j<group_status.length; j++){
+                    if(group_status[j].user_id==user_id && group_status[j].status==1){
+                      response_data.push({
+                        datetime: exports_private_chat_list[i].date,
+                        message: exports_private_chat_list[i].name+": "+exports_private_chat_list[i].message
+                      })
+                    }
+                  }
+                }
+                io.sockets.in(data.user_id+'_group_chat_export_data').emit('group_chat_export_data',{status: true, statuscode: 200, message: "success", data: response_data});
+              }else{
+                io.sockets.in(data.user_id+'_group_chat_export_data').emit('group_chat_export_data',{status: true, statuscode: 200, message: "No data found", data:[]});
+              }
+            }else{
+              io.sockets.in(data.user_id+'_group_chat_export_data').emit('group_chat_export_data',{status: false, statuscode: 200, message: "No user data found", data:[]});
+            }
+            socket.leave(user_id+'_group_chat_export_data');
+          }else{
+            socket.join(data.user_id+'_group_chat_export_data');
+            io.sockets.in(data.user_id+'_group_chat_export_data').emit('group_chat_export_data',{status: false, statuscode: 200, message: "Data is empty", data:[]});
+            socket.leave(data.user_id+'_group_chat_export_data');
+          }
+        }else{
+          console.error('Input type is string');
+        }
+      }catch(e){
+        console.error(e);
+      }
+    })
+
+    socket.on('audio_check',async function(data){
+      const getMP3Duration = require('get-mp3-duration')
+      const buffer = fs.readFileSync('music/b.mp3')
+      const duration = getMP3Duration(buffer)
+      console.log(duration, 'ms');
     })
   }catch(error){
       //console.log(error)

@@ -655,6 +655,11 @@ async function update_group_delivered_message(query){
     return results[0];
 }
 
+async function exports_private_chat_list(user_id,room){
+    const results=await db.sequelize.query("SELECT t1.*,DATE_FORMAT(t1.date,'%Y-%m-%d %H:%i:%s') as date,t2.name FROM `chat_list` t1 join `user` t2 on t1.senter_id=t2.id where room='"+room+"' and message_type='text' and JSON_CONTAINS(JSON_EXTRACT(group_status, '$[*].user_id'), '"+user_id+"', '$')");
+    return results[0];
+}
+
 module.exports = {
     update_online_status,
     select_online_status,
@@ -775,5 +780,6 @@ module.exports = {
     check_receiver_blocked_me,
     get_undelivered_messages,
     update_private_delivered_message,
-    update_group_delivered_message
+    update_group_delivered_message,
+    exports_private_chat_list
 }
