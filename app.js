@@ -1,6 +1,6 @@
 //const { Console, count } = require('console');
- const getAudioDurationInSeconds  = require('get-audio-duration');
- const fs = require('fs-extra')
+//  const getAudioDurationInSeconds  = require('get-audio-duration');
+//  const fs = require('fs-extra')
 // const { getVideoDurationInSeconds } = require('get-video-duration')
 //const { response } = require('express');
 //const { dashLogger } = require("./logger");
@@ -6762,7 +6762,7 @@ io.sockets.on('connection',async function (socket) {
     })
     socket.on('test_changes',async function(data){
       socket.join('test_changes');
-      io.sockets.in('test_changes').emit('test_changes',{status: true, statuscode: 200, message: "last changes affected upto 16-05-2023 (2)"});
+      io.sockets.in('test_changes').emit('test_changes',{status: true, statuscode: 200, message: "last changes affected upto 22-05-2023"});
       socket.leave('test_changes');
     });
     socket.on('private_chat_export_data',async function(data){
@@ -6813,12 +6813,12 @@ io.sockets.on('connection',async function (socket) {
                     }
                   }
                 }
-                io.sockets.in(data.user_id+'_private_chat_export_data').emit('private_chat_export_data',{status: true, statuscode: 200, message: "success", data: response_data});
+                io.sockets.in(user_id+'_private_chat_export_data').emit('private_chat_export_data',{status: true, statuscode: 200, message: "success", data: response_data});
               }else{
-                io.sockets.in(data.user_id+'_private_chat_export_data').emit('private_chat_export_data',{status: true, statuscode: 200, message: "No data found", data:[]});
+                io.sockets.in(user_id+'_private_chat_export_data').emit('private_chat_export_data',{status: true, statuscode: 200, message: "No data found", data:[]});
               }
             }else{
-              io.sockets.in(data.user_id+'_private_chat_export_data').emit('private_chat_export_data',{status: false, statuscode: 200, message: "No user data found", data:[]});
+              io.sockets.in(user_id+'_private_chat_export_data').emit('private_chat_export_data',{status: false, statuscode: 200, message: "No user data found", data:[]});
             }
             socket.leave(user_id+'_private_chat_export_data');
           }else{
@@ -6836,7 +6836,7 @@ io.sockets.on('connection',async function (socket) {
 
     socket.on('group_chat_export_data',async function(data){
       try{
-        //input -- {"user_id":"50","accessToken":"7520ff1679b65593200acf473d159e5f","receiver_id":"6"}
+        //input -- {"user_id":"50","accessToken":"7520ff1679b65593200acf473d159e5f","room":"group_20230321115416"}
         if(typeof(data)=='object'){
           let user_id=data.user_id ? data.user_id : '';
           let accessToken=data.accessToken ? data.accessToken : '';
@@ -6871,12 +6871,12 @@ io.sockets.on('connection',async function (socket) {
                     }
                   }
                 }
-                io.sockets.in(data.user_id+'_group_chat_export_data').emit('group_chat_export_data',{status: true, statuscode: 200, message: "success", data: response_data});
+                io.sockets.in(user_id+'_group_chat_export_data').emit('group_chat_export_data',{status: true, statuscode: 200, message: "success", data: response_data});
               }else{
-                io.sockets.in(data.user_id+'_group_chat_export_data').emit('group_chat_export_data',{status: true, statuscode: 200, message: "No data found", data:[]});
+                io.sockets.in(user_id+'_group_chat_export_data').emit('group_chat_export_data',{status: true, statuscode: 200, message: "No data found", data:[]});
               }
             }else{
-              io.sockets.in(data.user_id+'_group_chat_export_data').emit('group_chat_export_data',{status: false, statuscode: 200, message: "No user data found", data:[]});
+              io.sockets.in(user_id+'_group_chat_export_data').emit('group_chat_export_data',{status: false, statuscode: 200, message: "No user data found", data:[]});
             }
             socket.leave(user_id+'_group_chat_export_data');
           }else{
@@ -6891,12 +6891,173 @@ io.sockets.on('connection',async function (socket) {
         console.error(e);
       }
     })
-
+    socket.on('private_message_info',async function(data){
+      try{
+        //input -- {"user_id":"50","accessToken":"50","receiver_id":"5","message_id":"34"}
+        if(typeof(data)=='object'){
+          let user_id=data.user_id ? data.user_id : '';
+          let accessToken=data.accessToken ? data.accessToken : '';
+          let receiver_id=data.receiver_id ? data.receiver_id : '';
+          let message_id=data.message_id ? data.message_id : '';
+          let datetime=get_datetime();
+          if(user_id!='' && accessToken!='' && receiver_id!='' && message_id!=''){
+            socket.join(user_id+'_private_message_info');
+            //check user data
+            let check_user_data=await queries.check_user_valid(user_id,accessToken);
+            if(check_user_data.length>0){
+              //console.log('user is valided')
+              //create room
+              let room='';
+              console.log(user_id,receiver_id)
+              if(Number(user_id)>Number(receiver_id)){
+                room=''+receiver_id+user_id;
+                //console.log('first loop')
+              }else{
+                //console.log('else loop')
+                room=''+user_id+receiver_id;
+              }
+              console.log(room)
+              //check message_id is valided to the room
+              let set_user_id='"'+user_id+'"';
+              let check_message_id_is_valid_in_room=await queries.check_message_id_is_valid_in_room(set_user_id,message_id,room);
+              if(check_message_id_is_valid_in_room.length>0){
+                console.log(check_message_id_is_valid_in_room)
+                let group_status=check_message_id_is_valid_in_room[0].group_status;
+                if(group_status!=''){
+                  group_status=JSON.parse(check_message_id_is_valid_in_room[0].group_status);
+                }else{
+                  group_status=[];
+                }
+                console.log(group_status);
+                let response_data={};
+                for(var i=0; i<group_status.length; i++){
+                  if(group_status[i].user_id==receiver_id){
+                    console.log(group_status[i])
+                    response_data={
+                      read_datetime : group_status[i].message_read_datetime,
+                      delivered_datetime : group_status[i].delivered_datetime
+                    }
+                  }
+                }
+                io.sockets.in(user_id+'_private_message_info').emit('private_message_info',{status: true, statuscode: 200, message: "success", data: response_data})
+              }else{
+                io.sockets.in(user_id+'_private_message_info').emit('private_message_info',{status: false, statuscode: 200, message: "You doesn't have this message", data:{}});
+              }
+            }else{
+              //console.log('user is not valided')
+              io.sockets.in(user_id+'_private_message_info').emit('private_message_info',{status: false, statuscode: 200, message: "No user data found", data:{}});
+            }
+            socket.leave(user_id+'_private_message_info');
+          }else{
+            socket.join(data.user_id+'_private_message_info');
+            io.sockets.in(data.user_id+'_private_message_info').emit('private_message_info',{status: false, statuscode: 200, message: "Data is empty", data:{}});
+            socket.leave(data.user_id+'_private_message_info');
+          }
+        }else{
+          console.error('Input type is string');
+        }
+      }catch(e){
+        console.error(e);
+      }
+    });
+    socket.on('group_message_info', async function(data){
+      try{
+        //input -- {"user_id":"50","accessToken":"50","room":"5","message_id":"34"}
+        if(typeof(data)=='object'){
+          let user_id=data.user_id ? data.user_id : '';
+          let accessToken=data.accessToken ? data.accessToken : '';
+          let room=data.room ? data.room : '';
+          let message_id=data.message_id ? data.message_id : '';
+          let datetime=get_datetime();
+          if(user_id!='' && accessToken!='' && room!='' && message_id!=''){
+            socket.join(user_id+'_group_message_info');
+            //check user data
+            let check_user_data=await queries.check_user_valid(user_id,accessToken);
+            if(check_user_data.length>0){
+              let set_user_id='"'+user_id+'"';
+              let check_message_id_is_valid_in_room= await queries.check_message_id_is_valid_in_room(set_user_id,message_id,room);
+              if(check_message_id_is_valid_in_room.length>0){
+                console.log(check_message_id_is_valid_in_room)
+                let group_status=check_message_id_is_valid_in_room[0].group_status;
+                if(group_status!=''){
+                  group_status=JSON.parse(check_message_id_is_valid_in_room[0].group_status);
+                }else{
+                  group_status=[];
+                }
+                console.log(group_status)
+                let users='';
+                let read_by=[];
+                let delivered_to=[];
+                let remaining_delivered_user=0;
+                let remaning_read_user=0;
+                for(var user=0; user<group_status.length; user++){
+                  users=users+"'"+group_status[user].user_id+"',";
+                }
+                users=users.replace(/(^,)|(,$)/g, "");
+                let get_users_profile_data=await queries.get_users_profile_data(users);
+                console.log(get_users_profile_data);
+                for(var i=0; i<group_status.length; i++){
+                  if(group_status[i].user_id!=user_id){
+                    //users=users+"'"+group_status[i].user_id+"',";
+                    console.log('user id ',group_status[i].user_id);
+                    let user_profile_data=get_users_profile_data.find(u=>u.id==group_status[i].user_id);
+                    let name='';
+                    let profile_pic=BASE_URL+'uploads/default/profile.png';;
+                    if(user_profile_data!=undefined){
+                      name=user_profile_data.name;
+                      profile_pic=user_profile_data.profile_pic;
+                      if(profile_pic!=''){
+                        profile_pic=BASE_URL+user_profile_data.profile_pic;
+                      }
+                    }
+                    
+                    if(group_status[i].delivered_status==1 && group_status[i].message_status==1){
+                      delivered_to.push({
+                        user_id: group_status[i].user_id,
+                        profile_pic: profile_pic,
+                        name: name,
+                        datetime: group_status[i].delivered_datetime
+                      })
+                    }else{
+                      if(group_status[i].message_status==0){
+                        read_by.push({
+                          user_id: group_status[i].user_id,
+                          profile_pic: profile_pic,
+                          name: name,
+                          datetime: group_status[i].message_read_datetime
+                        })
+                      }
+                    }
+                  }                  
+                }
+                
+                console.log(delivered_to,read_by);
+                
+                //get user data
+              }else{
+                io.sockets.in(user_id+'_group_message_info').emit('group_message_info',{status: false, statuscode: 200, message: "You doesn't have this message", data:{}});
+              }
+            }else{
+              io.sockets.in(user_id+'_group_message_info').emit('group_message_info',{status: false, statuscode: 200, message: "No user data found", data:[]});
+            }
+            socket.leave(user_id+'_group_message_info');
+          }else{
+            socket.join(data.user_id+'_group_message_info');
+            io.sockets.in(data.user_id+'_group_message_info').emit('group_message_info',{status: false, statuscode: 200, message: "Data is empty", data:[]});
+            socket.leave(data.user_id+'_group_message_info');
+          }
+        }else{
+          console.error('Input type is string');
+        }
+      }catch(e){
+        console.error(e);
+      }
+    });
     socket.on('audio_check',async function(data){
-      const getMP3Duration = require('get-mp3-duration')
-      const buffer = fs.readFileSync('music/b.mp3')
-      const duration = getMP3Duration(buffer)
-      console.log(duration, 'ms');
+      // const getMP3Duration = require('get-mp3-duration')
+      // const buffer = fs.readFileSync('music/b.mp3')
+      // const duration = getMP3Duration(buffer)
+      // console.log(duration, 'ms');
     })
   }catch(error){
       //console.log(error)

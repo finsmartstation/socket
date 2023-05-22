@@ -660,6 +660,16 @@ async function exports_private_chat_list(user_id,room){
     return results[0];
 }
 
+async function check_message_id_is_valid_in_room(user_id,message_id, room){
+    const results=await db.sequelize.query("select * from `chat_list` where id='"+message_id+"' and room='"+room+"' and JSON_CONTAINS(JSON_EXTRACT(group_status, '$[*].user_id'), '"+user_id+"', '$')");
+    return results[0];
+}
+
+async function get_users_profile_data(user_ids){
+    const results=await db.sequelize.query("select id, name, phone,profile_pic from `user` where id in ("+user_ids+")");
+    return results[0];
+}
+
 module.exports = {
     update_online_status,
     select_online_status,
@@ -781,5 +791,7 @@ module.exports = {
     get_undelivered_messages,
     update_private_delivered_message,
     update_group_delivered_message,
-    exports_private_chat_list
+    exports_private_chat_list,
+    check_message_id_is_valid_in_room,
+    get_users_profile_data
 }
