@@ -660,8 +660,8 @@ async function exports_private_chat_list(user_id,room){
     return results[0];
 }
 
-async function check_message_id_is_valid_in_room(user_id,message_id, room){
-    const results=await db.sequelize.query("select * from `chat_list` where id='"+message_id+"' and room='"+room+"' and JSON_CONTAINS(JSON_EXTRACT(group_status, '$[*].user_id'), '"+user_id+"', '$')");
+async function check_message_id_is_valid_in_room(user_id,set_user_id,message_id, room){
+    const results=await db.sequelize.query("select * from `chat_list` where id='"+message_id+"' and senter_id='"+user_id+"' and room='"+room+"' and JSON_CONTAINS(JSON_EXTRACT(group_status, '$[*].user_id'), '"+set_user_id+"', '$')");
     return results[0];
 }
 
