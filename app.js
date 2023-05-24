@@ -5424,8 +5424,11 @@ io.sockets.on('connection',async function (socket) {
             let update_mark_as_unread_status=await functions.update_mark_as_unread_status(user_id,room);
             //console.log('group')
             let update_individual_message_as_read=await queries.update_individual_message_as_read(current_datetime,rid,room)
+            console.log(update_individual_message_as_read)
             if(update_individual_message_as_read.affectedRows>0){
               console.log('updated')
+              //emit message to private_message_info
+              
             }else{
               console.log('not updated')
             }
@@ -6560,7 +6563,7 @@ io.sockets.on('connection',async function (socket) {
           let user_id=data.user_id ? data.user_id : '';
           let accessToken=data.accessToken ? data.accessToken : '';
           let room=data.room ? data.room : '';
-          let datetime=get_datetime()
+          let datetime=get_datetime();
           if(user_id!='' && accessToken!='' && room!=''){
             socket.join(user_id+'_message_delivered');
             //check user data is valid
@@ -6568,7 +6571,7 @@ io.sockets.on('connection',async function (socket) {
             if(check_user_data.length>0){
               //console.log('user data is valid');
               let get_undelivered_message=await queries.get_undelivered_messages(user_id,room);
-              console.log(get_undelivered_message);
+              //console.log(get_undelivered_message);
               //exit ()
               if(get_undelivered_message.length>0){
                 //check room is group or private
@@ -6651,6 +6654,7 @@ io.sockets.on('connection',async function (socket) {
                   let delivererd_status_case='';
                   let ids='';
                   let message_sender_ids=[];
+                  let message_ids=[];
                   for(var i=0; i<get_undelivered_message.length; i++){
                     console.log('ids',get_undelivered_message[i].id)
                     let group_message_json=get_undelivered_message[i].group_status;
@@ -6663,6 +6667,7 @@ io.sockets.on('connection',async function (socket) {
                     let message_id=get_undelivered_message[i].id;
                     let message_sender_id=get_undelivered_message[i].senter_id;
                     message_sender_ids.push(message_sender_id);
+                    message_ids.push(get_undelivered_message[i].id);
                     let undelivered_message_count=0;
                     for(var undelivered=0; undelivered<group_message_json.length; undelivered++){
                       if(group_message_json[undelivered].user_id!=message_sender_id && group_message_json[undelivered].delivered_status==1){
@@ -6690,8 +6695,6 @@ io.sockets.on('connection',async function (socket) {
                           group_message_json[j].delivered_datetime=datetime;
                           update_delivery_status=true;
                         }
-                        //emit to group message info   --user_id+'_'+room+'_'+message_id+'_group_message_info'
-                        //io.sockets.in(message_sender_id+'_'+room+'_'+message_id+'_group_message_info').emit('group_message_info',{status: true, statuscode: 200, message: 'success',})
                       }
                     }
                     console.log('un delivered message',undelivered_message_count)
@@ -6707,14 +6710,14 @@ io.sockets.on('connection',async function (socket) {
                       group_status_case=group_status_case+"when id='"+get_undelivered_message[i].id+"' then '"+JSON.stringify(group_message_json)+"' ";
                       ids=ids+"'"+get_undelivered_message[i].id+"',"
                     }
-                    console.log('id - ',get_undelivered_message[i].id)
-                    console.log('group_status_case',group_status_case)
+                    // console.log('id - ',get_undelivered_message[i].id)
+                    // console.log('group_status_case',group_status_case)
                   }
                   //exit ()
                   ids=ids.replace(/(^,)|(,$)/g, "");
-                  console.log('group case ',group_status_case);
-                  console.log('delivererd status case',delivererd_status_case)
-                  console.log('ids',ids)
+                  // console.log('group case ',group_status_case);
+                  // console.log('delivererd status case',delivererd_status_case)
+                  // console.log('ids',ids)
                   let query='';
                   if(delivererd_status_case!=''){
                     query="UPDATE chat_list set group_status=(case "+group_status_case+" end), delivered_status=(case "+delivererd_status_case+" end) where id in ("+ids+")";
@@ -6722,7 +6725,7 @@ io.sockets.on('connection',async function (socket) {
                     query="UPDATE chat_list set group_status=(case "+group_status_case+" end) where id in ("+ids+")";
                   }
                   
-                  console.log(query)
+                  //console.log(query)
                   //save to db
                   let update_group_delivered_message=await queries.update_group_delivered_message(query);
                   if(update_group_delivered_message.affectedRows>0){
@@ -6731,8 +6734,13 @@ io.sockets.on('connection',async function (socket) {
                     //emit recent_chat_list to sender
                     console.log(message_sender_ids)
                     for(var k=0; k<message_sender_ids.length; k++){
-                      console.log(message_sender_ids[k])
+                      //console.log(message_sender_ids[k],message_ids[k])
                       if(message_sender_ids[k]!=user_id){
+                        //emit to group message info   --user_id+'_'+room+'_'+message_id+'_group_message_info'
+                        console.log(message_sender_ids[k], room, message_ids[k]);
+                        let group_message_info=await functions.group_message_info(message_sender_ids[k],room,message_ids[k]);
+                        // console.log(group_message_info)
+                        io.sockets.in(message_sender_ids[k]+'_'+room+'_'+message_ids[k]+'_group_message_info').emit('group_message_info', group_message_info)
                         //group room chat list
                         let sender_group_room_chat_list=await functions.get_group_chat_list_response(message_sender_ids[k],room);
                         io.sockets.in(room+'_'+message_sender_ids[k]).emit('message',sender_group_room_chat_list);
@@ -6770,7 +6778,7 @@ io.sockets.on('connection',async function (socket) {
     })
     socket.on('test_changes',async function(data){
       socket.join('test_changes');
-      io.sockets.in('test_changes').emit('test_changes',{status: true, statuscode: 200, message: "last changes affected upto 22-05-2023"});
+      io.sockets.in('test_changes').emit('test_changes',{status: true, statuscode: 200, message: "last changes affected upto 24-05-2023 (2)"});
       socket.leave('test_changes');
     });
     socket.on('private_chat_export_data',async function(data){
@@ -6924,10 +6932,11 @@ io.sockets.on('connection',async function (socket) {
                 //console.log('else loop')
                 room=''+user_id+receiver_id;
               }
-              console.log(room)
+              //console.log(room)
               //check message_id is valided to the room
               let set_user_id='"'+user_id+'"';
-              let check_message_id_is_valid_in_room=await queries.check_message_id_is_valid_in_room(set_user_id,message_id,room);
+              let check_message_id_is_valid_in_room=await queries.check_message_id_is_valid_in_room(user_id,set_user_id,message_id,room);
+              console.log(check_message_id_is_valid_in_room)
               if(check_message_id_is_valid_in_room.length>0){
                 console.log(check_message_id_is_valid_in_room)
                 let group_status=check_message_id_is_valid_in_room[0].group_status;
@@ -7011,7 +7020,7 @@ io.sockets.on('connection',async function (socket) {
                     //console.log('user id ',group_status[i].user_id);
                     let user_profile_data=get_users_profile_data.find(u=>u.id==group_status[i].user_id);
                     let name='';
-                    let profile_pic=BASE_URL+'uploads/default/profile.png';;
+                    let profile_pic=BASE_URL+'uploads/default/profile.png';
                     if(user_profile_data!=undefined){
                       name=user_profile_data.name;
                       profile_pic=user_profile_data.profile_pic;

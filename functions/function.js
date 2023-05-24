@@ -4437,6 +4437,112 @@ function convert_datetime_format(datetime){
   return set_datetime_format;
 }
 
+async function group_message_info(user_id, room, message_id){
+  let response={};
+  if(user_id!='' && room!='' && message_id!=''){
+    let set_user_id='"'+user_id+'"';
+    let check_message_id_is_valid_in_room= await queries.check_message_id_is_valid_in_room(user_id,set_user_id,message_id,room);
+    console.log(check_message_id_is_valid_in_room);
+    if(check_message_id_is_valid_in_room.length>0){
+      let group_status=check_message_id_is_valid_in_room[0].group_status;
+      if(group_status!=''){
+        group_status=JSON.parse(check_message_id_is_valid_in_room[0].group_status);
+      }else{
+        group_status=[];
+      }
+      console.log(group_status);
+      let users='';
+      let read_by=[];
+      let delivered_to=[];
+      let remaining_delivered_user=0;
+      let remaining_read_user=0;
+      let total_user=group_status.length-1;
+      for(var user=0; user<group_status.length; user++){
+        users=users+"'"+group_status[user].user_id+"',";
+      }
+      users=users.replace(/(^,)|(,$)/g, "");
+      //console.log(users)
+      let get_users_profile_data=await queries.get_users_profile_data(users);
+      console.log(get_users_profile_data,group_status);
+      for(var i=0; i<group_status.length; i++){
+        if(group_status[i].user_id!=user_id){
+          let user_profile_data=get_users_profile_data.find(u=>u.id==group_status[i].user_id);
+          let name='';
+          let profile_pic=BASE_URL+'uploads/default/profile.png';
+          if(user_profile_data!=undefined){
+            name=user_profile_data.name;
+            profile_pic=user_profile_data.profile_pic;
+            if(profile_pic!=''){
+              profile_pic=BASE_URL+user_profile_data.profile_pic;
+            }
+          }
+          //console.log('profile_pic',profile_pic,'name',name);
+          if('delivered_status' in group_status[i]){
+            if(group_status[i].delivered_status==1 && group_status[i].message_status==1){
+              remaining_delivered_user=remaining_delivered_user+1;
+            }else{
+              if(group_status[i].message_status==1){
+                remaining_read_user=remaining_read_user+1;
+              }
+            }
+            console.log(remaining_delivered_user,remaining_read_user)
+            if(group_status[i].delivered_status==0 && group_status[i].message_status==1){
+              delivered_to.push({
+                user_id: group_status[i].user_id,
+                profile_pic: profile_pic,
+                name: name,
+                datetime: group_status[i].delivered_datetime
+              });
+            }else{
+              
+              if(group_status[i].message_status==1){
+                remaining_read_user=remaining_read_user+1;
+              }
+              if(group_status[i].message_status==0){
+                read_by.push({
+                  user_id: group_status[i].user_id,
+                  profile_pic: profile_pic,
+                  name: name,
+                  datetime: group_status[i].message_read_datetime
+                });
+              }
+            }
+          }else{
+            //console.log('no')
+            if(group_status[i].message_status==0){
+              //remaining_delivered_user=remaining_delivered_user+1;
+              remaining_read_user=remaining_read_user+1;
+              read_by.push({
+                user_id: group_status[i].user_id,
+                profile_pic: profile_pic,
+                name: name,
+                datetime: group_status[i].message_read_datetime
+              });
+            }
+          }
+        }
+      }
+      response={
+        status: true,
+        statuscode: 200,
+        message: "success",
+        data: {
+          remaining_read_user: remaining_read_user.toString(),
+          read_by: read_by,
+          remaining_delivered_user: remaining_delivered_user.toString(),
+          delivered_to: delivered_to
+        }
+      }
+      // console.log(response);
+    }else{
+      response={status: false, statuscode: 200, message: "You doesn't send this message", data:{}}
+    }
+  }else{
+    response={status: true, statuscode: 200, message: "No data found", data: {}}
+  }
+  return response;
+}
+
 
 module.exports={
     get_individual_chat_list_response,
@@ -4452,5 +4558,6 @@ module.exports={
     check_user_data_exist_in_array,
     update_mark_as_unread_status,
     check_user_room_exist_in_array,
-    convert_datetime_format
+    convert_datetime_format,
+    group_message_info
 }
