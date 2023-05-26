@@ -670,6 +670,16 @@ async function get_users_profile_data(user_ids){
     return results[0];
 }
 
+async function get_unread_message(user_id,rid,room){
+    const results=await db.sequelize.query("select * from `chat_list` where senter_id='"+rid+"' and receiver_id='"+user_id+"' and room='"+room+"' and message_status='1'");
+    return results[0];
+}
+
+async function update_individual_message_as_read_in_query(query){
+    const results=await db.sequelize.query(query);
+    return results[0];
+}
+
 module.exports = {
     update_online_status,
     select_online_status,
@@ -793,5 +803,7 @@ module.exports = {
     update_group_delivered_message,
     exports_private_chat_list,
     check_message_id_is_valid_in_room,
-    get_users_profile_data
+    get_users_profile_data,
+    get_unread_message,
+    update_individual_message_as_read_in_query
 }

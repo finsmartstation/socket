@@ -3329,8 +3329,8 @@ async function get_recent_chat_list_response(user_id){
                 }
               }
             }
-            //console.log(get_recent_chat[i].id);
-             //console.log('opponent ',opponent_id,typeof(opponent_id),opponent_name,unread_count)
+            console.log(get_recent_chat[i].id);
+             console.log('opponent ',opponent_id,typeof(opponent_id),opponent_name,unread_count)
             // exit ()
             //push object to array chat list 
             chat_list_data.push({

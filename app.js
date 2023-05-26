@@ -5365,6 +5365,7 @@ io.sockets.on('connection',async function (socket) {
               //console.log(get_all_group_messages[i].id)
               if(get_all_group_messages[i].message_status==1){
                 let id=get_all_group_messages[i].id;
+                let message_sender_id=get_all_group_messages[i].senter_id;
                 console.log('not readed');
                 let group_status=get_all_group_messages[i].group_status;
                 if(group_status!=''){
@@ -5392,6 +5393,11 @@ io.sockets.on('connection',async function (socket) {
                   console.log(update_read_message_status);
                   if(update_read_message_status.affectedRows>0){
                     console.log('success')
+                    console.log(message_sender_id,id,room);
+                    //emit to read message data to group_message_info 
+                    let group_message_info=await functions.group_message_info(message_sender_id,room,id);
+                    io.sockets.in(message_sender_id+'_'+room+'_'+id+'_group_message_info').emit('group_message_info', group_message_info)
+                    //io.sockets.in(message_sender_ids[k]+'_'+room+'_'+message_ids[k]+'_group_message_info').emit('group_message_info', group_message_info)
                   }else{
                     console.log('not updated to db')
                   }
@@ -5401,6 +5407,7 @@ io.sockets.on('connection',async function (socket) {
                   console.log(update_read_message_status)
                   if(update_read_message_status.affectedRows>0){
                     console.log('success')
+                    //emit to read message data to group_message_info
                   }else{
                     console.log('not updated to db')
                   }
@@ -5410,7 +5417,6 @@ io.sockets.on('connection',async function (socket) {
               }
             }
           }else{
-            
             //console.log('private')
             if (Number(user_id) > Number(rid)) {
               //console.log('ssss')
@@ -5423,14 +5429,72 @@ io.sockets.on('connection',async function (socket) {
             //update remove mark_as_unread status
             let update_mark_as_unread_status=await functions.update_mark_as_unread_status(user_id,room);
             //console.log('group')
-            let update_individual_message_as_read=await queries.update_individual_message_as_read(current_datetime,rid,room)
-            console.log(update_individual_message_as_read)
-            if(update_individual_message_as_read.affectedRows>0){
-              console.log('updated')
-              //emit message to private_message_info
-              
+            //get room message
+
+            //--new changes
+            let get_room_messages=await queries.get_unread_message(user_id,rid,room);
+            console.log(get_room_messages.length);
+            
+            if(get_room_messages.length>0){
+              let group_status_case='';
+              let id_case='';
+              let message_ids=[];
+              let message_senter_id=[];
+              let message_delivered_datetime=[];
+              let message_read_datetime=[];
+              //UPDATE chat_list SET status = (case when id = '1' then '622057' when id = '2' then '2913659' when id = '3' then '6160230' end) WHERE id in ('1', '2', '3')
+              for(var i=0; i<get_room_messages.length; i++){
+                //console.log(get_room_messages[i].id)
+                id_case=id_case+"'"+get_room_messages[i].id+"',";
+                message_ids.push(get_room_messages[i].id);
+                message_senter_id.push(get_room_messages[i].senter_id);
+                let group_status=get_room_messages[i].group_status;
+                if(group_status!=''){
+                  group_status=JSON.parse(get_room_messages[i].group_status);
+                }else{
+                  group_status=[];
+                }
+                //console.log(group_status)
+                for(var j=0; j<group_status.length; j++){
+                  console.log(group_status[j].user_id,user_id)
+                  if(group_status[j].user_id==user_id && group_status[j].message_status==1){
+                    //exit ()
+                    group_status[j].message_status=0;
+                    group_status[j].message_read_datetime=current_datetime;
+                    let delivered_datetime='';
+                    if(group_status[j].delivered_status!=undefined){
+                      delivered_datetime=group_status[j].delivered_datetime;
+                    }
+                    message_delivered_datetime.push(delivered_datetime);
+                    message_read_datetime.push(group_status[j].message_read_datetime)
+                  }
+                }
+                group_status_case=group_status_case+"when id='"+get_room_messages[i].id+"' then '"+JSON.stringify(group_status)+"'";
+              }
+              id_case=id_case.replace(/,(?=[^,]*$)/, '');
+              //--new changes
+              let query="update `chat_list` set group_status=(case "+group_status_case+" end),message_status='0',message_read_datetime='"+current_datetime+"' where id in ("+id_case+")";
+              console.log(query)
+              //exit ()
+              //let update_individual_message_as_read=await queries.update_individual_message_as_read(current_datetime,rid,room)
+              let update_individual_message_as_read=await queries.update_individual_message_as_read_in_query(query);
+              //console.log(update_individual_message_as_read)
+              if(update_individual_message_as_read.affectedRows>0){
+                console.log('updated')
+                //emit message to private_message_info in rid
+                console.log(message_delivered_datetime,message_read_datetime)
+                for(var k=0; k<message_ids.length; k++){
+                  console.log('senter id ',message_senter_id[k])
+                  console.log('message id',message_ids[k])
+                  console.log('delivered ',message_delivered_datetime[k]);
+                  console.log('read ',message_read_datetime[k])
+                  io.sockets.in(message_senter_id[k]+'_'+message_ids[k]+'_private_message_info').emit('private_message_info',{status: true, statuscode: 200, message: "success", data: {read_datetime:message_read_datetime[k],delivered_datetime:message_delivered_datetime[k]}});
+                }
+              }else{
+                console.log('not updated')
+              }
             }else{
-              console.log('not updated')
+              console.log('no message to read')
             }
           }
         }else{
