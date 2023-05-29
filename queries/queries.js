@@ -92,8 +92,8 @@ async function individual_location_msg(datetime, sid, rid, message, room, group_
 }
 
 async function send_indv_message(rid, room){
-    //const results = await db.sequelize.query("SELECT t1.id,DATE_FORMAT(t1.date,'%Y-%m-%d %H:%i:%s') as date,t1.senter_id,t1.receiver_id,t1.message,t1.message_type,t1.message_status,t1.room,t1.duration, IF(t1.receiver_id='" + rid + "', 'sent', 'receive') as type FROM `chat_list` t1 JOIN `user` t2 on t2.id='" + rid + "' WHERE room='" + room + "' and t1.status='1'");
-    const results = await db.sequelize.query("SELECT t1.id,DATE_FORMAT(t1.date,'%Y-%m-%d %H:%i:%s') as date,t1.senter_id,t1.receiver_id,t1.replay_id,t1.forward_id,t1.message,t1.message_type,t1.optional_text,t1.thumbnail,t1.duration,t1.message_status,t1.room, IF(t1.receiver_id='"+rid+"', 'sent', 'receive') as type,t1.group_status  FROM `chat_list` t1 JOIN `user` t2 on t2.id='"+rid+"' where room='"+room+"' and message_type!='date' order by id asc");
+    //const results = await db.sequelize.query("SELECT t1.id,DATE_FORMAT(t1.date,'%Y-%m-%d %H:%i:%s') as date,t1.senter_id,t1.receiver_id,t1.message,t1.message_type,t1.delivered_status,t1.message_status,t1.room,t1.duration, IF(t1.receiver_id='" + rid + "', 'sent', 'receive') as type FROM `chat_list` t1 JOIN `user` t2 on t2.id='" + rid + "' WHERE room='" + room + "' and t1.status='1'");
+    const results = await db.sequelize.query("SELECT t1.id,DATE_FORMAT(t1.date,'%Y-%m-%d %H:%i:%s') as date,t1.senter_id,t1.receiver_id,t1.replay_id,t1.forward_id,t1.message,t1.message_type,t1.optional_text,t1.thumbnail,t1.duration,t1.delivered_status,t1.message_status,t1.room, IF(t1.receiver_id='"+rid+"', 'sent', 'receive') as type,t1.group_status  FROM `chat_list` t1 JOIN `user` t2 on t2.id='"+rid+"' where room='"+room+"' and message_type!='date' order by id asc");
     return results;
 }
 async function get_recent_chat_accessToken(rid){
@@ -680,6 +680,11 @@ async function update_individual_message_as_read_in_query(query){
     return results[0];
 }
 
+async function my_groups(user_id){
+    const results=await db.sequelize.query("SELECT * FROM `group_list` where JSON_CONTAINS(JSON_EXTRACT(current_members, '$[*].user_id'), '"+user_id+"', '$')");
+    return results[0];
+}
+
 module.exports = {
     update_online_status,
     select_online_status,
@@ -805,5 +810,6 @@ module.exports = {
     check_message_id_is_valid_in_room,
     get_users_profile_data,
     get_unread_message,
-    update_individual_message_as_read_in_query
+    update_individual_message_as_read_in_query,
+    my_groups
 }

@@ -167,7 +167,14 @@ async function get_individual_chat_list_response(sid,rid,room){
                     //console.log('nnnn')
                     result[0][i]['message']="This message was deleted";
                   }
-                  
+                  if('delivered_status' in group_status_json[j]){
+                    //console.log(result[0][i].delivered_status)
+                    if(result[0][i].delivered_status==0){
+                      result[0][i].message_status=result[0][i].message_status;
+                    }else{
+                      result[0][i].message_status="2";
+                    }
+                  }
                   if('read_receipt' in group_status_json[j]){
                     read_receipt=group_status_json[j].read_receipt;
                   }else{
@@ -575,6 +582,14 @@ async function get_individual_chat_list_response(sid,rid,room){
                   }
                   //console.log('all the dates', date_array)
                 }else if(group_status_json[j].user_id==sid && group_status_json[j].status==1){
+                  if('delivered_status' in group_status_json[j]){
+                    //console.log(result[0][i].delivered_status)
+                    if(result[0][i].delivered_status==0){
+                      result[0][i].message_status=result[0][i].message_status;
+                    }else{
+                      result[0][i].message_status="2";
+                    }
+                  }
                   //console.log(group_status_json[j])
                   if('read_receipt' in group_status_json[j]){
                     read_receipt=group_status_json[j].read_receipt;
@@ -1760,6 +1775,13 @@ async function get_group_chat_list_response(user_id,group_id){
                 }else{
                   get_all_group_messages[i].message='This message was deleted';
                 }
+                if('delivered_status' in group_status_json[j]){
+                  if(get_all_group_messages[i].delivered_status==0){
+                    get_all_group_messages[i].message_status=get_all_group_messages[i].message_status;
+                  }else{
+                    get_all_group_messages[i].message_status="2";
+                  }
+                }
                 get_all_group_messages[i].message_type='text';
                 //check date already exist in array
                 if(date_array.includes(split_date[0])){
@@ -1866,6 +1888,13 @@ async function get_group_chat_list_response(user_id,group_id){
                     }
                   }else{
                     read_receipt=0;
+                  }
+                }
+                if('delivered_status' in group_status_json[j]){
+                  if(get_all_group_messages[i].delivered_status==0){
+                    get_all_group_messages[i].message_status=get_all_group_messages[i].message_status;
+                  }else{
+                    get_all_group_messages[i].message_status="2";
                   }
                 }
                 if(date_array.includes(split_date[0])){
@@ -4380,8 +4409,12 @@ async function get_group_info(user_id,accessToken,group_id){
 
 async function update_mark_as_unread_status(user_id,room){
   let get_room_last_message=await queries.get_room_last_message(user_id,room);
-  //console.log(get_room_last_message);
-  let group_status=get_room_last_message[0].group_status;
+  console.log(get_room_last_message);
+  let group_status='';
+  if(get_room_last_message.length){
+    group_status=get_room_last_message[0].group_status;
+  }
+  
   if(group_status!=''){
     let check_mark_as_unread_exist=false;
     group_status=JSON.parse(get_room_last_message[0].group_status) || [];

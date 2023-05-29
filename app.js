@@ -5393,10 +5393,16 @@ io.sockets.on('connection',async function (socket) {
                   console.log(update_read_message_status);
                   if(update_read_message_status.affectedRows>0){
                     console.log('success')
-                    console.log(message_sender_id,id,room);
+                    //console.log(message_sender_id,id,room);
+                    
                     //emit to read message data to group_message_info 
                     let group_message_info=await functions.group_message_info(message_sender_id,room,id);
-                    io.sockets.in(message_sender_id+'_'+room+'_'+id+'_group_message_info').emit('group_message_info', group_message_info)
+                    io.sockets.in(message_sender_id+'_'+room+'_'+id+'_group_message_info').emit('group_message_info', group_message_info);
+                    //emit chat_list and room_message to message senter
+                    let room_chat_list=await functions.get_group_chat_list_response(message_sender_id,room);
+                    io.sockets.in(room+'_'+message_sender_id).emit('message',room_chat_list);
+                    let recent_chat_list=await functions.get_recent_chat_list_response(message_sender_id);
+                    io.sockets.in(message_sender_id.toString()).emit('chat_list',recent_chat_list);
                     //io.sockets.in(message_sender_ids[k]+'_'+room+'_'+message_ids[k]+'_group_message_info').emit('group_message_info', group_message_info)
                   }else{
                     console.log('not updated to db')
@@ -5408,6 +5414,14 @@ io.sockets.on('connection',async function (socket) {
                   if(update_read_message_status.affectedRows>0){
                     console.log('success')
                     //emit to read message data to group_message_info
+                    let group_message_info=await functions.group_message_info(message_sender_id,room,id);
+                    io.sockets.in(message_sender_id+'_'+room+'_'+id+'_group_message_info').emit('group_message_info', group_message_info);
+                    //emit chat_list and room_message to message senter
+                    let room_chat_list=await functions.get_group_chat_list_response(message_sender_id,room);
+                    io.sockets.in(room+'_'+message_sender_id).emit('message',room_chat_list);
+                    let recent_chat_list=await functions.get_recent_chat_list_response(message_sender_id);
+                    io.sockets.in(message_sender_id.toString()).emit('chat_list',recent_chat_list);
+                    //console.log(typeof message_sender_id);
                   }else{
                     console.log('not updated to db')
                   }
@@ -5441,6 +5455,7 @@ io.sockets.on('connection',async function (socket) {
               let message_ids=[];
               let message_senter_id=[];
               let message_delivered_datetime=[];
+              let message_receiver_id=[];
               let message_read_datetime=[];
               //UPDATE chat_list SET status = (case when id = '1' then '622057' when id = '2' then '2913659' when id = '3' then '6160230' end) WHERE id in ('1', '2', '3')
               for(var i=0; i<get_room_messages.length; i++){
@@ -5448,6 +5463,7 @@ io.sockets.on('connection',async function (socket) {
                 id_case=id_case+"'"+get_room_messages[i].id+"',";
                 message_ids.push(get_room_messages[i].id);
                 message_senter_id.push(get_room_messages[i].senter_id);
+                message_receiver_id.push(get_room_messages[i].receiver_id);
                 let group_status=get_room_messages[i].group_status;
                 if(group_status!=''){
                   group_status=JSON.parse(get_room_messages[i].group_status);
@@ -5489,6 +5505,15 @@ io.sockets.on('connection',async function (socket) {
                   console.log('delivered ',message_delivered_datetime[k]);
                   console.log('read ',message_read_datetime[k])
                   io.sockets.in(message_senter_id[k]+'_'+message_ids[k]+'_private_message_info').emit('private_message_info',{status: true, statuscode: 200, message: "success", data: {read_datetime:message_read_datetime[k],delivered_datetime:message_delivered_datetime[k]}});
+                  //emit chat_list and room_message to message senter
+                  let room_chat_list=await functions.get_individual_chat_list_response(message_senter_id[k],message_receiver_id[k],room);
+                  io.sockets.in(room+'_'+message_senter_id[k]).emit('message',room_chat_list);
+                  let recent_chat_list=await functions.get_recent_chat_list_response(message_senter_id[k]);
+                  //console.log(typeof message_senter_id[k].toString());
+                  
+                  io.sockets.in(message_senter_id[k].toString()).emit('chat_list', recent_chat_list);
+                  
+                  console.log('success')
                 }
               }else{
                 console.log('not updated')
@@ -6842,7 +6867,7 @@ io.sockets.on('connection',async function (socket) {
     })
     socket.on('test_changes',async function(data){
       socket.join('test_changes');
-      io.sockets.in('test_changes').emit('test_changes',{status: true, statuscode: 200, message: "last changes affected upto 24-05-2023 (2)"});
+      io.sockets.in('test_changes').emit('test_changes',{status: true, statuscode: 200, message: "last changes affected upto 29-05-2023 (2)"});
       socket.leave('test_changes');
     });
     socket.on('private_chat_export_data',async function(data){
@@ -7173,6 +7198,58 @@ io.sockets.on('connection',async function (socket) {
       // const buffer = fs.readFileSync('music/b.mp3')
       // const duration = getMP3Duration(buffer)
       // console.log(duration, 'ms');
+    })
+    socket.on('my_group_list', async function(data){
+      console.log('my_group_list');
+      try{
+        //input -- {"user_id":"50","accessToken":"50"}
+        if(typeof(data)=='object'){
+          let user_id=data.user_id ? data.user_id : '';
+          let accessToken=data.accessToken ? data.accessToken : '';
+          if(user_id!='' && accessToken!=''){
+            socket.join(user_id+'_my_group_list');
+            let check_user_data=await queries.check_user_valid(user_id,accessToken);
+            if(check_user_data.length>0){
+              let set_user_id='"'+user_id+'"';
+              let get_my_group_list=await queries.my_groups(set_user_id);
+              //console.log(get_my_group_list);
+              let datas=[];
+              if(get_my_group_list.length>0){
+                for(var i=0; i<get_my_group_list.length; i++){
+                  let group_profile_pic=BASE_URL+'uploads/default/group_profile.png';
+                  if(get_my_group_list[i].group_profile!=''){
+                    group_profile_pic=BASE_URL+get_my_group_list[i].group_profile;
+                  }
+                  datas.push({
+                    "group_name": get_my_group_list[i].group_name,
+                    "group_id": get_my_group_list[i].group_id,
+                    "group_description": get_my_group_list[i].group_description,
+                    "group_profile": group_profile_pic
+                  });
+                }
+              }
+              let response_data={
+                status: true,
+                statuscode: 200,
+                message: "success",
+                data: datas
+              }
+              io.sockets.in(user_id+'_my_group_list').emit('my_group_list',response_data)
+            }else{
+              io.sockets.in(user_id+'_my_group_list').emit('my_group_list',{status: false, statuscode: 200, message: "No user data found", data:[]});
+            }
+            socket.leave(user_id+'_my_group_list');
+          }else{
+            socket.join(data.user_id+'_my_group_list');
+            io.sockets.in(data.user_id+'_my_group_list').emit('my_group_list',{status: false, statuscode: 200, message: "Data is empty", data:[]});
+            socket.leave(data.user_id+'_my_group_list');
+          }
+        }else{
+          console.error('Input type is string');
+        }
+      }catch(e){
+        console.error(e);
+      }
     })
   }catch(error){
       //console.log(error)
