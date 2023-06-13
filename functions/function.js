@@ -3076,9 +3076,12 @@ async function get_recent_chat_list_response(user_id){
                 //let get_user_chat_list_data=await queries.user_chat_list_details(get_recent_chat[i].userid);
                 // let get_user_chat_list_data=await queries.user_chat_list_details(get_recent_chat[i].receiver_id);
                 // let check_user_exist_in_chat_list=check_user_data_exist_in_array(get_recent_chat[i].receiver_id,get_user_chat_list_data);
+                console.log('opponent id ',get_recent_chat[i].opponent_id)
                 let get_user_chat_list_data=await queries.user_chat_list_details(get_recent_chat[i].opponent_id);
-                let check_user_exist_in_chat_list=check_user_data_exist_in_array(get_recent_chat[i].opponent_id,get_user_chat_list_data);
-                //console.log(get_recent_chat[i].userid,get_user_chat_list_data,check_user_exist_in_chat_list)
+                console.log('chat list ',get_user_chat_list_data)
+                //let check_user_exist_in_chat_list=check_user_data_exist_in_array(get_recent_chat[i].opponent_id,get_user_chat_list_data);
+                let check_user_exist_in_chat_list=check_user_data_exist_in_array(user_id,get_user_chat_list_data);
+                console.log(get_recent_chat[i].userid,get_user_chat_list_data,check_user_exist_in_chat_list)
                 if(check_user_exist_in_chat_list){
                   //opponent_profile=opponent_data[0].profile_pic;
                   opponent_profile=get_recent_chat[i].opponent_profile_pic;
@@ -3202,6 +3205,7 @@ async function get_recent_chat_list_response(user_id){
             }else{
               mark_as_unread=0;
             }
+            get_recent_chat[i].message_type='text';
             chat_list_data.push({
               id: get_recent_chat[i].id.toString(),
               date: get_recent_chat[i].date,
@@ -3561,7 +3565,7 @@ async function get_recent_chat_list_response(user_id){
               }else{
                 mark_as_unread=0;
               }
-
+              get_recent_chat[i].message_type='text';
               chat_list_data.push({
                 id: get_recent_chat[i].id.toString(),
                 date: get_recent_chat[i].date,
@@ -4271,6 +4275,7 @@ async function get_group_info(user_id,accessToken,group_id){
           }else if(about_options==1){
             //check user is member of chat_list
             let check_user_exist_in_chat_list=check_user_data_exist_in_array(user_id,get_user_chat_list_data)
+            //console.log(user_id,get_user_chat_list_data,check_user_exist_in_chat_list);
             if(check_user_exist_in_chat_list){
               if(get_user_profile_data[0].about!=''){
                 about=get_user_profile_data[0].about;

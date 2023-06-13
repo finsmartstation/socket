@@ -77,7 +77,7 @@ async function get_last_private_message(room_id,message_id,user_id,opponent_prof
                         }else{
                             mark_as_unread=0;
                         }
-
+                        last_message_data[i].message_type='text';
                           last_message_array=[{
                             id: last_message_data[i].id.toString(),
                             date: last_message_data[i].date,
@@ -313,7 +313,7 @@ async function get_last_private_message(room_id,message_id,user_id,opponent_prof
                         }else{
                             mark_as_unread=0;
                         }
-
+                        last_message_data[i].message_type='text';
                           last_message_array=[{
                             id: last_message_data[i].id.toString(),
                             date: last_message_data[i].date,
