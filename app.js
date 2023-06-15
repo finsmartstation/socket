@@ -236,6 +236,8 @@ io.sockets.on('connection',async function (socket) {
             let same_as_last_seen='';
             let check_user_privacy_for_last_seen_and_online=await queries.check_user_privacy_for_last_seen_and_online(room_data.rid);
             console.log(`user id ${room_data.rid}'s privacy `,check_user_privacy_for_last_seen_and_online,check_user_privacy_for_last_seen_and_online.length)
+            console.log('socket data ',soc[room_data.rid]);
+            //exit ()
             if (soc[room_data.rid] != undefined) {
               console.log('user is online')
               //const results = db.sequelize.query("UPDATE user SET online_status = '1', last_seen='" + last_seen + "' WHERE id = '" + room_data.sid + "'");
@@ -243,7 +245,7 @@ io.sockets.on('connection',async function (socket) {
               //get online status to emit
               var online_s=await queries.select_online_status(room_data.rid);
               //console.log('140 in app.js',online_s)
-            // try{
+              // try{
                 console.log('online user', newRoom)
                 let data_array=[{
                   online_status:1,
@@ -290,25 +292,26 @@ io.sockets.on('connection',async function (socket) {
                           same_as_last_seen="1";
                         }
                       }else if(options==3){
-                        console.log('nobody')
+                        //console.log('nobody')
                         last_seen_value="";
                         same_as_last_seen="";
                       }
                   }else{
-                    console.log('last_seen else part')
+                    //console.log('last_seen else part')
                     last_seen_value=online_s[0].last_seen;
                   }
                   if(check_user_privacy_for_last_seen_and_online[0].type=='online'){
-                    console.log('online exist')
+                    //console.log('online exist')
                     let options=check_user_privacy_for_last_seen_and_online[0].options;
                       if(options==0){
-                        online_status_value="1"
+                        online_status_value="1";
                       }else if(options==1){
                         //same as last seen 
-                        online_status_value=same_as_last_seen;
+                        //online_status_value=same_as_last_seen;
+                        online_status_value="1";
                       }
                   }else{
-                    console.log('online else part')
+                    //console.log('online else part')
                     online_status_value="1";
                   }
                 }else{
@@ -381,7 +384,8 @@ io.sockets.on('connection',async function (socket) {
                 online_status:0,
                 last_seen: online_s[0].last_seen
               }]
-              console.log(data_array)
+              //console.log(data_array)
+              console.log(check_user_privacy_for_last_seen_and_online)
               if(check_user_privacy_for_last_seen_and_online.length){
                 if(check_user_privacy_for_last_seen_and_online.length==1){
                   console.log('count 1')
@@ -395,7 +399,9 @@ io.sockets.on('connection',async function (socket) {
                       }else if(options==1){
                         console.log('my contact')
                         let get_user_chat_list_data=await queries.user_chat_list_details(room_data.rid);
+                        
                         console.log(get_user_chat_list_data)
+                        //exit ()
                         let check_user_exist_in_chat_list=await functions.check_user_data_exist_in_array(room_data.sid,get_user_chat_list_data);
                         console.log(check_user_exist_in_chat_list)
                         if(check_user_exist_in_chat_list){
@@ -429,19 +435,24 @@ io.sockets.on('connection',async function (socket) {
                     console.log('last_seen else part')
                     last_seen_value=online_s[0].last_seen;
                   }
+
                   if(check_user_privacy_for_last_seen_and_online[0].type=='online'){
-                    console.log('online exist')
+                    console.log('online exist');
                     let options=check_user_privacy_for_last_seen_and_online[0].options;
                       if(options==0){
                         online_status_value="0"
                       }else if(options==1){
+                        //exit ();
                         //same as last seen 
-                        online_status_value=same_as_last_seen;
+                        console.log(same_as_last_seen)
+                        //online_status_value=same_as_last_seen;
+                        online_status_value="0";
                       }
                   }else{
                     console.log('online else part')
                     online_status_value="0";
                   }
+                  console.log(online_status_value,last_seen_value);
                 }else{
                   for(var i=0; i<check_user_privacy_for_last_seen_and_online.length; i++){
                     if(check_user_privacy_for_last_seen_and_online[i].type=='last_seen'){
@@ -495,6 +506,7 @@ io.sockets.on('connection',async function (socket) {
                       }
                     }
                   }
+                  //console.log(online_status_value,last_seen_value);
                 }
               }else{
                 online_status_value="0";
@@ -1424,6 +1436,7 @@ io.sockets.on('connection',async function (socket) {
         //emit to other user's in the room when he/she disconnect
         if(online_user_room_data.length>0){
           console.log('user in the room', online_user_room_data)
+          //exit ()
           for(var i=0; i<online_user_room_data.length; i++){
             //console.log('initial loop',i)
             let flag_status=false;
@@ -1488,7 +1501,8 @@ io.sockets.on('connection',async function (socket) {
                       if(options==0){
                         online_status_value="0";
                       }else if(options==1){
-                        online_status_value=same_as_last_seen;
+                        //online_status_value=same_as_last_seen;
+                        online_status_value="0";
                       }
                     }else{
                       online_status_value="0";
@@ -1535,6 +1549,7 @@ io.sockets.on('connection',async function (socket) {
                           online_status_value="0";
                         }else if(options==1){
                           online_status_value=same_as_last_seen;
+                          //online_status_value="0";
                         }
                       }
                     }
@@ -1639,7 +1654,7 @@ io.sockets.on('connection',async function (socket) {
             //emit online_users -- to show user is online
             console.log(`online user's room `,online_user_room_data)
             if(online_user_room_data.length>0){
-              //console.log('sssss')
+              //console.log(online_user_room_data,'sssss');
               for(var i=0; i<online_user_room_data.length; i++){
                 if(input.user_id==online_user_room_data[i].sid || input.user_id==online_user_room_data[i].rid){
                   //console.log('yes')
@@ -1694,7 +1709,8 @@ io.sockets.on('connection',async function (socket) {
                           if(options==0){
                             online_status_value="1";
                           }else if(options==1){
-                            online_status_value=same_as_last_seen;
+                            //online_status_value=same_as_last_seen;
+                            online_status_value="1";
                           }
                         }else{
                           online_status_value="1"
@@ -6867,7 +6883,7 @@ io.sockets.on('connection',async function (socket) {
     })
     socket.on('test_changes',async function(data){
       socket.join('test_changes');
-      io.sockets.in('test_changes').emit('test_changes',{status: true, statuscode: 200, message: "last changes affected upto 07-06-2023"});
+      io.sockets.in('test_changes').emit('test_changes',{status: true, statuscode: 200, message: "last changes affected upto 15-06-2023"});
       socket.leave('test_changes');
     });
     socket.on('private_chat_export_data',async function(data){
@@ -7243,6 +7259,35 @@ io.sockets.on('connection',async function (socket) {
             socket.join(data.user_id+'_my_group_list');
             io.sockets.in(data.user_id+'_my_group_list').emit('my_group_list',{status: false, statuscode: 200, message: "Data is empty", data:[]});
             socket.leave(data.user_id+'_my_group_list');
+          }
+        }else{
+          console.error('Input type is string');
+        }
+      }catch(e){
+        console.error(e);
+      }
+    });
+    socket.on('search_chat_list', async function(data){
+      try{
+        //input -- {"user_id":"50","accessToken":"50"}
+        if(typeof(data)=='object'){
+          let user_id=data.user_id ? data.user_id : '';
+          let accessToken=data.accessToken ? data.accessToken : '';
+          let search=data.search ? data.search : '';
+          if(user_id!='' && accessToken!='' && search!=''){
+            socket.join(user_id+'_search_chat_list');
+            let check_user_data=await queries.check_user_valid(user_id,accessToken);
+            if(check_user_data.length>0){
+              let search_chat_list=await functions.search_chat_list_response(user_id,search);
+              io.sockets.in(user_id+'_search_chat_list').emit('search_chat_list',search_chat_list)
+            }else{
+              io.sockets.in(user_id+'_search_chat_list').emit('search_chat_list',{status: false, statuscode: 200, message: "No user data found", data:[]});
+            }
+            socket.leave(user_id+'_search_chat_list');
+          }else{
+            socket.join(data.user_id+'_search_chat_list');
+            io.sockets.in(data.user_id+'_search_chat_list').emit('search_chat_list',{status: false, statuscode: 200, message: "Data is empty", data:[]});
+            socket.leave(data.user_id+'_search_chat_list');
           }
         }else{
           console.error('Input type is string');
