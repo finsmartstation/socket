@@ -1126,9 +1126,23 @@ async function get_individual_chat_list_response(sid,rid,room){
                   user_details[0].profile_pic=user_details[0].profile_pic;
                }else if(profile_options==1){
                   //check user is member of users chat_list
-                  let get_user_chat_list_data=await queries.user_chat_list_details(rid);
-                  let check_user_exist_in_chat_list=check_user_data_exist_in_array(sid,get_user_chat_list_data);
-                  if(check_user_exist_in_chat_list){
+                  // let get_user_chat_list_data=await queries.user_chat_list_details(rid);
+                  // let check_user_exist_in_chat_list=check_user_data_exist_in_array(sid,get_user_chat_list_data);
+                  // if(check_user_exist_in_chat_list){
+                  //   user_details[0].profile_pic=user_details[0].profile_pic;
+                  // }else{
+                  //   user_details[0].profile_pic='uploads/default/profile.png';
+                  // }
+
+                  let excepted_users=check_privacy_profile_pic[0].options;
+                  //console.log(excepted_users)
+                  if(excepted_users!=''){
+                    excepted_users=JSON.parse(check_privacy_profile_pic[0].except_users);
+                  }else{
+                    excepted_users=[];
+                  }
+                  
+                  if(excepted_users.includes(sid)){
                     user_details[0].profile_pic=user_details[0].profile_pic;
                   }else{
                     user_details[0].profile_pic='uploads/default/profile.png';
@@ -3077,20 +3091,33 @@ async function get_recent_chat_list_response(user_id){
                 //let get_user_chat_list_data=await queries.user_chat_list_details(get_recent_chat[i].userid);
                 // let get_user_chat_list_data=await queries.user_chat_list_details(get_recent_chat[i].receiver_id);
                 // let check_user_exist_in_chat_list=check_user_data_exist_in_array(get_recent_chat[i].receiver_id,get_user_chat_list_data);
-                console.log('opponent id ',get_recent_chat[i].opponent_id);
-                let get_user_chat_list_data=await queries.user_chat_list_details(get_recent_chat[i].opponent_id);
-                console.log('chat list ',get_user_chat_list_data)
-                //let check_user_exist_in_chat_list=check_user_data_exist_in_array(get_recent_chat[i].opponent_id,get_user_chat_list_data);
-                let check_user_exist_in_chat_list=check_user_data_exist_in_array(user_id,get_user_chat_list_data);
-                console.log(get_recent_chat[i].userid,get_user_chat_list_data,check_user_exist_in_chat_list)
-                if(check_user_exist_in_chat_list){
+                // console.log('opponent id ',get_recent_chat[i].opponent_id);
+                // let get_user_chat_list_data=await queries.user_chat_list_details(get_recent_chat[i].opponent_id);
+                // console.log('chat list ',get_user_chat_list_data)
+                // //let check_user_exist_in_chat_list=check_user_data_exist_in_array(get_recent_chat[i].opponent_id,get_user_chat_list_data);
+                // let check_user_exist_in_chat_list=check_user_data_exist_in_array(user_id,get_user_chat_list_data);
+                // console.log(get_recent_chat[i].userid,get_user_chat_list_data,check_user_exist_in_chat_list)
+                // if(check_user_exist_in_chat_list){
+                //   //opponent_profile=opponent_data[0].profile_pic;
+                //   opponent_profile=get_recent_chat[i].opponent_profile_pic;
+                // }else{
+                //   opponent_profile='uploads/default/profile.png';
+                // }
+
+                let excepted_users=get_recent_chat[i].except_users;
+                if(excepted_users!=''){
+                  excepted_users=JSON.parse(get_recent_chat[i].except_users)
+                }else{
+                  excepted_users=[];
+                }
+                //console.log(user_id,get_recent_chat[i].except_users)
+                if(excepted_users.includes(user_id)){
                   //opponent_profile=opponent_data[0].profile_pic;
                   opponent_profile=get_recent_chat[i].opponent_profile_pic;
                 }else{
                   opponent_profile='uploads/default/profile.png';
-                }
+                }                
               }else if(get_recent_chat[i].options==2){
-                
                 //check 
                 let excepted_users=get_recent_chat[i].except_users;
                 if(excepted_users!=''){
@@ -3951,7 +3978,13 @@ async function get_recent_chat_list_response(user_id){
 } 
 
 async function search_chat_list_response(user_id,search){
-  let get_recent_chat=await queries.search_chat_list_data(user_id,search);
+  let get_recent_chat=[];
+  if(search!=''){
+    get_recent_chat=await queries.search_chat_list_data(user_id,search);
+  }else{
+    get_recent_chat=await queries.get_recent_chat(user_id);
+  }
+
   //console.log('search chat ',get_recent_chat);
   //exit ()
   //console.log('testing')
@@ -4042,13 +4075,27 @@ async function search_chat_list_response(user_id,search){
                 //let get_user_chat_list_data=await queries.user_chat_list_details(get_recent_chat[i].userid);
                 // let get_user_chat_list_data=await queries.user_chat_list_details(get_recent_chat[i].receiver_id);
                 // let check_user_exist_in_chat_list=check_user_data_exist_in_array(get_recent_chat[i].receiver_id,get_user_chat_list_data);
-                console.log('opponent id ',get_recent_chat[i].opponent_id);
-                let get_user_chat_list_data=await queries.user_chat_list_details(get_recent_chat[i].opponent_id);
-                console.log('chat list ',get_user_chat_list_data)
-                //let check_user_exist_in_chat_list=check_user_data_exist_in_array(get_recent_chat[i].opponent_id,get_user_chat_list_data);
-                let check_user_exist_in_chat_list=check_user_data_exist_in_array(user_id,get_user_chat_list_data);
-                console.log(get_recent_chat[i].userid,get_user_chat_list_data,check_user_exist_in_chat_list)
-                if(check_user_exist_in_chat_list){
+                // console.log('opponent id ',get_recent_chat[i].opponent_id);
+                // let get_user_chat_list_data=await queries.user_chat_list_details(get_recent_chat[i].opponent_id);
+                // console.log('chat list ',get_user_chat_list_data)
+                // //let check_user_exist_in_chat_list=check_user_data_exist_in_array(get_recent_chat[i].opponent_id,get_user_chat_list_data);
+                // let check_user_exist_in_chat_list=check_user_data_exist_in_array(user_id,get_user_chat_list_data);
+                // console.log(get_recent_chat[i].userid,get_user_chat_list_data,check_user_exist_in_chat_list)
+                // if(check_user_exist_in_chat_list){
+                //   //opponent_profile=opponent_data[0].profile_pic;
+                //   opponent_profile=get_recent_chat[i].opponent_profile_pic;
+                // }else{
+                //   opponent_profile='uploads/default/profile.png';
+                // }
+
+                let excepted_users=get_recent_chat[i].except_users;
+                if(excepted_users!=''){
+                  excepted_users=JSON.parse(get_recent_chat[i].except_users)
+                }else{
+                  excepted_users=[];
+                }
+                //console.log(user_id,get_recent_chat[i].except_users)
+                if(excepted_users.includes(user_id)){
                   //opponent_profile=opponent_data[0].profile_pic;
                   opponent_profile=get_recent_chat[i].opponent_profile_pic;
                 }else{
@@ -5132,14 +5179,29 @@ async function get_group_info(user_id,accessToken,group_id){
             //check this user is one of the member in chat_list
             //check user_id is exist in array
             //console.log('sssssss',get_user_chat_list_data)
-            let check_user_exist_in_chat_list=check_user_data_exist_in_array(user_id,get_user_chat_list_data)
-            if(check_user_exist_in_chat_list){
+
+            // let check_user_exist_in_chat_list=check_user_data_exist_in_array(user_id,get_user_chat_list_data)
+            // if(check_user_exist_in_chat_list){
+            //   profile_pic=get_user_profile_data[0].profile_pic;
+            //   //console.log('s')
+            // }else{
+            //   profile_pic='uploads/default/profile.png';
+            // }
+            //console.log(check_user_exist_in_chat_list)
+
+            let excepted_users=check_privacy_profile_pic[0].except_users;
+            if(excepted_users!=''){
+              excepted_users=JSON.parse(check_privacy_profile_pic[0].except_users);
+            }else{
+              excepted_users=[];
+            }
+            // console.log(excepted_users);
+            // console.log(excepted_users.indexOf(user_id))
+            if(excepted_users.includes(user_id)){
               profile_pic=get_user_profile_data[0].profile_pic;
-              //console.log('s')
             }else{
               profile_pic='uploads/default/profile.png';
             }
-            //console.log(check_user_exist_in_chat_list)
           }else if(profile_options==2){
             //console.log('exclude chat list users',check_privacy_profile_pic)
             let excepted_users=check_privacy_profile_pic[0].except_users;
@@ -5178,9 +5240,25 @@ async function get_group_info(user_id,accessToken,group_id){
             about=get_user_profile_data[0].about;
           }else if(about_options==1){
             //check user is member of chat_list
-            let check_user_exist_in_chat_list=check_user_data_exist_in_array(user_id,get_user_chat_list_data)
-            //console.log(user_id,get_user_chat_list_data,check_user_exist_in_chat_list);
-            if(check_user_exist_in_chat_list){
+            // let check_user_exist_in_chat_list=check_user_data_exist_in_array(user_id,get_user_chat_list_data)
+            // //console.log(user_id,get_user_chat_list_data,check_user_exist_in_chat_list);
+            // if(check_user_exist_in_chat_list){
+            //   if(get_user_profile_data[0].about!=''){
+            //     about=get_user_profile_data[0].about;
+            //   }else{
+            //     about='Hey there! I am using Smart Station';
+            //   }
+            // }else{
+            //   about='Hey there! I am using Smart Station';
+            // }
+
+            let excepted_users=check_privacy_about[0].except_users;
+            if(excepted_users!=''){
+              excepted_users=JSON.parse(check_privacy_about[0].except_users);
+            }else{
+              excepted_users=[];
+            }
+            if(excepted_users.includes(user_id)){
               if(get_user_profile_data[0].about!=''){
                 about=get_user_profile_data[0].about;
               }else{
@@ -5418,6 +5496,44 @@ async function group_message_info(user_id, room, message_id){
               profile_pic=BASE_URL+user_profile_data.profile_pic;
             }
           }
+
+          //check user privacy
+          let check_privacy_profile_pic=await queries.check_user_privacy(group_status[i].user_id,'profile_pic');
+          console.log(check_privacy_profile_pic,group_status[i].user_id);
+          if(check_privacy_profile_pic.length>0){
+            let profile_options=check_privacy_profile_pic[0].options;
+            if(profile_options==0){
+              //show profile data
+              profile_pic=profile_pic;
+            }else if(profile_options==1){
+              let excepted_users=check_privacy_profile_pic[0].options;
+              if(excepted_users!=''){
+                excepted_users=JSON.parse(check_privacy_profile_pic[0].except_users);
+              }else{
+                excepted_users=[];
+              }
+              if(excepted_users.includes(user_id)){
+                profile_pic=profile_pic;
+              }else{
+                profile_pic=BASE_URL+'uploads/default/profile.png';
+              }
+            }else if(profile_options==2){
+              let excepted_users=check_privacy_profile_pic[0].options;
+              if(excepted_users!=''){
+                excepted_users=JSON.parse(check_privacy_profile_pic[0].except_users);
+              }else{
+                excepted_users=[];
+              }
+              if(excepted_users.includes(user_id)){
+                profile_pic=BASE_URL+'uploads/default/profile.png';
+              }else{
+                profile_pic=profile_pic;
+              }
+            }else if(profile_options==3){
+              profile_pic=BASE_URL+'uploads/default/profile.png';
+            }
+          }
+          
           //console.log('profile_pic',profile_pic,'name',name);
           if('delivered_status' in group_status[i]){
             if(group_status[i].delivered_status==1 && group_status[i].message_status==1){
