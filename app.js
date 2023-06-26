@@ -1694,7 +1694,7 @@ io.sockets.on('connection',async function (socket) {
             //console.log('recent',get_recent_chat_response)
             
             io.sockets.in(input.user_id).emit('chat_list', get_recent_chat_response);
-            console.log(soc)
+            //console.log(soc)
             //get data based on user privacy -- last_seen and online
             let online_status_value='';
             let last_seen_value='';
@@ -1910,6 +1910,8 @@ io.sockets.on('connection',async function (socket) {
                 let forward_message=get_forward_message_data[0].message;
                 let forward_message_type=get_forward_message_data[0].message_type;
                 let forward_duration=get_forward_message_data[0].duration;
+                let forward_optional_text=get_forward_message_data[0].optional_text;
+                let forward_thumbnail=get_forward_message_data[0].thumbnail;
                 //console.log('message id ',message_ids[i])
                 let to_users=input.to_users.split(',');
                 for(var j=0;j<to_users.length;j++){
@@ -1965,7 +1967,7 @@ io.sockets.on('connection',async function (socket) {
                     //console.log(group_status_json_data);
                     //save forward message
                     
-                    let save_individual_forward_message=await queries.save_individual_forward_message(message_ids[i],datetime,input.sid,receiver_id,forward_message,forward_message_type,room,forward_duration,group_status_json_data)
+                    let save_individual_forward_message=await queries.save_individual_forward_message(message_ids[i],datetime,input.sid,receiver_id,forward_message,forward_message_type,room,forward_duration,group_status_json_data,forward_optional_text,forward_thumbnail)
                     //console.log(save_individual_forward_message)
                     if(save_individual_forward_message.length>0){
                       send_forward_message_status=true;
@@ -2035,7 +2037,7 @@ io.sockets.on('connection',async function (socket) {
                       //console.log(group_status_data)
                       //save forward message for group
                       //console.log('group forward msg ',forword_message_id)
-                      let save_group_forward_message=await queries.save_group_forward_message(forword_message_id,datetime,input.sid,0,forward_message,forward_message_type,room,forward_duration,JSON.stringify(group_status_data));
+                      let save_group_forward_message=await queries.save_group_forward_message(forword_message_id,datetime,input.sid,0,forward_message,forward_message_type,room,forward_duration,JSON.stringify(group_status_data),forward_optional_text,forward_thumbnail);
                       console.log('save_group_forward_message ',save_group_forward_message)
                       if(save_group_forward_message.length>0){
                         send_forward_message_status=true;
@@ -3620,7 +3622,7 @@ io.sockets.on('connection',async function (socket) {
                           io.sockets.in(data.user_id+'_group_admin').emit('make_group_admin',{status: true, statuscode: 200, message: "success"})
                           //emit message to user_list
                           let get_group_info_and_user_details=await functions.get_group_info(user_id,accessToken,group_id);
-                          io.sockets.in(user_id+'_user_list').emit('get_group_user_list',get_group_info_and_user_details);
+                          io.sockets.in(group_id+'_'+user_id+'_user_list').emit('get_group_user_list',get_group_info_and_user_details);
                           //emit message and chat_list to the user
                           let sender_group_chat_list=await functions.get_group_chat_list_response(user_id,group_id);
                           io.sockets.in(group_id+'_'+user_id).emit('message',sender_group_chat_list);
@@ -3779,7 +3781,7 @@ io.sockets.on('connection',async function (socket) {
                           io.sockets.in(user_id+'_remove').emit('remove_group_member',{status: true, statuscode: 200, message: "success"})
                           //emit to user_list
                           let get_group_user_and_info_data=await functions.get_group_info(user_id,accessToken,group_id);
-                          io.sockets.in(user_id+'_user_list').emit('get_group_user_list',get_group_user_and_info_data);
+                          io.sockets.in(group_id+'_'+user_id+'_user_list').emit('get_group_user_list',get_group_user_and_info_data);
                           //emit message and chat_list to all group users
                           let sender_group_chat_data=await functions.get_group_chat_list_response(user_id,group_id);
                           io.sockets.in(group_id+'_'+user_id).emit('message',sender_group_chat_data);
@@ -5377,16 +5379,16 @@ io.sockets.on('connection',async function (socket) {
           let group_id=data.group_id ? data.group_id : '';
           if(user_id!='' && accessToken!='' && group_id!=''){
             //console.log('not empty')
-            socket.join(user_id+'_user_list');
+            socket.join(group_id+'_'+user_id+'_user_list');
             let get_group_info_response=await functions.get_group_info(user_id,accessToken,group_id);
-            io.sockets.in(user_id+'_user_list').emit('get_group_user_list',{status: true, statuscode:200, message:'success'});
-            io.sockets.in(user_id+'_user_list').emit('get_group_user_list', get_group_info_response);
+            //io.sockets.in(user_id+'_user_list').emit('get_group_user_list',{status: true, statuscode:200, message:'success'});
+            io.sockets.in(group_id+'_'+user_id+'_user_list').emit('get_group_user_list', get_group_info_response);
             //socket.leave(user_id+'_user_list');
           }else{
             //console.log('empty')
-            socket.join(data.user_id+'_user_list');
-            io.sockets.in(data.user_id+'_user_list').emit('get_group_user_list', {status: false, statuscode: 200, message: "No data found", data:[]});
-            socket.leave(data.user_id+'_user_list');
+            socket.join(group_id+'_'+data.user_id+'_user_list');
+            io.sockets.in(group_id+'_'+data.user_id+'_user_list').emit('get_group_user_list', {status: false, statuscode: 200, message: "No data found", data:[]});
+            socket.leave(group_id+'_'+data.user_id+'_user_list');
           }
         }else{
           console.error('Input type is string');
@@ -6091,7 +6093,7 @@ io.sockets.on('connection',async function (socket) {
                       if(update_group_data.affectedRows>0){
                         io.sockets.in(data.user_id+'_remove_group_admin').emit('remove_group_admin',{status: true, statuscode: 200, message: "success"});
                         let get_group_info_response=await functions.get_group_info(user_id,accessToken,group_id);
-                        io.sockets.in(user_id+'_user_list').emit('get_group_user_list',get_group_info_response);
+                        io.sockets.in(group_id+'_'+user_id+'_user_list').emit('get_group_user_list',get_group_info_response);
                         //emit to receiver side
                         for(var j=0; j<current_members.length; j++){
                           console.log(current_members[j].user_id)
@@ -6100,7 +6102,7 @@ io.sockets.on('connection',async function (socket) {
                             let get_group_user_accessToken=await queries.get_access_token(current_members[j].user_id)
                             //console.log('access token',get_group_user_accessToken[0].accessToken)
                             let get_group_info_response_for_receiver=await functions.get_group_info(current_members[j].user_id,get_group_user_accessToken[0].accessToken,group_id);
-                            io.sockets.in(current_members[j].user_id+'_user_list').emit('get_group_user_list',get_group_info_response);
+                            io.sockets.in(group_id+'_'+current_members[j].user_id+'_user_list').emit('get_group_user_list',get_group_info_response_for_receiver);
                           }
                         }
                       }else{
@@ -6458,6 +6460,10 @@ io.sockets.on('connection',async function (socket) {
                   }
                 }
                 if(total_count>0){
+                  //check chat_list is pinned or unpinned
+                  let remove_user_pinned_rooms=await queries.remove_user_pinned_rooms(user_id,room);
+                  //console.log(remove_user_pinned_rooms);
+                  //exit ()
                   //clear room chat message
                   //SELECT * FROM `chat_list` where room in ('550','group_20221003093352') and JSON_CONTAINS(JSON_EXTRACT(group_status, '$[*].user_id'), '"5"', '$') ORDER BY `id` DESC;
                   //console.log(room_query)
@@ -6825,10 +6831,13 @@ io.sockets.on('connection',async function (socket) {
                     //emit message to the user
                     //console.log(user_id,receiver_id)
                     //exit ()
-                    let room_chat_list=await functions.get_individual_chat_list_response(user_id,receiver_id);
+                    //let room_chat_list=await functions.get_individual_chat_list_response(user_id,receiver_id,room);
+                    let room_chat_list=await functions.get_individual_chat_list_response(receiver_id,user_id,room);
                     io.sockets.in(room+'_'+receiver_id).emit('message',room_chat_list);
-                    let recent_chat_list=await functions.get_recent_chat_list_response(user_id);
-                    io.sockets.in(receiver_id).emit('chat_list',recent_chat_list);
+                    //let recent_chat_list=await functions.get_recent_chat_list_response(user_id);
+                    let recent_chat_list=await functions.get_recent_chat_list_response(receiver_id);
+                    io.sockets.in(receiver_id.toString()).emit('chat_list',recent_chat_list);
+                    //console.log(typeof(receiver_id))
                   }else{
                     io.sockets.in(user_id+'_message_delivered').emit('message_delivered',{status: true, statuscode: 400, message: "Not saved in db"});
                   }
@@ -6962,7 +6971,7 @@ io.sockets.on('connection',async function (socket) {
     })
     socket.on('test_changes',async function(data){
       socket.join('test_changes');
-      io.sockets.in('test_changes').emit('test_changes',{status: true, statuscode: 200, message: "last changes affected upto 17-06-2023"});
+      io.sockets.in('test_changes').emit('test_changes',{status: true, statuscode: 200, message: "last changes affected upto 24-06-2023 (2)"});
       socket.leave('test_changes');
     });
     socket.on('private_chat_export_data',async function(data){
@@ -7411,7 +7420,217 @@ io.sockets.on('connection',async function (socket) {
       }catch(e){
         console.error(e);
       }
-    })
+    });
+    socket.on('save_private_missed_call',async function(data){
+      try{
+        if(typeof(data)=='object'){
+          let user_id=data.user_id ? data.user_id : '';
+          let accessToken=data.accessToken ? data.accessToken : '';
+          let senter_id=data.senter_id ? data.senter_id : '';
+          let receiver_id=data.receiver_id ? data.receiver_id : '0';
+          let room=data.room ? data.room : '';
+          let call_duration=data.call_duration ? data.call_duration : '0';
+          let type=data.type ? data.type : '';
+          let call_type='missed';
+          let datetime=get_datetime();
+          if(user_id!='' && accessToken!='' && senter_id!='' && receiver_id!=''){
+            socket.join(user_id+'_save_private_missed_call');
+            //check user data is valid
+            let check_user_data=await queries.check_user_valid(user_id,accessToken);
+            if(check_user_data.length>0){
+              let json_data=[];
+              json_data.push({
+                user_id:senter_id,
+                end_datetime: datetime,
+                duration: call_duration,
+                status: 1
+              });
+              json_data.push({
+                user_id:receiver_id,
+                end_datetime: datetime,
+                duration: call_duration,
+                status: 1
+              });
+              //save to call_list table
+               let save_private_missed_call=await queries.save_private_missed_call(senter_id,receiver_id,room,datetime,type,call_type,call_duration,JSON.stringify(json_data),user_id);
+               console.log(save_private_missed_call);
+               if(save_private_missed_call>0){
+                //save to chat_list
+                //let senter_id=user_id;
+                let message='';
+                if(type=='voice'){
+                  message='Missed voice call';
+                }else{
+                  message='Missed video call';
+                }
+                let message_type='notification';
+                //let room=group_id;
+                let message_status=1;
+                let status=1;
+                let online_status=0;
+                //let private_status=0;
+                let group_status=[];
+                
+                  group_status.push({
+                    user_id: senter_id,
+                    username: '',
+                    datetime: datetime,
+                    message_status: 0,
+                    message_read_datetime: datetime,
+                    status: 1
+                  });
+                  group_status.push({
+                    user_id: receiver_id,
+                    username: '',
+                    datetime: datetime,
+                    message_status: 1,
+                    message_read_datetime: '',
+                    status: 1
+                  });
+                
+                let save_private_missed_call=await queries.save_private_missed_call_message(datetime,senter_id,receiver_id,message,message_type,room,message_status,status,online_status,JSON.stringify(group_status))
+                if(save_private_missed_call>0){
+                  io.sockets.in(user_id+'_save_private_missed_call').emit('save_private_missed_call',{status: true, statuscode: 200, message: "success"});
+                  //emit chat_list and room message
+                  let senter_room_chat_list=await functions.get_individual_chat_list_response(senter_id,receiver_id,room);
+                  io.sockets.in(room+'_'+senter_id).emit('message',senter_room_chat_list);
+                  let sender_chat_list=await functions.get_recent_chat_list_response(senter_id);
+                  io.sockets.in(senter_id).emit('chat_list',sender_chat_list);
+
+                  let receiver_room_chat_list=await functions.get_individual_chat_list_response(receiver_id,senter_id,room);
+                  io.sockets.in(room+'_'+receiver_id).emit('message',receiver_room_chat_list);
+                  let receiver_chat_list=await functions.get_recent_chat_list_response(receiver_id);
+                  io.sockets.in(receiver_id).emit('chat_list',receiver_chat_list);
+                  console.log(room+'_'+senter_id,receiver_id)
+                  //exit ()
+                }else{
+                  io.sockets.in(user_id+'_save_private_missed_call').emit('save_private_missed_call',{status: false, statuscode: 400, message: "Not saved to db"});
+                }
+               }else{
+                io.sockets.in(user_id+'_save_private_missed_call').emit('save_private_missed_call',{status: false, statuscode: 400, message: "Not saved to db"});
+               }
+            }else{
+              io.sockets.in(user_id+'_save_private_missed_call').emit('save_private_missed_call',{status: false, statuscode: 200, message: "No user data found"});
+            }
+            socket.leave(user_id+'_save_private_missed_call');
+          }else{
+            socket.join(user_id+'_save_private_missed_call');
+            io.sockets.in(user_id+'_save_private_missed_call').emit('save_private_missed_call',{status: false, statuscode: 200, message: "Data is empty"});
+            socket.leave(user_id+'_save_private_missed_call');
+          }
+        }else{
+          console.error('Input type is string');
+        }
+      }catch(e){
+        console.error(e);
+      }
+    });
+    socket.on('save_group_call',async function(data){
+      try{
+        if(typeof(data)=='object'){
+          let user_id=data.user_id ? data.user_id : '';
+          let accessToken=data.accessToken ? data.accessToken : '';
+          //let senter_id=data.senter_id ? data.senter_id : '';
+          let receiver_id=data.receiver_id ? data.receiver_id : '';
+          let room=data.room ? data.room : '';
+          let call_duration=data.call_duration ? data.call_duration : '0';
+          let type=data.type ? data.type : '';
+          let call_type='group_call';
+          let datetime=get_datetime();
+          if(user_id!='' && accessToken!='' && receiver_id!='' && type!=''){
+            socket.join(user_id+'_save_group_call');
+            //check user data is valid
+            //split receiver_id
+            let split_receiver_id=receiver_id.split(',');
+            console.log(split_receiver_id);
+            let check_user_data=await queries.check_user_valid(user_id,accessToken);
+            if(check_user_data.length>0){
+              //check group data exit
+              let check_group_data=await queries.check_group_data(room);
+              //console.log(check_group_data);
+              if(check_group_data.length>0){
+                let json_data=[];
+                let group_status=[];
+                json_data.push({
+                  user_id: user_id,
+                  end_datetime: '',
+                  duration: '',
+                  status:1
+                });
+                group_status.push({
+                  user_id: user_id,
+                  username: '',
+                  datetime: datetime,
+                  message_status: 0,
+                  message_read_datetime: datetime,
+                  status: 1
+                });
+                for(var i=0; i<split_receiver_id.length; i++){
+                  //console.log(split_receiver_id[i])
+                  json_data.push({
+                    user_id: split_receiver_id[i],
+                    end_datetime: '',
+                    duration: '',
+                    status:1
+                  });
+                  group_status.push({
+                    user_id: split_receiver_id[i],
+                    username: '',
+                    datetime: datetime,
+                    message_status: 1,
+                    message_read_datetime: '',
+                    status: 1
+                  });
+                }
+                //save to call list
+                let save_group_call=await queries.save_group_call(user_id,room,datetime,type,call_type,0,JSON.stringify(json_data),user_id);
+                if(save_group_call>0){
+                  //save to chat list
+                  let message_status=1;
+                  let status=1;
+                  let online_status=0;
+                  let save_chat_list=await queries.save_group_call_message(datetime,user_id,'group_call','notification',room,message_status,status,online_status,JSON.stringify(group_status));
+                  if(save_chat_list>0){
+                    //console.log(typeof(save_group_call))
+                    io.sockets.in(user_id+'_save_group_call').emit('save_group_call',{status: true, statuscode: 200, message: "success","id":save_group_call.toString()});
+                    //emit message
+                    let sender_chat_room=await functions.get_group_chat_list_response(user_id,room);
+                    io.sockets.in(room+'_'+user_id).emit('message',sender_chat_room);
+                    let sender_chat_list=await functions.get_recent_chat_list_response(user_id);
+                    io.sockets.in(user_id).emit('chat_list',sender_chat_list);
+                    //emit message to receiver
+                    for(var j=0; j<split_receiver_id.length; j++){
+                      let receiver_chat_room=await functions.get_group_chat_list_response(split_receiver_id[j],room);
+                      io.sockets.in(room+'_'+split_receiver_id[j]).emit('message',receiver_chat_room);
+                      let receiver_chat_list=await functions.get_recent_chat_list_response(split_receiver_id[j]);
+                      io.sockets.in(split_receiver_id[j]).emit('chat_list',receiver_chat_list);
+                    }
+                    
+                  }else{
+                    io.sockets.in(user_id+'_save_group_call').emit('save_group_call',{status: false, statuscode: 400, message: "Not saved to db","id":""});
+                  }
+                }else{
+                  io.sockets.in(user_id+'_save_group_call').emit('save_group_call',{status: false, statuscode: 400, message: "Not saved to db","id":""});
+                }
+              }else{
+                io.sockets.in(user_id+'_save_group_call').emit('save_group_call',{status: false, statuscode: 200, message: "No group data found","id":""});
+              }
+            }else{
+              io.sockets.in(user_id+'_save_group_call').emit('save_group_call',{status: false, statuscode: 200, message: "No user data found","id":""});
+            }
+            socket.leave(user_id+'_save_group_call');
+          }else{
+            socket.join(user_id+'_save_group_call');
+            io.sockets.in(user_id+'_save_group_call').emit('save_group_call',{status: false, statuscode: 200, message: "Data is empty","id":""});
+            socket.leave(user_id+'_save_group_call');
+          }
+        }else{
+          console.error('Input type is string');
+        }
+      }catch(e){
+        console.error(e);
+      }
+    });
   }catch(error){
       //console.log(error)
       console.error('error occurs ', error);

@@ -222,12 +222,12 @@ async function get_user_profile(user_id){
 }
 
 async function get_forward_message_data(message_id){
-    const results=await db.sequelize.query("select message,message_type,duration from chat_list where id='"+message_id+"'");
+    const results=await db.sequelize.query("select message,message_type,duration,optional_text,thumbnail from chat_list where id='"+message_id+"'");
     return results[0];
 }
 
-async function save_individual_forward_message(forward_id,datetime, sid, rid, message, message_type, room, duration, group_status_json_data) {
-    const results = await db.sequelize.query("INSERT INTO chat_list( date,senter_id,receiver_id,replay_id,forward_id,message,message_type,room,message_status,group_status,duration) VALUES ('" + datetime + "','" + sid + "','" + rid + "','0','"+forward_id+"','" + message + "','"+message_type+"','" + room + "','1','" + group_status_json_data + "','" + duration + "')");
+async function save_individual_forward_message(forward_id, datetime, sid, rid, message, message_type, room, duration, group_status_json_data, optional_text, thumbnail) {
+    const results = await db.sequelize.query("INSERT INTO chat_list (date,senter_id,receiver_id,replay_id,forward_id,message,message_type,optional_text,thumbnail,room,message_status,group_status,duration) VALUES ('" + datetime + "','" + sid + "','" + rid + "','0','"+forward_id+"','" + message + "','"+message_type+"','"+optional_text+"','"+thumbnail+"','" + room + "','1','" + group_status_json_data + "','" + duration + "')");
     return results;
 }
 
@@ -236,8 +236,8 @@ async function get_group_current_users(group_id){
     return results[0];
 }
 
-async function save_group_forward_message(forward_id,datetime, sid, rid, message, message_type, room, duration, group_status_json_data) {
-    const results = await db.sequelize.query("INSERT INTO chat_list( date,senter_id,receiver_id,replay_id,forward_id,message,message_type,room,message_status,private_group,group_status,duration) VALUES ('" + datetime + "','" + sid + "','" + rid + "','0','"+forward_id+"','" + message + "','"+message_type+"','" + room + "','1','1','" + group_status_json_data + "','" + duration + "')");
+async function save_group_forward_message(forward_id,datetime, sid, rid, message, message_type, room, duration, group_status_json_data,optional_text,thumbnail) {
+    const results = await db.sequelize.query("INSERT INTO chat_list( date,senter_id,receiver_id,replay_id,forward_id,message,message_type,optional_text,thumbnail,room,message_status,private_group,group_status,duration) VALUES ('" + datetime + "','" + sid + "','" + rid + "','0','"+forward_id+"','" + message + "','"+message_type+"','"+optional_text+"','"+thumbnail+"','" + room + "','1','1','" + group_status_json_data + "','" + duration + "')");
     return results;
 }
 
@@ -344,6 +344,16 @@ async function update_group_user_left_data(left_members,new_members,group_id){
 
 async function save_left_message(datetime,user_id,message,message_type,room,message_status,status,online_status,private_group,group_status){
     const results=await db.sequelize.query("INSERT INTO `chat_list`(`date`, `senter_id`, `receiver_id`, `message`, `message_type`, `room`, `message_status`, `status`, `online_status`, `private_group`, `group_status`) VALUES ('"+datetime+"','"+user_id+"','0','"+message+"','"+message_type+"','"+room+"','"+message_status+"','"+status+"','"+online_status+"','"+private_group+"','"+group_status+"')");
+    return results[1];
+}
+
+async function save_private_missed_call_message(datetime,user_id,receiver_id,message,message_type,room,message_status,status,online_status,group_status){
+    const results=await db.sequelize.query("INSERT INTO `chat_list`(`date`, `senter_id`, `receiver_id`, `message`, `message_type`, `room`, `message_status`, `status`, `online_status`, `private_group`, `group_status`) VALUES ('"+datetime+"','"+user_id+"','"+receiver_id+"','"+message+"','"+message_type+"','"+room+"','"+message_status+"','"+status+"','"+online_status+"','0','"+group_status+"')");
+    return results[1];
+}
+
+async function save_group_call_message(datetime,user_id,message,message_type,room,message_status,status,online_status,group_status){
+    const results=await db.sequelize.query("INSERT INTO `chat_list`(`date`, `senter_id`, `receiver_id`, `message`, `message_type`, `room`, `message_status`, `status`, `online_status`, `private_group`, `group_status`) VALUES ('"+datetime+"','"+user_id+"','0','"+message+"','"+message_type+"','"+room+"','"+message_status+"','"+status+"','"+online_status+"','1','"+group_status+"')");
     return results[1];
 }
 
@@ -469,6 +479,11 @@ async function save_pin_chat(user_id,receiver_id,room,datetime){
 
 async function check_room_is_pinned(user_id,room){
     const results=await db.sequelize.query("select * from `pin_chat` where user_id='"+user_id+"' and room='"+room+"'");
+    return results[0];
+}
+
+async function remove_user_pinned_rooms(user_id, rooms){
+    const results=await db.sequelize.query("delete from `pin_chat` where user_id='"+user_id+"' and room in ("+rooms+")");
     return results[0];
 }
 
@@ -692,6 +707,16 @@ async function my_groups(user_id){
     return results[0];
 }
 
+async function save_private_missed_call(senter_id,receiver_id,room,datetime,type,call_type,duration,json_data,added_by){
+    const results=await db.sequelize.query("INSERT INTO `call_list`(`senter_id`, `receiver_id`, `room_id`, `datetime`, `type`, `call_type`, `private_group`, `call_duration`, `status`, `json_data`, `added_by`) VALUES ('"+senter_id+"','"+receiver_id+"','"+room+"','"+datetime+"','"+type+"','"+call_type+"','0','"+duration+"','1','"+json_data+"','"+added_by+"')");
+    return results[0];
+}
+
+async function save_group_call(user_id,room,datetime,type,call_type,duration,json_data,added_by){
+    const results=await db.sequelize.query("INSERT INTO `call_list`(`senter_id`, `receiver_id`, `room_id`, `datetime`, `type`, `call_type`, `private_group`, `call_duration`, `status`, `json_data`, `added_by`) VALUES ('"+user_id+"','0','"+room+"','"+datetime+"','"+type+"','"+call_type+"','0','"+duration+"','1','"+json_data+"','"+added_by+"')");
+    return results[0];
+}
+
 module.exports = {
     update_online_status,
     select_online_status,
@@ -819,5 +844,10 @@ module.exports = {
     get_unread_message,
     update_individual_message_as_read_in_query,
     my_groups,
-    search_chat_list_data
+    search_chat_list_data,
+    remove_user_pinned_rooms,
+    save_private_missed_call,
+    save_private_missed_call_message,
+    save_group_call,
+    save_group_call_message
 }
