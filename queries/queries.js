@@ -713,7 +713,7 @@ async function save_private_missed_call(senter_id,receiver_id,room,datetime,type
 }
 
 async function save_group_call(user_id,room,datetime,type,call_type,duration,json_data,added_by){
-    const results=await db.sequelize.query("INSERT INTO `call_list`(`senter_id`, `receiver_id`, `room_id`, `datetime`, `type`, `call_type`, `private_group`, `call_duration`, `status`, `json_data`, `added_by`) VALUES ('"+user_id+"','0','"+room+"','"+datetime+"','"+type+"','"+call_type+"','0','"+duration+"','1','"+json_data+"','"+added_by+"')");
+    const results=await db.sequelize.query("INSERT INTO `call_list`(`senter_id`, `receiver_id`, `room_id`, `datetime`, `type`, `call_type`, `private_group`, `call_duration`, `status`, `json_data`, `added_by`) VALUES ('"+user_id+"','0','"+room+"','"+datetime+"','"+type+"','"+call_type+"','1','"+duration+"','1','"+json_data+"','"+added_by+"')");
     return results[0];
 }
 

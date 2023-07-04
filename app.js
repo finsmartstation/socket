@@ -642,13 +642,13 @@ io.sockets.on('connection',async function (socket) {
           message_id=data.message_id;
         }
 
-      //final var qur = db.sequelize.query("SELECT t1.created_datetime as created_date, t2.count FROM `group_list` t1 JOIN (select COUNT(*) as count from `chat_list` WHERE date(date)='" + date + "' and room='" + data.room + "') t2 where t1.group_id='" + data.room + "'")
-      var x=await queries.get_current_date(date,data.room);
-        //console.log('x is here',x[0][0]['created_date']); 
-      var group_created_date_time = x[0][0]['created_date']; 
-      var group_created_date = group_created_date_time.toISOString().slice(0,10);
-      var today_message_count = x[0][0]['count'];
-      var user_id_quotes='"'+data.sid+'"'
+        //final var qur = db.sequelize.query("SELECT t1.created_datetime as created_date, t2.count FROM `group_list` t1 JOIN (select COUNT(*) as count from `chat_list` WHERE date(date)='" + date + "' and room='" + data.room + "') t2 where t1.group_id='" + data.room + "'")
+        var x=await queries.get_current_date(date,data.room);
+          //console.log('x is here',x[0][0]['created_date']); 
+        var group_created_date_time = x[0][0]['created_date']; 
+        var group_created_date = group_created_date_time.toISOString().slice(0,10);
+        var today_message_count = x[0][0]['count'];
+        var user_id_quotes='"'+data.sid+'"'
         //  const group_chat_response=await queries.sample(data.sid,user_id_quotes,data.room);
         //  console.log('group_chat_response',group_chat_response);
         if (date == group_created_date && today_message_count == 0) {
@@ -1354,6 +1354,7 @@ io.sockets.on('connection',async function (socket) {
             //let receiver_devicetoken=await queries.get_device_token(data.rid);
         
             let send_push_notification=await functions.individual_chat_push_notification(data.sid,data.rid,room,data.message,data.type);
+            
           }
         //let individual_push_notification_data = { user_id: data.sid, accessToken: data.accessToken, receiver_id: data.rid, message: message, message_type: data.type }
         // axios({
@@ -6971,7 +6972,7 @@ io.sockets.on('connection',async function (socket) {
     })
     socket.on('test_changes',async function(data){
       socket.join('test_changes');
-      io.sockets.in('test_changes').emit('test_changes',{status: true, statuscode: 200, message: "last changes affected upto 24-06-2023 (2)"});
+      io.sockets.in('test_changes').emit('test_changes',{status: true, statuscode: 200, message: "last changes affected upto 03-07-2023"});
       socket.leave('test_changes');
     });
     socket.on('private_chat_export_data',async function(data){
@@ -7471,14 +7472,14 @@ io.sockets.on('connection',async function (socket) {
                 //let private_status=0;
                 let group_status=[];
                 
-                  group_status.push({
-                    user_id: senter_id,
-                    username: '',
-                    datetime: datetime,
-                    message_status: 0,
-                    message_read_datetime: datetime,
-                    status: 1
-                  });
+                  // group_status.push({
+                  //   user_id: senter_id,
+                  //   username: '',
+                  //   datetime: datetime,
+                  //   message_status: 0,
+                  //   message_read_datetime: datetime,
+                  //   status: 1
+                  // });
                   group_status.push({
                     user_id: receiver_id,
                     username: '',
