@@ -710,7 +710,7 @@ async function get_last_private_message(room_id,message_id,user_id,opponent_prof
   }
 
   async function send_firebase_notification(user_id,device_token, title, body, type,profile_pic,message_type,sound,vibration){
-    console.log(device_token, title, body, type,profile_pic,message_type)
+    //console.log(device_token, title, body, type,profile_pic,message_type)
     const message={
       to: device_token,
       //registration_ids: device_token,
@@ -745,12 +745,11 @@ async function get_last_private_message(room_id,message_id,user_id,opponent_prof
     }catch(fc){
         console.log(fc)
     }
-    
   }
 
   async function send_firebase_notification_group(group_id,device_token, title, body, type,group_profile_pic,message_type,sound,vibration){
     //console.log('group id',group_id,'device token',device_token, 'title',title, 'body',body, 'type',type,'g profile',group_profile_pic,'me typ',message_type)
-    console.log(sound,vibration)
+    //console.log(sound,vibration)
     const message={
       to: device_token,
       //registration_ids: device_token,

@@ -169,19 +169,24 @@ async function get_individual_chat_list_response(sid,rid,room){
                     result[0][i]['message']="This message was deleted";
                   }
                   result[0][i]['message_type']='text';
-                  if('delivered_status' in group_status_json[j]){
-                    //console.log(result[0][i].delivered_status)
-                    if(result[0][i].delivered_status==0){
-                      result[0][i].message_status=result[0][i].message_status;
-                    }else{
-                      //result[0][i].message_status="2";
-                      if(group_status_json[j].user_id==result[0][i].senter_id){
-                        result[0][i].message_status=result[0][i].message_status;
-                      }else{
-                        result[0][i].message_status="2";
-                      }
-                    }
+                  if(result[0][i]['delivered_status']==0){
+                    result[0][i].message_status=result[0][i].message_status;
+                  }else{
+                    result[0][i].message_status="2";
                   }
+                  // if('delivered_status' in group_status_json[j]){
+                  //   //console.log(result[0][i].delivered_status)
+                  //   if(result[0][i].delivered_status==0){
+                  //     result[0][i].message_status=result[0][i].message_status;
+                  //   }else{
+                  //     //result[0][i].message_status="2";
+                  //     if(group_status_json[j].user_id==result[0][i].senter_id){
+                  //       result[0][i].message_status=result[0][i].message_status;
+                  //     }else{
+                  //       result[0][i].message_status="2";
+                  //     }
+                  //   }
+                  // }
                   if('read_receipt' in group_status_json[j]){
                     read_receipt=group_status_json[j].read_receipt;
                   }else{
@@ -589,22 +594,30 @@ async function get_individual_chat_list_response(sid,rid,room){
                   }
                   //console.log('all the dates', date_array)
                 }else if(group_status_json[j].user_id==sid && group_status_json[j].status==1){
-                  if('delivered_status' in group_status_json[j]){
-                    //console.log(result[0][i].delivered_status)
-                    if(result[0][i].delivered_status==0){
-                      result[0][i].message_status=result[0][i].message_status;
-                    }else{
-                      //result[0][i].message_status="2";
-                      
-                      if(group_status_json[j].user_id==result[0][i].senter_id){
-                        result[0][i].message_status=result[0][i].message_status;
-                      }else{
-                        result[0][i].message_status="2";
-                      }
-                      // console.log(group_status_json[j],group_status_json[j].user_id, result[0][i].senter_id,result[0][i].id,result[0][i].message_status)
-                      // exit ()
-                    }
+                  //console.log(result[0][i]['delivered_status'],'delivered_status' in group_status_json[j],group_status_json[j]);
+                  
+                  if(result[0][i]['delivered_status']==0){
+                    result[0][i].message_status=result[0][i].message_status;
+                  }else{
+                    result[0][i].message_status="2";
                   }
+                  
+                  // if('delivered_status' in group_status_json[j]){
+                  //   //console.log(result[0][i].delivered_status)
+                  //   if(result[0][i].delivered_status==0){
+                  //     result[0][i].message_status=result[0][i].message_status;
+                  //   }else{
+                  //     //result[0][i].message_status="2";
+                      
+                  //     if(group_status_json[j].user_id==result[0][i].senter_id){
+                  //       result[0][i].message_status=result[0][i].message_status;
+                  //     }else{
+                  //       result[0][i].message_status="2";
+                  //     }
+                  //     // console.log(group_status_json[j],group_status_json[j].user_id, result[0][i].senter_id,result[0][i].id,result[0][i].message_status)
+                  //     // exit ()
+                  //   }
+                  // }
                   //console.log(group_status_json[j])
                   if('read_receipt' in group_status_json[j]){
                     read_receipt=group_status_json[j].read_receipt;
@@ -2011,18 +2024,23 @@ async function get_group_chat_list_response(user_id,group_id){
                 }else{
                   get_all_group_messages[i].message='This message was deleted';
                 }
-                if('delivered_status' in group_status_json[j]){
-                  if(get_all_group_messages[i].delivered_status==0){
-                    get_all_group_messages[i].message_status=get_all_group_messages[i].message_status;
-                  }else{
-                    //get_all_group_messages[i].message_status="2";
-                    if(group_status_json[j].user_id==get_all_group_messages[i].senter_id){
-                      get_all_group_messages[i].message_status=get_all_group_messages[i].message_status;
-                    }else{
-                      get_all_group_messages[i].message_status="2";
-                    }
-                  }
+                if(get_all_group_messages[i].delivered_status==0){
+                  get_all_group_messages[i].message_status=get_all_group_messages[i].message_status;
+                }else{
+                    get_all_group_messages[i].message_status="2";
                 }
+                // if('delivered_status' in group_status_json[j]){
+                //   if(get_all_group_messages[i].delivered_status==0){
+                //     get_all_group_messages[i].message_status=get_all_group_messages[i].message_status;
+                //   }else{
+                //     //get_all_group_messages[i].message_status="2";
+                //     if(group_status_json[j].user_id==get_all_group_messages[i].senter_id){
+                //       get_all_group_messages[i].message_status=get_all_group_messages[i].message_status;
+                //     }else{
+                //       get_all_group_messages[i].message_status="2";
+                //     }
+                //   }
+                // }
                 get_all_group_messages[i].message_type='text';
                 //check date already exist in array
                 if(date_array.includes(split_date[0])){
@@ -2131,18 +2149,25 @@ async function get_group_chat_list_response(user_id,group_id){
                     read_receipt=0;
                   }
                 }
-                if('delivered_status' in group_status_json[j]){
-                  if(get_all_group_messages[i].delivered_status==0){
-                    get_all_group_messages[i].message_status=get_all_group_messages[i].message_status;
-                  }else{
-                    //get_all_group_messages[i].message_status="2";
-                    if(group_status_json[j].user_id==get_all_group_messages[i].senter_id){
-                      get_all_group_messages[i].message_status=get_all_group_messages[i].message_status;
-                    }else{
-                      get_all_group_messages[i].message_status="2";
-                    }
-                  }
+                console.log(get_all_group_messages[i].delivered_status)
+                //exit ()
+                if(get_all_group_messages[i].delivered_status==0){
+                  get_all_group_messages[i].message_status=get_all_group_messages[i].message_status;
+                }else{
+                    get_all_group_messages[i].message_status="2";
                 }
+                // if('delivered_status' in group_status_json[j]){
+                //   if(get_all_group_messages[i].delivered_status==0){
+                //     get_all_group_messages[i].message_status=get_all_group_messages[i].message_status;
+                //   }else{
+                //     //get_all_group_messages[i].message_status="2";
+                //     if(group_status_json[j].user_id==get_all_group_messages[i].senter_id){
+                //       get_all_group_messages[i].message_status=get_all_group_messages[i].message_status;
+                //     }else{
+                //       get_all_group_messages[i].message_status="2";
+                //     }
+                //   }
+                // }
                 if(date_array.includes(split_date[0])){
                   //console.log('date is already exist')
                   group_messages.push({
@@ -4218,21 +4243,23 @@ async function get_recent_chat_list_response(user_id){
 
 async function search_chat_list_response(user_id,search){
   let get_recent_chat=[];
+  let search_text_message=[];
   if(search!=''){
     get_recent_chat=await queries.search_chat_list_data(user_id,search);
+    search_text_message=await queries.search_text_messages(user_id,search);
   }else{
     get_recent_chat=await queries.get_recent_chat(user_id);
   }
 
-  //console.log('search chat ',get_recent_chat);
-  //exit ()
+  // console.log('search chat ',get_recent_chat);
+  // exit ()
   //console.log('testing')
   let chat_list_data=[];
   //get current datetime
   //let archived_chat_list=await queries.archived_chat_list_details(user_id);
   let get_archived_and_deleted_chat_list=await queries.archived_and_deleted_chat_list(user_id);
-  //console.log(get_archived_and_deleted_chat_list);
-  //exit ();
+  // console.log(get_archived_and_deleted_chat_list);
+  // exit ();
   let current_datetime=get_datetime();
   if(get_recent_chat.length>0){
     for(var i=0; i<get_recent_chat.length; i++){
@@ -4288,6 +4315,7 @@ async function search_chat_list_response(user_id,search){
         let opponent_name='';
         let opponent_profile='';
         let opponent_phone='';
+        let opponent_about='';
         //get opponent data
         //if(user_id==get_recent_chat[i].senter_id){
           //opponent_data=await queries.get_user_profile(get_recent_chat[i].receiver_id);
@@ -4363,7 +4391,51 @@ async function search_chat_list_response(user_id,search){
               }
             }
             opponent_phone=get_recent_chat[i].opponent_phone;
-         
+            //check who can see my about
+            let check_privacy_about=await queries.check_user_privacy(get_recent_chat[i].opponent_id,'about');
+            if(check_privacy_about.length>0){
+              let about_options=check_privacy_about[0].options;
+              if(about_options==0){
+                opponent_about=get_recent_chat[i].opponent_about;
+              }else if(about_options==1){
+                let excepted_users=check_privacy_about[0].except_users;
+                if(excepted_users!=''){
+                  excepted_users=JSON.parse(check_privacy_about[0].except_users);
+                }else{
+                  excepted_users=[];
+                }
+                if(excepted_users.includes(user_id)){
+                  if(get_recent_chat[0].about!=''){
+                    opponent_about=get_recent_chat[0].about;
+                  }else{
+                    opponent_about='Hey there! I am using Smart Station';
+                  }
+                }else{
+                  opponent_about='Hey there! I am using Smart Station';
+                }
+              }else if(about_options==2){
+                let excepted_users=check_privacy_about[0].except_users;
+                if(excepted_users!=''){
+                  excepted_users=JSON.parse(check_privacy_about[0].except_users);
+                }else{
+                  excepted_users=[];
+                }
+                if(excepted_users.includes(user_id)){
+                  opponent_about='Hey there! I am using Smart Station';
+                  
+                }else{
+                  if(get_recent_chat[0].about!=''){
+                    opponent_about=get_recent_chat[0].about;
+                  }else{
+                    opponent_about='Hey there! I am using Smart Station';
+                  }
+                }
+              }else if(about_options==3){
+                opponent_about='Hey there! I am using Smart Station';
+              }
+            }else{
+              opponent_about=get_recent_chat[i].opponent_about;
+            }
         //set base url to profile pic
         if(opponent_profile!=''){
           opponent_profile=BASE_URL+opponent_profile;
@@ -4411,7 +4483,9 @@ async function search_chat_list_response(user_id,search){
               pin_status: get_recent_chat[i].pin_status.toString(),
               device_token: get_recent_chat[i].device_token,
               optional_text: get_recent_chat[i].optional_text,
-              mark_as_unread: mark_as_unread.toString()
+              mark_as_unread: mark_as_unread.toString(),
+              archived_status: '0',
+              about: opponent_about 
             })
           }else if(group_status[j].user_id==user_id && group_status[j].status==1){
             let mark_as_unread=0;
@@ -4571,7 +4645,9 @@ async function search_chat_list_response(user_id,search){
               pin_status: get_recent_chat[i].pin_status.toString(),
               device_token: get_recent_chat[i].device_token,
               optional_text: get_recent_chat[i].optional_text ? get_recent_chat[i].optional_text : '',
-              mark_as_unread: mark_as_unread.toString()
+              mark_as_unread: mark_as_unread.toString(),
+              archived_status: '0',
+              about: opponent_about 
             })
             // if(get_recent_chat[i].id==650){
             //   console.log(get_recent_chat[i].message,get_recent_chat[i].message_type,chat_list_data)
@@ -4602,7 +4678,9 @@ async function search_chat_list_response(user_id,search){
                 device_token: get_recent_chat[i].device_token,
                 //optional_text: get_recent_chat[i].optional_text,
                 optional_text: '',
-                mark_as_unread: "0"
+                mark_as_unread: "0",
+                archived_status: '0',
+                about: opponent_about 
               })
             }else{
               chat_list_data.push({
@@ -4622,7 +4700,9 @@ async function search_chat_list_response(user_id,search){
                 pin_status: get_recent_chat[i].pin_status.toString(),
                 device_token: get_recent_chat[i].device_token,
                 optional_text: get_last_private_message[0].optional_text ? get_last_private_message[0].optional_text : '',
-                mark_as_unread: get_last_private_message[0].mark_as_unread.toString()
+                mark_as_unread: get_last_private_message[0].mark_as_unread.toString(),
+                archived_status: '0',
+                about: opponent_about 
               })
             }
           }
@@ -4771,7 +4851,9 @@ async function search_chat_list_response(user_id,search){
                 pin_status: get_recent_chat[i].pin_status.toString(),
                 device_token: get_recent_chat[i].device_token,
                 optional_text: get_recent_chat[i].optional_text ? get_recent_chat[i].optional_text : '',
-                mark_as_unread: mark_as_unread.toString()
+                mark_as_unread: mark_as_unread.toString(),
+                archived_status: '0',
+                about: get_recent_chat[i].opponent_about 
               });
             }else if(group_status[j].user_id==user_id && group_status[j].status==1){
               let mark_as_unread=0;
@@ -5009,7 +5091,8 @@ async function search_chat_list_response(user_id,search){
                 device_token: get_recent_chat[i].device_token,
                 optional_text: get_recent_chat[i].optional_text ? get_recent_chat[i].optional_text : '',
                 mark_as_unread: mark_as_unread.toString(),
-                archived_status: '0'
+                archived_status: '0',
+                about: get_recent_chat[i].opponent_about
               });
             }else if(group_status[j].user_id==user_id && group_status[j].status==2){
               console.log(get_recent_chat[i].room,get_recent_chat[i].id)
@@ -5038,7 +5121,8 @@ async function search_chat_list_response(user_id,search){
                   device_token: get_recent_chat[i].device_token,
                   optional_text: get_recent_chat[i].optional_text ? get_recent_chat[i].optional_text : '',
                   mark_as_unread: '0',
-                  archived_status: '0'
+                  archived_status: '0',
+                  about: get_recent_chat[i].opponent_about
                 });
                 
               }else{
@@ -5061,7 +5145,8 @@ async function search_chat_list_response(user_id,search){
                   device_token: get_recent_chat[i].device_token,
                   optional_text: get_last_group_message[0].optional_text ? get_last_group_message[0].optional_text : '',
                   mark_as_unread: get_last_group_message[0].mark_as_unread.toString(),
-                  archived_status: '0'
+                  archived_status: '0',
+                  about: get_recent_chat[i].opponent_about
                 });
               }
               
@@ -5117,13 +5202,30 @@ async function search_chat_list_response(user_id,search){
     }
     
     //console.log('after',chat_list_data.length,chat_list_data)
+    
+    console.log(search_text_message)
+    let text_message_data=[];
+    if(search_text_message.length>0){
+      for(var m=0;m<search_text_message.length;m++){
+        console.log(search_text_message[m])
+        text_message_data.push({
+          id: search_text_message[m].id,
+          date: search_text_message[m].date,
+          name: search_text_message[m].opponent_name,
+          user_id: search_text_message[m].opponent_id,
+          message: search_text_message[m].sender+': '+search_text_message[m].message,
+          room: search_text_message[m].room
+        })
+      }
+    }
     let setresponse={
       status: true,
       statuscode: 200,
       message: "success", 
       socket: true,
       //archived_chat_list:archived_list,
-      data:chat_list_data
+      data: chat_list_data,
+      messages: text_message_data
     }
     return setresponse;
   }else{
@@ -5133,7 +5235,8 @@ async function search_chat_list_response(user_id,search){
       message: "No chat found", 
       socket: true,
       //archived_chat_list:[],
-      data:[]
+      data:[],
+      messages: []
     }
     return setresponse;
   }
@@ -5399,6 +5502,13 @@ async function get_group_info(user_id,accessToken,group_id){
         current_group_users=[];
       }
       //console.log('yes',current_group_users);
+      let user_left_status="0";
+      //check user exist in group -- user left status
+      let check_user_left_status=await sub_function.check_user_data_exist_in_array(user_id,current_group_users);
+      //console.log(check_user_left_status)
+      if(check_user_left_status){
+        user_left_status="1";
+      }
       let group_users=[];
       for(var i=0; i<current_group_users.length; i++){
         let profile_pic='';
@@ -5613,6 +5723,7 @@ async function get_group_info(user_id,accessToken,group_id){
         status: true,
         statuscode: 200,
         message: 'success',
+        user_left_status: user_left_status,
         group_name: check_group_data[0].group_name,
         group_profile: BASE_URL+check_group_data[0].group_profile,
         created_by: group_created_by_name,

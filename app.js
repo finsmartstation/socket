@@ -47,7 +47,7 @@ const e = require('express');
 const { on } = require('events');
 const { where } = require('sequelize');
 const botName = 'Smart_Station_Bot';
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 3001;
 db.sequelize.sync();
 
 // Results will be an empty array and metadata will contain the number of affected rows.
@@ -608,7 +608,6 @@ io.sockets.on('connection',async function (socket) {
     //   }
     // })
     socket.on('message', async function (data) {
-      
       //console.log('message data')
       try{
         
@@ -6927,6 +6926,7 @@ io.sockets.on('connection',async function (socket) {
                     io.sockets.in(user_id+'_message_delivered').emit('message_delivered',{status: true, statuscode: 200, message: "success"});
                     //emit recent_chat_list to sender
                     console.log(message_sender_ids)
+                    //exit ()
                     for(var k=0; k<message_sender_ids.length; k++){
                       //console.log(message_sender_ids[k],message_ids[k])
                       if(message_sender_ids[k]!=user_id){
@@ -6940,7 +6940,7 @@ io.sockets.on('connection',async function (socket) {
                         io.sockets.in(room+'_'+message_sender_ids[k]).emit('message',sender_group_room_chat_list);
                         //sender chat list
                         let recent_chat_list=await functions.get_recent_chat_list_response(message_sender_ids[k]);
-                        io.sockets.in(message_sender_ids[k]).emit('chat_list',recent_chat_list);
+                        io.sockets.in(message_sender_ids[k].toString()).emit('chat_list',recent_chat_list);
                       }
                     }
                   }else{
@@ -6972,7 +6972,7 @@ io.sockets.on('connection',async function (socket) {
     })
     socket.on('test_changes',async function(data){
       socket.join('test_changes');
-      io.sockets.in('test_changes').emit('test_changes',{status: true, statuscode: 200, message: "last changes affected upto 03-07-2023"});
+      io.sockets.in('test_changes').emit('test_changes',{status: true, statuscode: 200, message: "last changes affected upto 07-07-2023"});
       socket.leave('test_changes');
     });
     socket.on('private_chat_export_data',async function(data){
