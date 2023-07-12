@@ -608,6 +608,7 @@ io.sockets.on('connection',async function (socket) {
     //   }
     // })
     socket.on('message', async function (data) {
+      
       //console.log('message data')
       try{
         
@@ -626,11 +627,12 @@ io.sockets.on('connection',async function (socket) {
         //check user room is exist in deleted chat list
         let check_user_deleted_chat_list=await queries.get_user_deleted_chat_list(data.sid);
         //console.log(check_user_deleted_chat_list)
-        if(check_user_deleted_chat_list.length>0){
+        //if(check_user_deleted_chat_list.length>0){
           //delete the room from deleted_chat_list
-          let delete_room_from_deleted_chat_list=await queries.delete_room_from_deleted_chat_list(data.sid,data.room);
+          //let delete_room_from_deleted_chat_list=await queries.delete_room_from_deleted_chat_list(data.sid,data.room);
+          let delete_room_from_deleted_chat_list=await queries.delete_room_from_deleted_chat_list(data.room);
           //console.log(delete_room_from_deleted_chat_list)
-        }
+        //}
         var current_date = new Date();
         var date = current_date.toISOString().slice(0, 10);
         var datetime = get_datetime();
@@ -952,11 +954,12 @@ io.sockets.on('connection',async function (socket) {
         //console.log(data.sid)
         let check_user_deleted_chat_list=await queries.get_user_deleted_chat_list(data.sid);
         //console.log(check_user_deleted_chat_list)
-        if(check_user_deleted_chat_list.length>0){
+        //if(check_user_deleted_chat_list.length>0){
           //delete the room from deleted_chat_list
-          let delete_room_from_deleted_chat_list=await queries.delete_room_from_deleted_chat_list(data.sid,room);
+          //let delete_room_from_deleted_chat_list=await queries.delete_room_from_deleted_chat_list(data.sid,room);
+          let delete_room_from_deleted_chat_list=await queries.delete_room_from_deleted_chat_list(room);
           //console.log(delete_room_from_deleted_chat_list)
-        }
+        //}
         //check message_id exist for replay_id
         let message_id=0;
         if(data.message_id){
@@ -1025,14 +1028,15 @@ io.sockets.on('connection',async function (socket) {
         var hr_str = "" + hours;
         var min_str = "" + minute;
         var sec_str = "" + second;
-        var pad = "00"
+        var pad = "00";
         var hr = pad.substring(0, pad.length - hr_str.length) + hr_str;
         var min = pad.substring(0, pad.length - min_str.length) + min_str;
         var sec = pad.substring(0, pad.length - sec_str.length) + sec_str;
         var time = hr + ":" + min + ":" + sec;
         var datetime = date + " " + time;
         var individual_Date=await queries.individual_chat_date(date,room);
-        //console.log('individual date length',individual_Date.length)
+        console.log('individual date length',individual_Date,individual_Date.length)
+        //exit ()
         //check user read receipt status
         let senter_read_receipt=0;
         let receiver_read_receipt=0;
@@ -1113,7 +1117,9 @@ io.sockets.on('connection',async function (socket) {
           //console.log(group_status_data)
           //exit ()
           var group_status_json_data = JSON.stringify(group_status_data);
-          if (individual_Date.length > 0) {
+          console.log(individual_Date[0],individual_Date[0].length)
+          //exit ()
+          if (individual_Date[0].length > 0) {
             if (type == 'text') {
               var result=await queries.individual_text_msg(datetime,data.sid,data.rid,message,room,group_status_json_data,message_id,optional_text)
             }else if (type == 'image') {
@@ -1150,6 +1156,7 @@ io.sockets.on('connection',async function (socket) {
             }else if (type == "video") {
               let split_path=message.split(',');
               let split_thumbnail=thumbnail.split(',');
+              //console.log(split_path)
               for(var i=0;i<split_path.length;i++){
                 let thumbnail_path=split_thumbnail[i] ? split_thumbnail[i] : '';
                 if(i==0){
@@ -1163,6 +1170,27 @@ io.sockets.on('connection',async function (socket) {
               //save latitude and longitude of the map location
               let thumbnail_path=thumbnail ? thumbnail : '';
               var result=await queries.individual_location_msg(datetime,data.sid,data.rid,message,room,group_status_json_data,duration,message_id,optional_text,thumbnail_path)
+            } else if(type=="contact"){
+              //if(message!=''){
+                let split_semicolon=message.split(';');
+              //}
+              console.log(split_semicolon);
+              let contacts=[];
+              for(var i=0; i<split_semicolon.length; i++){
+                console.log(split_semicolon[i])
+                let splipt_colon=split_semicolon[i].split(':');
+                console.log(splipt_colon);
+                //check contact number user is using smart station 
+                let get_user_id=await functions.get_user_id_using_mobile_number(splipt_colon[0]);
+                
+                contacts.push({
+                  user_id: '',
+                  number: splipt_colon[0],
+                  contact_name: splipt_colon[1]
+                });
+              }
+              //console.log('contact data ',contacts)
+              //exit ()
             } else {
               type = '';
             } 
@@ -1199,7 +1227,7 @@ io.sockets.on('connection',async function (socket) {
             await queries.individual_date_insert(datetime,data.sid,data.rid,room,group_status_json_data,message_id);
             
             if (type == 'text') {
-              await queries.individual_text_msg(datetime, datasid, datarid, message, room, group_status_json_data,message_id,optional_text)
+              await queries.individual_text_msg(datetime, data.sid, data.rid, message, room, group_status_json_data,message_id,optional_text)
             }
             else if (type == 'image') {
               let split_path=message.split(',');
@@ -2551,17 +2579,17 @@ io.sockets.on('connection',async function (socket) {
           if(get_group_basic_details.length>0){
             let current_group_members=JSON.parse(get_group_basic_details[0].current_members)
             //console.log(current_group_members)
-            io.sockets.in(room).emit('type_group', { "status": "true", "statuscode": "200", "message": "success", "typing": status, "user_id": data.sid, "name": username});
+            io.sockets.in(room).emit('type_group', { "status": "true", "statuscode": "200", "message": "success", "typing": status, "user_id": room, "name": username, "typing_user_id": sid});
             //typing_individual_chatlist
             //io.sockets.in(room).emit('typing_individual_chatlist', { "status": "true", "statuscode": "200", "message": "success", "typing": status, "user_id": data.sid, "name": username});
             // let active_rooms=io.sockets.adapter.rooms;
             // console.log(active_rooms.get('group_20221110045738'))
-            console.log('sender user')
+            //console.log('sender user')
             for(var i=0; i<current_group_members.length; i++){
               if(sid!=current_group_members[i].user_id){
                 console.log('sender user',current_group_members[i].user_id)
                 //emit to the other user
-                io.sockets.in(current_group_members[i].user_id).emit('typing_individual_chatlist', { "status": "true", "statuscode": "200", "message": "success", "typing": status, "user_id": data.sid, "name": username});
+                io.sockets.in(current_group_members[i].user_id).emit('typing_individual_chatlist', { "status": "true", "statuscode": "200", "message": "success", "typing": status, "user_id": room, "name": username, "typing_user_id": sid});
               }
             }
           }else{
@@ -5408,12 +5436,17 @@ io.sockets.on('connection',async function (socket) {
           //let accessToken=data.accessToken ? data.accessToken : '';
           let rid=data.rid ? data.rid : '';
           let room=data.room ? data.room : '';
-          
+          let page_number=data.page_number ? data.page_number : 0;
+          let limit=5;
+          //page_number=(page_number-1)*limit;
+          //console.log(page_number);
+          let message_id=data.message_id ? data.message_id : 0;
           //console.log('not empty')
           if(room!=''){
             //console.log('group',room+'_'+user_id)
-            
-            let get_group_chat_list_response=await functions.get_group_chat_list_response(user_id,room);
+            //let get_group_chat_list_response=await functions.get_group_chat_list_response(user_id,room);
+            //using pagination
+            let get_group_chat_list_response=await functions.group_message_using_pagination(user_id,room,limit,message_id);
             //console.log(get_individual_chat_list_response)
             io.sockets.in(room+'_'+user_id).emit('message', get_group_chat_list_response);
           }else{
@@ -5426,7 +5459,9 @@ io.sockets.on('connection',async function (socket) {
               room = '' + user_id + rid;
               //console.log('room id in else', room);
             }
-            let get_individual_chat_list_response=await functions.get_individual_chat_list_response(user_id,rid,room);
+            //let get_individual_chat_list_response=await functions.get_individual_chat_list_response(user_id,rid,room);
+            //using pagination
+            let get_individual_chat_list_response=await functions.individual_message_using_pagination(user_id,rid,room,limit,message_id);
             //console.log(get_individual_chat_list_response)
             io.sockets.in(room+'_'+user_id).emit('message', get_individual_chat_list_response);
           }
@@ -5437,6 +5472,7 @@ io.sockets.on('connection',async function (socket) {
         }
       }catch(e){
         console.error(e)
+        exit ()
       }
     });
     socket.on('read', async function(data){
@@ -6459,20 +6495,28 @@ io.sockets.on('connection',async function (socket) {
                     console.log('already exist ')
                   }
                 }
+                console.log(total_count)
+              //exit ()
                 if(total_count>0){
                   //check chat_list is pinned or unpinned
-                  let remove_user_pinned_rooms=await queries.remove_user_pinned_rooms(user_id,room);
+                  console.log(room,'- ',room_query)
+                  //exit ()
+                  room_query=room_query.replace(/,(?=[^,]*$)/, '');
+                  let remove_user_pinned_rooms=await queries.remove_user_pinned_rooms(user_id,room_query);
+                 
+                  
                   //console.log(remove_user_pinned_rooms);
                   //exit ()
                   //clear room chat message
                   //SELECT * FROM `chat_list` where room in ('550','group_20221003093352') and JSON_CONTAINS(JSON_EXTRACT(group_status, '$[*].user_id'), '"5"', '$') ORDER BY `id` DESC;
                   //console.log(room_query)
-                  room_query=room_query.replace(/,(?=[^,]*$)/, '');
+                  
                   let set_user_id='"'+user_id+'"';
                   let query="SELECT * FROM `chat_list` where room in ("+room_query+") and JSON_CONTAINS(JSON_EXTRACT(group_status, '$[*].user_id'), '"+set_user_id+"', '$') ORDER BY `id` DESC";
-                  console.log(query)
+                  //console.log(query)
+                  
                   let room_user_messages=await queries.room_user_messages(query);
-                  //console.log(room_user_messages.length);
+                  console.log(room_user_messages.length);
                   //exit ()
                   let total_uncleared_message=0;
                   let case_query='';
@@ -6972,7 +7016,7 @@ io.sockets.on('connection',async function (socket) {
     })
     socket.on('test_changes',async function(data){
       socket.join('test_changes');
-      io.sockets.in('test_changes').emit('test_changes',{status: true, statuscode: 200, message: "last changes affected upto 07-07-2023"});
+      io.sockets.in('test_changes').emit('test_changes',{status: true, statuscode: 200, message: "last changes affected upto 12-07-2023 (2)"});
       socket.leave('test_changes');
     });
     socket.on('private_chat_export_data',async function(data){
@@ -6993,7 +7037,6 @@ io.sockets.on('connection',async function (socket) {
             if(check_user_data.length>0){
               //create room
               if (Number(user_id) > Number(receiver_id)) {
-                
                 room = '' + receiver_id + user_id;
                 //console.log('room id in if' + room);
               } else {
@@ -7407,12 +7450,12 @@ io.sockets.on('connection',async function (socket) {
               let search_chat_list=await functions.search_chat_list_response(user_id,search);
               io.sockets.in(user_id+'_search_chat_list').emit('search_chat_list',search_chat_list)
             }else{
-              io.sockets.in(user_id+'_search_chat_list').emit('search_chat_list',{status: false, statuscode: 200, message: "No user data found", data:[]});
+              io.sockets.in(user_id+'_search_chat_list').emit('search_chat_list',{status: false, statuscode: 200, message: "No user data found", data:[], messages: []});
             }
             socket.leave(user_id+'_search_chat_list');
           }else{
             socket.join(data.user_id+'_search_chat_list');
-            io.sockets.in(data.user_id+'_search_chat_list').emit('search_chat_list',{status: false, statuscode: 200, message: "Data is empty", data:[]});
+            io.sockets.in(data.user_id+'_search_chat_list').emit('search_chat_list',{status: false, statuscode: 200, message: "Data is empty", data:[], messages: []});
             socket.leave(data.user_id+'_search_chat_list');
           }
         }else{

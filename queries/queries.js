@@ -93,7 +93,27 @@ async function individual_location_msg(datetime, sid, rid, message, room, group_
 
 async function send_indv_message(rid, room){
     //const results = await db.sequelize.query("SELECT t1.id,DATE_FORMAT(t1.date,'%Y-%m-%d %H:%i:%s') as date,t1.senter_id,t1.receiver_id,t1.message,t1.message_type,t1.delivered_status,t1.message_status,t1.room,t1.duration, IF(t1.receiver_id='" + rid + "', 'sent', 'receive') as type FROM `chat_list` t1 JOIN `user` t2 on t2.id='" + rid + "' WHERE room='" + room + "' and t1.status='1'");
-    const results = await db.sequelize.query("SELECT t1.id,DATE_FORMAT(t1.date,'%Y-%m-%d %H:%i:%s') as date,t1.senter_id,t1.receiver_id,t1.replay_id,t1.forward_id,t1.message,t1.message_type,t1.optional_text,t1.thumbnail,t1.duration,t1.delivered_status,t1.message_status,t1.room, IF(t1.receiver_id='"+rid+"', 'sent', 'receive') as type,t1.group_status  FROM `chat_list` t1 JOIN `user` t2 on t2.id='"+rid+"' where room='"+room+"' and message_type!='date' order by id asc");
+    //const results = await db.sequelize.query("SELECT t1.id,DATE_FORMAT(t1.date,'%Y-%m-%d %H:%i:%s') as date,t1.senter_id,t1.receiver_id,t1.replay_id,t1.forward_id,t1.message,t1.message_type,t1.optional_text,t1.thumbnail,t1.duration,t1.delivered_status,t1.message_status,t1.room, IF(t1.receiver_id='"+rid+"', 'sent', 'receive') as type,t1.group_status  FROM `chat_list` t1 JOIN `user` t2 on t2.id='"+rid+"' where room='"+room+"' and message_type!='date' order by id asc");
+    //get last message only
+    const results = await db.sequelize.query("SELECT t1.id,DATE_FORMAT(t1.date,'%Y-%m-%d %H:%i:%s') as date,t1.senter_id,t1.receiver_id,t1.replay_id,t1.forward_id,t1.message,t1.message_type,t1.optional_text,t1.thumbnail,t1.duration,t1.delivered_status,t1.message_status,t1.room, IF(t1.receiver_id='"+rid+"', 'sent', 'receive') as type,t1.group_status  FROM `chat_list` t1 JOIN `user` t2 on t2.id='"+rid+"' where room='"+room+"' and message_type!='date' order by id desc limit 1");
+    return results;
+}
+
+async function individual_room_using_pagination(sid,rid, room,limit,message_id){
+    //console.log(rid,room)
+    let json_object_0='{"user_id":"'+sid+'","status":0}';
+    let json_object_1='{"user_id":"'+sid+'","status":1}';
+    //console.log(json_object_0,json_object_1);
+    //SELECT t1.id,DATE_FORMAT(t1.date,'%Y-%m-%d %H:%i:%s') as date,t1.senter_id,t1.receiver_id,t1.replay_id,t1.forward_id,t1.message,t1.message_type,t1.optional_text,t1.thumbnail,t1.duration,t1.delivered_status,t1.message_status,t1.room, IF(t1.receiver_id='2', 'sent', 'receive') as type,t1.group_status  FROM `chat_list` t1 JOIN `user` t2 on t2.id='2' where room='12' and message_type!='date' and (JSON_CONTAINS(t1.group_status,'{"user_id":"1","status":0}') or JSON_CONTAINS(t1.group_status,'{"user_id":"1","status":1}')) order by id desc limit 5 OFFSET 0;
+    var results;
+    if(message_id!=0){
+        //results = await db.sequelize.query("SELECT t1.id,DATE_FORMAT(t1.date,'%Y-%m-%d %H:%i:%s') as date,t1.senter_id,t1.receiver_id,t1.replay_id,t1.forward_id,t1.message,t1.message_type,t1.optional_text,t1.thumbnail,t1.duration,t1.delivered_status,t1.message_status,t1.room, IF(t1.receiver_id='"+rid+"', 'sent', 'receive') as type,t1.group_status  FROM `chat_list` t1 JOIN `user` t2 on t2.id='"+rid+"' where t1.id<'"+message_id+"' and t1.room='"+room+"' and (JSON_CONTAINS(t1.group_status,'"+json_object_0+"') or JSON_CONTAINS(t1.group_status,'"+json_object_1+"')) order by id desc limit "+limit+" OFFSET "+page_number+"");
+        results = await db.sequelize.query("SELECT t1.id,DATE_FORMAT(t1.date,'%Y-%m-%d %H:%i:%s') as date,t1.senter_id,t1.receiver_id,t1.replay_id,t1.forward_id,t1.message,t1.message_type,t1.optional_text,t1.thumbnail,t1.duration,t1.delivered_status,t1.message_status,t1.room, IF(t1.receiver_id='"+rid+"', 'sent', 'receive') as type,t1.group_status  FROM `chat_list` t1 JOIN `user` t2 on t2.id='"+rid+"' where t1.id<'"+message_id+"' and t1.room='"+room+"' and (JSON_CONTAINS(t1.group_status,'"+json_object_0+"') or JSON_CONTAINS(t1.group_status,'"+json_object_1+"')) order by id desc limit "+limit+" ");
+    }else{
+        //results = await db.sequelize.query("SELECT t1.id,DATE_FORMAT(t1.date,'%Y-%m-%d %H:%i:%s') as date,t1.senter_id,t1.receiver_id,t1.replay_id,t1.forward_id,t1.message,t1.message_type,t1.optional_text,t1.thumbnail,t1.duration,t1.delivered_status,t1.message_status,t1.room, IF(t1.receiver_id='"+rid+"', 'sent', 'receive') as type,t1.group_status  FROM `chat_list` t1 JOIN `user` t2 on t2.id='"+rid+"' where t1.room='"+room+"' and (JSON_CONTAINS(t1.group_status,'"+json_object_0+"') or JSON_CONTAINS(t1.group_status,'"+json_object_1+"')) order by id desc limit "+limit+" OFFSET "+page_number+"");
+        results = await db.sequelize.query("SELECT t1.id,DATE_FORMAT(t1.date,'%Y-%m-%d %H:%i:%s') as date,t1.senter_id,t1.receiver_id,t1.replay_id,t1.forward_id,t1.message,t1.message_type,t1.optional_text,t1.thumbnail,t1.duration,t1.delivered_status,t1.message_status,t1.room, IF(t1.receiver_id='"+rid+"', 'sent', 'receive') as type,t1.group_status  FROM `chat_list` t1 JOIN `user` t2 on t2.id='"+rid+"' where t1.room='"+room+"' and (JSON_CONTAINS(t1.group_status,'"+json_object_0+"') or JSON_CONTAINS(t1.group_status,'"+json_object_1+"')) order by id desc limit "+limit+" ");
+    }
+    
     return results;
 }
 async function get_recent_chat_accessToken(rid){
@@ -135,15 +155,20 @@ async function search_text_messages(user_id,search){
     let set_user_id='"'+user_id+'"';
     let json_options='{"user_id": '+set_user_id+', "status": 1}';
     //console.log(json_options)
-    const results=await db.sequelize.query("SELECT t1.*,DATE_FORMAT(t1.date,'%Y-%m-%d %H:%i:%s') as date, CASE WHEN t1.private_group=0 THEN if(t1.senter_id='"+user_id+"',t3.id,t2.id) ELSE t4.group_id END as opponent_id,CASE WHEN t1.private_group=0 THEN if(t1.senter_id='"+user_id+"',t3.name,t2.name) ELSE t4.group_name END as opponent_name,if(t1.senter_id='"+user_id+"','You',t2.name) as sender FROM `chat_list` t1 LEFT JOIN `user` t2 on t2.id=t1.senter_id LEFT JOIN `user` t3 on t3.id=t1.receiver_id LEFT JOIN `group_list` t4 on t4.group_id=t1.room where (LOWER(t1.message) LIKE LOWER('%vi%')) and t1.message_type='text' and JSON_CONTAINS(t1.group_status, '"+json_options+"') ORDER BY t1.id DESC");
+    const results=await db.sequelize.query("SELECT t1.*,DATE_FORMAT(t1.date,'%Y-%m-%d %H:%i:%s') as date, CASE WHEN t1.private_group=0 THEN if(t1.senter_id='"+user_id+"',t3.id,t2.id) ELSE t4.group_id END as opponent_id,CASE WHEN t1.private_group=0 THEN if(t1.senter_id='"+user_id+"',t3.name,t2.name) ELSE t4.group_name END as opponent_name,if(t1.senter_id='"+user_id+"','You',t2.name) as sender FROM `chat_list` t1 LEFT JOIN `user` t2 on t2.id=t1.senter_id LEFT JOIN `user` t3 on t3.id=t1.receiver_id LEFT JOIN `group_list` t4 on t4.group_id=t1.room where (LOWER(t1.message) LIKE LOWER('%"+search+"%')) and t1.message_type='text' and JSON_CONTAINS(t1.group_status, '"+json_options+"') ORDER BY t1.id DESC");
     return results[0];
 }
 async function individual_date_insert(datetime,sid,rid,room,group_status_json_data,message_id){
     const results=await db.sequelize.query("INSERT INTO chat_list( date,senter_id,receiver_id,replay_id,message,message_type,room,message_status,group_status) VALUES ('" + datetime + "','" + sid + "','" + rid + "','"+message_id+"','','date','" + room + "','0','" + group_status_json_data + "')")
-    return results;
+    return results[0];
 }
 async function group_chat_response(sid,user_id_quotes,room){
     //const results=await db.sequelize.query("SELECT t1.id,t1.date,t1.senter_id,t1.message,t1.message_type,t1.room,t1.message_status,t1.replay_id,t2.name,if(t1.senter_id='"+sid+"','sent','receive') as type,t1.group_status FROM `chat_list` t1 join `user` t2 on t1.Senter_id=t2.id where t1.room='"+room+"' and t1.status='1' and t1.private_group='1' and JSON_CONTAINS(JSON_EXTRACT(t1.group_status, '$[*].user_id'), '"+user_id_quotes+"', '$') order by id asc");
+    const results=await db.sequelize.query("SELECT t1.id,DATE_FORMAT(t1.date,'%Y-%m-%d %H:%i:%s') as date,t1.senter_id,t1.message,t1.replay_id,t1.forward_id,t1.message_type,t1.optional_text,t1.thumbnail,t1.duration,t1.room,t1.delivered_status,t1.message_status, t2.name,if(t1.senter_id='"+sid+"','sent','receive') as type,t1.group_status FROM `chat_list` t1 join `user` t2 on t1.Senter_id=t2.id where t1.room='"+room+"' and t1.private_group='1'  and JSON_CONTAINS(JSON_EXTRACT(t1.group_status, '$[*].user_id'), '"+user_id_quotes+"', '$') and t1.message_type!='date' order by id asc");
+    return results[0];
+}
+
+async function group_room_using_pagination(sid,user_id_quotes,room,limit,message_id){
     const results=await db.sequelize.query("SELECT t1.id,DATE_FORMAT(t1.date,'%Y-%m-%d %H:%i:%s') as date,t1.senter_id,t1.message,t1.replay_id,t1.forward_id,t1.message_type,t1.optional_text,t1.thumbnail,t1.duration,t1.room,t1.delivered_status,t1.message_status, t2.name,if(t1.senter_id='"+sid+"','sent','receive') as type,t1.group_status FROM `chat_list` t1 join `user` t2 on t1.Senter_id=t2.id where t1.room='"+room+"' and t1.private_group='1'  and JSON_CONTAINS(JSON_EXTRACT(t1.group_status, '$[*].user_id'), '"+user_id_quotes+"', '$') and t1.message_type!='date' order by id asc");
     return results[0];
 }
@@ -629,8 +654,9 @@ async function get_user_deleted_chat_list(user_id){
     return results[0];
 }
 
-async function delete_room_from_deleted_chat_list(user_id,room){
-    const results=await db.sequelize.query("delete from `deleted_chat_list` where user_id='"+user_id+"' and room='"+room+"'");
+async function delete_room_from_deleted_chat_list(room){
+    //const results=await db.sequelize.query("delete from `deleted_chat_list` where user_id='"+user_id+"' and room='"+room+"'");
+    const results=await db.sequelize.query("delete from `deleted_chat_list` where room='"+room+"'");
     return results[0];
 }
 
@@ -723,6 +749,11 @@ async function save_private_missed_call(senter_id,receiver_id,room,datetime,type
 
 async function save_group_call(user_id,room,datetime,type,call_type,duration,json_data,added_by){
     const results=await db.sequelize.query("INSERT INTO `call_list`(`senter_id`, `receiver_id`, `room_id`, `datetime`, `type`, `call_type`, `private_group`, `call_duration`, `status`, `json_data`, `added_by`) VALUES ('"+user_id+"','0','"+room+"','"+datetime+"','"+type+"','"+call_type+"','1','"+duration+"','1','"+json_data+"','"+added_by+"')");
+    return results[0];
+}
+
+async function check_user_id_based_mobile_number(mobile_number){
+    const results=await db.sequelize.query("select id FROM `user` where concat(country,phone) LIKE '%"+mobile_number+"%'");
     return results[0];
 }
 
@@ -859,5 +890,8 @@ module.exports = {
     save_private_missed_call_message,
     save_group_call,
     save_group_call_message,
-    search_text_messages
+    search_text_messages,
+    check_user_id_based_mobile_number,
+    individual_room_using_pagination,
+    group_room_using_pagination
 }
