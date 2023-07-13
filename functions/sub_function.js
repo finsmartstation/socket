@@ -869,6 +869,12 @@ async function get_last_private_message(room_id,message_id,user_id,opponent_prof
     })
   }
 
+  function check_id_exist_in_message_array(id,message_array){
+    return message_array.some(function(message){
+        return message.id == id;
+    })
+  }
+
   
 
   module.exports={
@@ -879,5 +885,6 @@ async function get_last_private_message(room_id,message_id,user_id,opponent_prof
     check_value_exist_in_deleted_chat_list,
     check_profile_pic_privacy,
     check_user_data_exist_in_array,
-    send_firebase_notification_group
+    send_firebase_notification_group,
+    check_id_exist_in_message_array
   }

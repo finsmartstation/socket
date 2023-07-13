@@ -1419,6 +1419,758 @@ async function get_individual_chat_list_response(sid,rid,room){
         return setresponse;
 }
 
+async function send_individual_message(sid,rid,room,date){
+  var result=await queries.individual_room_using_pagination(sid,rid,room,limit,message_id);
+  var get_current_datetime=get_datetime()
+  console.log(result[0],result[0].length)
+  let mute_status="0";
+  let check_private_chat_read_receipts=await queries.check_private_chat_read_receipts(sid,rid);
+  let check_mute_chat_list=await queries.get_mute_notification(sid,rid);
+  console.log(check_mute_chat_list);
+  
+  if(check_mute_chat_list.length>0){
+    //console.log(check_mute_chat_list[0].type,check_mute_chat_list[0].end_datetime)
+    if(check_mute_chat_list[0].type!='always' && check_mute_chat_list[0].end_datetime!='0000-00-00 00:00:00'){
+      console.log(get_current_datetime,'-',check_mute_chat_list[0].end_datetime);
+      if(get_current_datetime<=check_mute_chat_list[0].end_datetime){
+        mute_status="1";
+      }else{
+        mute_status="0";
+      }
+    }else{
+      mute_status="0";
+    }
+  }else{
+    mute_status="0";
+  }
+  // console.log(mute_status,get_current_datetime)
+  let default_read_receipt=0;
+  //console.log(check_private_chat_read_receipts,check_private_chat_read_receipts.length)
+  let read_receipt_datetime='';
+  if(check_private_chat_read_receipts.length>0){
+    for(var rr=0;rr<check_private_chat_read_receipts.length;rr++){
+      if(check_private_chat_read_receipts[rr].user_id==sid){
+        default_read_receipt=1;
+        read_receipt_datetime=check_private_chat_read_receipts[rr].updated_datetime;
+      }
+    }
+  }
+  let read_receipt=0;
+  //console.log(default_read_receipt)
+  //exit ()
+          //console.log('testing response', result[0],check_private_chat_read_receipts)
+          //exit ()
+          let message_length=result[0].length
+          let message_list_response=[];
+          let date_array=[];
+          for (var i = 0; i < message_length; i++) {
+            //console.log('replay id data ',result[0][i].replay_id)
+            let split_date=result[0][i].date.split(" ");
+            //console.log(split_date[0])
+            //change message_status type to string
+            result[0][i].senter_id=result[0][i].senter_id.toString();
+            result[0][i].receiver_id=result[0][i].receiver_id.toString();
+            result[0][i].message_status=result[0][i].message_status.toString();
+            if (result[0][i].message_type == 'date') {
+              result[0][i].type = 'date';
+              // console.log('first ', result[i].type)
+            }
+
+            //result[i].data='12's
+            //get reply message data
+            if(result[0][i]['replay_id']!=0 && result[0][i]['replay_id']!=''){
+              //console.log('msg has reply msg',result[0][i]['replay_id'])
+              
+              //write reply msg query to get reply msg details
+              let reply_message_details=await queries.reply_message_details(result[0][i]['replay_id']);
+              //console.log(reply_message_details[0]);
+              //exit ()
+              //console.log('reply msg', reply_message_details[0][0].message)
+              result[0][i]['reply_message']=reply_message_details[0][0].message;
+              result[0][i]['reply_message_type']=reply_message_details[0][0].message_type,
+              //result[0][i]['reply_senter']=reply_message_details[0].senter_id;
+              result[0][i]['reply_duration']=reply_message_details[0][0].duration;
+              //console.log('id s',reply_message_details[0][0].id)
+              result[0][i]['replay_id']=reply_message_details[0][0].id.toString();
+              //reply_message type -- video
+              
+              if(result[0][i]['reply_message_type']=='video'){
+                //console.log('thumb data',reply_message_details[0][0]['thumbnail'])
+                if(reply_message_details[0][0]['thumbnail']!=''){
+                  result[0][i]['reply_message']=BASE_URL+reply_message_details[0][0]['thumbnail'];
+                  //console.log(result[0][i]['thumbnail'])
+                  
+                }
+                // exit ();
+                // console.log(result[0][i]['reply_message'])
+                
+              }
+              //reply_message type -- image
+              if(result[0][i]['reply_message_type']=='image'){
+                if(result[0][i]['reply_message']!=''){
+                  result[0][i]['reply_message']=BASE_URL+result[0][i]['reply_message']
+                }
+              }
+              //senter
+              if(sid==result[0][i]['senter_id']){
+                result[0][i]['reply_senter']='You';
+              }else{
+                //get sender name
+                result[0][i]['reply_senter']=await queries.get_username(result[0][i]['senter_id']);
+                //console.log(result[0][i]['reply_senter'])
+              }
+              // result[0][i]['replay_id']=result[0][i]['replay_id'].toString();
+            }else{
+              //console.log('msg has no reply msg')
+              result[0][i]['replay_id']='0';
+              result[0][i]['reply_message']='';
+              result[0][i]['reply_message_type']='';
+              result[0][i]['reply_senter']='';
+              result[0][i]['reply_duration']='0';
+            }
+
+            //console.log('reply id  ', result[0][i]);
+            //exit ();
+            //get forward messages
+            if(result[0][i]['forward_id']!=0 && result[0][i]['forward_id']!=''){
+              //message has forward message
+              let forward_message_details=await queries.get_forward_message_details(result[0][i]['forward_id']);
+              let get_forward_message_count=await queries.get_forward_message_count(result[0][i]['forward_id'])
+              //console.log(forward_message_details);
+              result[0][i]['forward_id']=forward_message_details[0].forward_id;
+              result[0][i]['forward_count']=get_forward_message_count;
+              if(get_forward_message_count>=10){
+                result[0][i]['forward_message_status']='Forwarded Many Times';
+              }else{
+                result[0][i]['forward_message_status']='Forwarded';
+              }
+            }else{
+              //message not have forward message
+              result[0][i]['forward_id']='0';
+              result[0][i]['forward_count']=0;
+              result[0][i]['forward_message_status']='';
+              
+            }
+
+            //check message deleted or not
+            let group_status_json
+            //console.log('group data',result[0][i]['group_status'])
+            //let group_status_json=JSON.parse(result[0][i]['group_status']) || [];
+            if(result[0][i]['group_status']!=''){
+              group_status_json=JSON.parse(result[0][i]['group_status']);
+            }else{
+              group_status_json=[];
+            }
+            
+            if(group_status_json.length>0){
+            //console.log(group_status_json)
+            for(j=0; j < group_status_json.length; j++){
+              let starred_status=group_status_json[j].starred_status ? group_status_json[j].starred_status : '0';
+              //console.log('starred ',starred_status)
+              //console.log('group status data ',group_status_json[j])
+              if(group_status_json[j].user_id==sid && group_status_json[j].status==0){
+                //console.log('0')
+                if('deleted_by' in group_status_json[j]){
+                  //console.log('ssss');
+                  if(group_status_json[j].deleted_by==sid){
+                    //"You deleted this message";
+                    result[0][i]['message']="You deleted this message";
+                  }else{
+                    result[0][i]['message']="This message was deleted";
+                  }
+                }else{
+                  //console.log('nnnn')
+                  result[0][i]['message']="This message was deleted";
+                }
+                result[0][i]['message_type']='text';
+                if(result[0][i]['delivered_status']==0){
+                  result[0][i].message_status=result[0][i].message_status;
+                }else{
+                  result[0][i].message_status="2";
+                }
+                // if('delivered_status' in group_status_json[j]){
+                //   //console.log(result[0][i].delivered_status)
+                //   if(result[0][i].delivered_status==0){
+                //     result[0][i].message_status=result[0][i].message_status;
+                //   }else{
+                //     //result[0][i].message_status="2";
+                //     if(group_status_json[j].user_id==result[0][i].senter_id){
+                //       result[0][i].message_status=result[0][i].message_status;
+                //     }else{
+                //       result[0][i].message_status="2";
+                //     }
+                //   }
+                // }
+                if('read_receipt' in group_status_json[j]){
+                  read_receipt=group_status_json[j].read_receipt;
+                }else{
+                  read_receipt=0;
+                }
+                if(read_receipt==0){
+                  if(read_receipt_datetime!=''){
+                    if(read_receipt_datetime<result[0][i].date){
+                      read_receipt=default_read_receipt;
+                    }else{
+                      read_receipt=0;
+                    }
+                  }else{
+                    read_receipt=0;
+                  }
+                }
+                //console.log(result[0][i]['message_type'])
+                if(result[0][i]['message_type']=='notification'){
+                  //check user
+                  if(result[0][i]['senter_id']==sid){
+                    if(result[0][i]['message']=='block'){
+                      //console.log(' msg is block')
+                      let block_msg="You blocked this contact. Tap to unblock.";
+                      //check date is exist in date_array
+                      //add block message data entry
+                      message_list_response.push({
+                        id: result[0][i].id.toString(),
+                        date: result[0][i].date,
+                        senter_id: result[0][i].senter_id,
+                        receiver_id: result[0][i].receiver_id,
+                        //message: block_msg,
+                        message: result[0][i]['message'],
+                        message_type:"notification",
+                        duration: result[0][i].duration.toString(),
+                        message_status:result[0][i].message_status,
+                        room:result[0][i].room,
+                        type:"notification",
+                        status:group_status_json[j].status ? group_status_json[j].status.toString() : '',
+                        replay_id:(result[0][i].replay_id ? result[0][i].replay_id : ''),
+                        replay_message:(result[0][i].reply_message ? result[0][i].reply_message : ''),
+                        replay_message_type:(result[0][i].reply_message_type ? result[0][i].reply_message_type : ''),
+                        replay_senter:(result[0][i].reply_senter ? result[0][i].reply_senter : ''),
+                        //replay_duration:(result[0][i].reply_duration ? result[0][i].replay_duration : ''),
+                        replay_duration: result[0][i].reply_duration ? result[0][i].reply_duration.toString() : '0',
+                        forward_id : result[0][i].forward_id.toString(),
+                        forward_count : result[0][i].forward_count.toString(),
+                        forward_message_status : result[0][i].forward_message_status,
+                        delete_status : "0",
+                        starred_status: starred_status.toString(),
+                        read_receipt: read_receipt.toString(),
+                        optional_text: result[0][i].optional_text,
+                        thumbnail: ""
+                      });
+                      
+                    }else if(result[0][i]['message']=='unblock'){
+                      //console.log(' msg is unblock')
+                      let unblock_msg="You unblocked this contact.";
+                      //add block message data entry
+                      message_list_response.push({
+                        id: result[0][i].id.toString(),
+                        date: result[0][i].date,
+                        senter_id: result[0][i].senter_id,
+                        receiver_id: result[0][i].receiver_id,
+                        //message: unblock_msg,
+                        message: result[0][i]['message'],
+                        message_type:"notification",
+                        duration: result[0][i].duration.toString(),
+                        message_status:result[0][i].message_status,
+                        room:result[0][i].room,
+                        type:"notification",
+                        status:group_status_json[j].status ? group_status_json[j].status.toString() : '',
+                        replay_id:(result[0][i].replay_id ? result[0][i].replay_id : ''),
+                        replay_message:(result[0][i].reply_message ? result[0][i].reply_message : ''),
+                        replay_message_type:(result[0][i].reply_message_type ? result[0][i].reply_message_type : ''),
+                        replay_senter:(result[0][i].reply_senter ? result[0][i].reply_senter : ''),
+                        //replay_duration:(result[0][i].reply_duration ? result[0][i].replay_duration : ''),
+                        replay_duration: result[0][i].reply_duration ? result[0][i].reply_duration.toString() : '0',
+                        forward_id : result[0][i].forward_id.toString(),
+                        forward_count : result[0][i].forward_count.toString(),
+                        forward_message_status : result[0][i].forward_message_status,
+                        delete_status : "0",
+                        starred_status: starred_status.toString(),
+                        read_receipt: read_receipt.toString(),
+                        optional_text: result[0][i].optional_text,
+                        thumbnail: ''
+                      });
+                    }
+                  }else{
+                    if(result[0][i]['message']=='phone_number_changed'){
+                      //console.log('phone number changed');
+
+                      let number_changed_msg=await queries.get_username(result[0][i]['senter_id'])+" changed their phone number. You're currently chatting with their new number. Tap to add it to your contacts.";
+                      //console.log(number_changed_msg)
+                      //add block message data entry
+                      message_list_response.push({
+                        id: result[0][i].id.toString(),
+                        date: result[0][i].date,
+                        senter_id: result[0][i].senter_id,
+                        receiver_id: result[0][i].receiver_id,
+                        //message: number_changed_msg,
+                        message: result[0][i]['message'],
+                        message_type:"notification",
+                        duration: result[0][i].duration.toString(),
+                        message_status:result[0][i].message_status,
+                        room:result[0][i].room,
+                        type:"notification",
+                        status:group_status_json[j].status ? group_status_json[j].status.toString() : '',
+                        replay_id:(result[0][i].replay_id ? result[0][i].replay_id : ''),
+                        replay_message:(result[0][i].reply_message ? result[0][i].reply_message : ''),
+                        replay_message_type:(result[0][i].reply_message_type ? result[0][i].reply_message_type : ''),
+                        replay_senter:(result[0][i].reply_senter ? result[0][i].reply_senter : ''),
+                        //replay_duration:(result[0][i].reply_duration ? result[0][i].replay_duration : ''),
+                        replay_duration: result[0][i].reply_duration ? result[0][i].reply_duration.toString() : '0',
+                        forward_id : result[0][i].forward_id.toString(),
+                        forward_count : result[0][i].forward_count.toString(),
+                        forward_message_status : result[0][i].forward_message_status,
+                        delete_status : "1",
+                        starred_status: starred_status.toString(),
+                        read_receipt: read_receipt.toString(),
+                        optional_text: result[0][i].optional_text,
+                        thumbnail: ''
+                      });
+                    }
+                  }
+                }else{
+                  console.log(result[0][i]['message_type'])
+                  //add block message data entry
+                  message_list_response.push({
+                    id: result[0][i].id.toString(),
+                    date: result[0][i].date,
+                    senter_id: result[0][i].senter_id,
+                    receiver_id: result[0][i].receiver_id,
+                    message: result[0][i].message,
+                    message_type:result[0][i].message_type,
+                    duration: result[0][i].duration.toString(),
+                    message_status:result[0][i].message_status,
+                    room:result[0][i].room,
+                    type:result[0][i].type,
+                    status:group_status_json[j].status ? group_status_json[j].status.toString() : '',
+                    replay_id:(result[0][i].replay_id ? result[0][i].replay_id : ''),
+                    replay_message:(result[0][i].reply_message ? result[0][i].reply_message : ''),
+                    replay_message_type:(result[0][i].reply_message_type ? result[0][i].reply_message_type : ''),
+                    replay_senter:(result[0][i].reply_senter ? result[0][i].reply_senter : ''),
+                    //replay_duration:(result[0][i].reply_duration ? result[0][i].replay_duration : ''),
+                    replay_duration: result[0][i].reply_duration ? result[0][i].reply_duration.toString() : '0',
+                    forward_id : result[0][i].forward_id.toString(),
+                    forward_count : result[0][i].forward_count.toString(),
+                    forward_message_status : result[0][i].forward_message_status,
+                    delete_status : "0",
+                    starred_status: starred_status.toString(),
+                    read_receipt: read_receipt.toString(),
+                    optional_text: result[0][i].optional_text,
+                    thumbnail: ''
+                  });
+                    
+                }
+                //console.log('all the dates', date_array)
+              }else if(group_status_json[j].user_id==sid && group_status_json[j].status==1){
+                //console.log(result[0][i]['delivered_status'],'delivered_status' in group_status_json[j],group_status_json[j]);
+                console.log(result[0][i]);
+                
+                if(result[0][i]['delivered_status']==0){
+                  result[0][i].message_status=result[0][i].message_status;
+                }else{
+                  result[0][i].message_status="2";
+                }
+                
+                // if('delivered_status' in group_status_json[j]){
+                //   //console.log(result[0][i].delivered_status)
+                //   if(result[0][i].delivered_status==0){
+                //     result[0][i].message_status=result[0][i].message_status;
+                //   }else{
+                //     //result[0][i].message_status="2";
+                    
+                //     if(group_status_json[j].user_id==result[0][i].senter_id){
+                //       result[0][i].message_status=result[0][i].message_status;
+                //     }else{
+                //       result[0][i].message_status="2";
+                //     }
+                //     // console.log(group_status_json[j],group_status_json[j].user_id, result[0][i].senter_id,result[0][i].id,result[0][i].message_status)
+                //     // exit ()
+                //   }
+                // }
+                //console.log(group_status_json[j])
+                if('read_receipt' in group_status_json[j]){
+                  read_receipt=group_status_json[j].read_receipt;
+                }else{
+                  read_receipt=0;
+                }
+                // if(read_receipt==0){
+                //   read_receipt=default_read_receipt;
+                // }
+                if(read_receipt==0){
+                  if(read_receipt_datetime!=''){
+                    if(read_receipt_datetime<result[0][i].date){
+                      read_receipt=default_read_receipt;
+                    }else{
+                      read_receipt=0;
+                    }
+                  }else{
+                    read_receipt=0;
+                  }
+                }
+                //not deleted message
+                if(result[0][i]['message_type']=='notification'){
+                  //console.log('yes notification ')
+                  //check user
+                  if(result[0][i]['senter_id']==sid){
+                    if(result[0][i]['message']=='block'){
+                      //console.log(' msg is block')
+                      let block_msg="You blocked this contact. Tap to unblock.";
+                      //add block message data entry
+                      message_list_response.push({
+                        id: result[0][i].id.toString(),
+                        date: result[0][i].date,
+                        senter_id: result[0][i].senter_id,
+                        receiver_id: result[0][i].receiver_id,
+                        message: block_msg,
+                        message_type:"notification",
+                        duration: result[0][i].duration.toString(),
+                        message_status:result[0][i].message_status,
+                        room:result[0][i].room,
+                        type:"notification",
+                        status:group_status_json[j].status ? group_status_json[j].status.toString() : '',
+                        replay_id:(result[0][i].replay_id ? result[0][i].replay_id : ''),
+                        replay_message:(result[0][i].reply_message ? result[0][i].reply_message : ''),
+                        replay_message_type:(result[0][i].reply_message_type ? result[0][i].reply_message_type : ''),
+                        replay_senter:(result[0][i].reply_senter ? result[0][i].reply_senter : ''),
+                        //replay_duration:(result[0][i].reply_duration ? result[0][i].replay_duration : ''),
+                        replay_duration: result[0][i].reply_duration ? result[0][i].reply_duration.toString() : '0',
+                        forward_id : result[0][i].forward_id.toString(),
+                        forward_count : result[0][i].forward_count.toString(),
+                        forward_message_status : result[0][i].forward_message_status,
+                        delete_status : "1",
+                        starred_status: starred_status.toString(),
+                        read_receipt: read_receipt.toString(),
+                        optional_text: result[0][i].optional_text,
+                        thumbnail: ''
+                      });
+                        
+                    }else if(result[0][i]['message']=='unblock'){
+                      //console.log(' msg is unblock')
+                      let unblock_msg="You unblocked this contact.";
+                      //add block message data entry
+                      message_list_response.push({
+                        id: result[0][i].id.toString(),
+                        date: result[0][i].date,
+                        senter_id: result[0][i].senter_id,
+                        receiver_id: result[0][i].receiver_id,
+                        message: unblock_msg,
+                        message_type:"notification",
+                        duration: result[0][i].duration.toString(),
+                        message_status:result[0][i].message_status,
+                        room:result[0][i].room,
+                        type:"notification",
+                        status:group_status_json[j].status ? group_status_json[j].status.toString() : '',
+                        replay_id:(result[0][i].replay_id ? result[0][i].replay_id : ''),
+                        replay_message:(result[0][i].reply_message ? result[0][i].reply_message : ''),
+                        replay_message_type:(result[0][i].reply_message_type ? result[0][i].reply_message_type : ''),
+                        replay_senter:(result[0][i].reply_senter ? result[0][i].reply_senter : ''),
+                        //replay_duration:(result[0][i].reply_duration ? result[0][i].replay_duration : ''),
+                        replay_duration: result[0][i].reply_duration ? result[0][i].reply_duration.toString() : '0',
+                        forward_id : result[0][i].forward_id.toString(),
+                        forward_count : result[0][i].forward_count.toString(),
+                        forward_message_status : result[0][i].forward_message_status,
+                        delete_status : "1",
+                        starred_status: starred_status.toString(),
+                        read_receipt: read_receipt.toString(),
+                        optional_text: result[0][i].optional_text,
+                        thumbnail: ''
+                      });
+                    }
+                  }else{
+                    //console.log('sssss')
+                    
+                    //opponent user
+                    //receiver side notification meesage
+                    if(result[0][i]['message']=='phone_number_changed'){
+                      console.log('phone number changed');
+                      let number_changed_msg=await queries.get_username(result[0][i]['senter_id'])+" changed their phone number. You're currently chatting with their new number. Tap to add it to your contacts.";
+                      //console.log(number_changed_msg)
+                      //add block message data entry
+                      message_list_response.push({
+                        id: result[0][i].id.toString(),
+                        date: result[0][i].date,
+                        senter_id: result[0][i].senter_id,
+                        receiver_id: result[0][i].receiver_id,
+                        message: number_changed_msg,
+                        message_type:"notification",
+                        duration: result[0][i].duration.toString(),
+                        message_status:result[0][i].message_status,
+                        room:result[0][i].room,
+                        type:"notification",
+                        status:group_status_json[j].status ? group_status_json[j].status.toString() : '',
+                        replay_id:(result[0][i].replay_id ? result[0][i].replay_id : ''),
+                        replay_message:(result[0][i].reply_message ? result[0][i].reply_message : ''),
+                        replay_message_type:(result[0][i].reply_message_type ? result[0][i].reply_message_type : ''),
+                        replay_senter:(result[0][i].reply_senter ? result[0][i].reply_senter : ''),
+                        //replay_duration:(result[0][i].reply_duration ? result[0][i].replay_duration : ''),
+                        replay_duration: result[0][i].reply_duration ? result[0][i].reply_duration.toString() : '0',
+                        forward_id : result[0][i].forward_id.toString(),
+                        forward_count : result[0][i].forward_count.toString(),
+                        forward_message_status : result[0][i].forward_message_status,
+                        delete_status : "1",
+                        starred_status: starred_status.toString(),
+                        read_receipt: read_receipt.toString(),
+                        optional_text: result[0][i].optional_text,
+                        thumbnail: ''
+                      });
+                    }else if(result[0][i]['message']=='Missed voice call'){
+                      //exit ()
+                      let call_msg="Missed voice call";
+                      //add block message data entry
+                      message_list_response.push({
+                        id: result[0][i].id.toString(),
+                        date: result[0][i].date,
+                        senter_id: result[0][i].senter_id,
+                        receiver_id: result[0][i].receiver_id,
+                        message: call_msg,
+                        message_type:"notification",
+                        duration: result[0][i].duration.toString(),
+                        message_status:result[0][i].message_status,
+                        room:result[0][i].room,
+                        type:"notification",
+                        status:group_status_json[j].status ? group_status_json[j].status.toString() : '',
+                        replay_id:(result[0][i].replay_id ? result[0][i].replay_id : ''),
+                        replay_message:(result[0][i].reply_message ? result[0][i].reply_message : ''),
+                        replay_message_type:(result[0][i].reply_message_type ? result[0][i].reply_message_type : ''),
+                        replay_senter:(result[0][i].reply_senter ? result[0][i].reply_senter : ''),
+                        //replay_duration:(result[0][i].reply_duration ? result[0][i].replay_duration : ''),
+                        replay_duration: result[0][i].reply_duration ? result[0][i].reply_duration.toString() : '0',
+                        forward_id : result[0][i].forward_id.toString(),
+                        forward_count : result[0][i].forward_count.toString(),
+                        forward_message_status : result[0][i].forward_message_status,
+                        delete_status : "1",
+                        starred_status: starred_status.toString(),
+                        read_receipt: read_receipt.toString(),
+                        optional_text: result[0][i].optional_text,
+                        thumbnail: ''
+                      });
+                    }else if(result[0][i]['message']=='Missed video call'){
+                      let call_msg="Missed video call";
+                      //add block message data entry
+                      message_list_response.push({
+                        id: result[0][i].id.toString(),
+                        date: result[0][i].date,
+                        senter_id: result[0][i].senter_id,
+                        receiver_id: result[0][i].receiver_id,
+                        message: call_msg,
+                        message_type:"notification",
+                        duration: result[0][i].duration.toString(),
+                        message_status:result[0][i].message_status,
+                        room:result[0][i].room,
+                        type:"notification",
+                        status:group_status_json[j].status ? group_status_json[j].status.toString() : '',
+                        replay_id:(result[0][i].replay_id ? result[0][i].replay_id : ''),
+                        replay_message:(result[0][i].reply_message ? result[0][i].reply_message : ''),
+                        replay_message_type:(result[0][i].reply_message_type ? result[0][i].reply_message_type : ''),
+                        replay_senter:(result[0][i].reply_senter ? result[0][i].reply_senter : ''),
+                        //replay_duration:(result[0][i].reply_duration ? result[0][i].replay_duration : ''),
+                        replay_duration: result[0][i].reply_duration ? result[0][i].reply_duration.toString() : '0',
+                        forward_id : result[0][i].forward_id.toString(),
+                        forward_count : result[0][i].forward_count.toString(),
+                        forward_message_status : result[0][i].forward_message_status,
+                        delete_status : "1",
+                        starred_status: starred_status.toString(),
+                        read_receipt: read_receipt.toString(),
+                        optional_text: result[0][i].optional_text,
+                        thumbnail: ''
+                      });
+                    }
+                  }
+                }else if(result[0][i]['message_type']=='image' || result[0][i]['message_type']=='video' || result[0][i]['message_type']=='voice' || result[0][i]['message_type']=='doc'){
+                  //console.log(result[0][i]['message_type']);
+                  if(result[0][i]['message']!=''){
+                    let check_is_url=isUrl(result[0][i]['message']);
+                    //console.log(check_is_url);
+                    if(!check_is_url){
+                      result[0][i]['message']=BASE_URL+result[0][i]['message'];
+                    }
+                    if(result[0][i]['thumbnail']!=''){
+                      result[0][i]['thumbnail']=BASE_URL+result[0][i]['thumbnail'];
+                    }
+                      //console.log(result[0][i]['message'])
+                      //exit ()
+                    
+                    //add block message data entry
+                    //console.log(result[0][i].id,result[0][i],result[0][i].reply_duration)
+                    message_list_response.push({
+                      id: result[0][i].id.toString(),
+                      date: result[0][i].date,
+                      senter_id: result[0][i].senter_id,
+                      receiver_id: result[0][i].receiver_id,
+                      message: result[0][i].message,
+                      message_type:result[0][i].message_type,
+                      duration: result[0][i].duration.toString(),
+                      message_status:result[0][i].message_status,
+                      room:result[0][i].room,
+                      type:result[0][i].type,
+                      status:group_status_json[j].status ? group_status_json[j].status.toString() : '',
+                      replay_id:(result[0][i].replay_id ? result[0][i].replay_id : ''),
+                      replay_message:(result[0][i].reply_message ? result[0][i].reply_message : ''),
+                      replay_message_type:(result[0][i].reply_message_type ? result[0][i].reply_message_type : ''),
+                      replay_senter:(result[0][i].reply_senter ? result[0][i].reply_senter : ''),
+                      replay_duration: result[0][i].reply_duration ? result[0][i].reply_duration.toString() : '0',
+                      forward_id : result[0][i].forward_id? result[0][i].forward_id.toString() : '0',
+                      forward_count : result[0][i].forward_count.toString(),
+                      forward_message_status : result[0][i].forward_message_status,
+                      delete_status : "1",
+                      starred_status: starred_status.toString(),
+                      read_receipt: read_receipt.toString(),
+                      optional_text: result[0][i].optional_text,
+                      thumbnail: result[0][i]['thumbnail']
+                    });
+                  }
+                }else if(result[0][i]['message_type']=="date"){
+                  //exit ();
+                  message_list_response.push({
+                    id: result[0][i].id,
+                    date: result[0][i].date,
+                    senter_id: "",
+                    receiver_id: "",
+                    message: "",
+                    message_type:"date",
+                    duration: "",
+                    message_status:"0",
+                    room:"",
+                    type:"date",
+                    status:"",
+                    replay_id:"",
+                    replay_message:"",
+                    replay_message_type:"",
+                    replay_senter:"",
+                    replay_duration:"",
+                    forward_id : "",
+                    forward_count : "",
+                    forward_message_status : "",
+                    delete_status : "",
+                    starred_status: "",
+                    read_receipt: "",
+                    optional_text: "",
+                    thumbnail: ''
+                  });
+                }else{
+                  //console.log('no others')
+                  //push other msg to the array
+                  //check date is exist in date_array
+                  
+                  //date already exist
+                  //add block message data entry
+                  message_list_response.push({
+                    id: result[0][i].id.toString(),
+                    date: result[0][i].date,
+                    senter_id: result[0][i].senter_id,
+                    receiver_id: result[0][i].receiver_id,
+                    message: result[0][i].message,
+                    message_type:result[0][i].message_type,
+                    duration: result[0][i].duration.toString(),
+                    message_status:result[0][i].message_status,
+                    room:result[0][i].room,
+                    type:result[0][i].type,
+                    status:group_status_json[j].status ? group_status_json[j].status.toString() : '',
+                    replay_id:(result[0][i].replay_id ? result[0][i].replay_id : ''),
+                    replay_message:(result[0][i].reply_message ? result[0][i].reply_message : ''),
+                    replay_message_type:(result[0][i].reply_message_type ? result[0][i].reply_message_type : ''),
+                    replay_senter:(result[0][i].reply_senter ? result[0][i].reply_senter : ''),
+                    //replay_duration:(result[0][i].reply_duration ? result[0][i].replay_duration : ''),
+                    replay_duration: result[0][i].reply_duration ? result[0][i].reply_duration.toString() : '0',
+                    forward_id : result[0][i].forward_id ? result[0][i].forward_id.toString() : '0',
+                    forward_count : result[0][i].forward_count.toString(),
+                    forward_message_status : result[0][i].forward_message_status,
+                    delete_status : "1",
+                    starred_status: starred_status.toString(),
+                    read_receipt: read_receipt.toString(),
+                    optional_text: result[0][i].optional_text,
+                    thumbnail: ''
+                  });
+                }
+                
+              }else if(group_status_json[j].user_id==sid && group_status_json[j].status==2){
+                //console.log('2')
+                //clear chat list -- Don't need to show
+              }
+            }
+          }
+
+            result[0][i]['delete_status']='';
+            delete result[0][i]['group_status'];
+          }
+          //console.log('all dates', date_array)
+          //console.log('result with new value ',message_list_response)
+          let user_details=await queries.get_user_details(rid)
+          let block_status=await queries.check_user_block_status(sid,rid)
+          //console.log(user_details)
+            //check privacy who can see my profile pic
+            let check_privacy_profile_pic=await queries.check_user_privacy(rid,'profile_pic');
+            if(check_privacy_profile_pic.length>0){
+              let profile_options=check_privacy_profile_pic[0].options;
+              if(profile_options==0){
+                user_details[0].profile_pic=user_details[0].profile_pic;
+              }else if(profile_options==1){
+                //check user is member of users chat_list
+                // let get_user_chat_list_data=await queries.user_chat_list_details(rid);
+                // let check_user_exist_in_chat_list=check_user_data_exist_in_array(sid,get_user_chat_list_data);
+                // if(check_user_exist_in_chat_list){
+                //   user_details[0].profile_pic=user_details[0].profile_pic;
+                // }else{
+                //   user_details[0].profile_pic='uploads/default/profile.png';
+                // }
+
+                let excepted_users=check_privacy_profile_pic[0].options;
+                //console.log(excepted_users)
+                if(excepted_users!=''){
+                  excepted_users=JSON.parse(check_privacy_profile_pic[0].except_users);
+                }else{
+                  excepted_users=[];
+                }
+                
+                if(excepted_users.includes(sid)){
+                  user_details[0].profile_pic=user_details[0].profile_pic;
+                }else{
+                  user_details[0].profile_pic='uploads/default/profile.png';
+                }
+              }else if(profile_options==2){
+                let excepted_users=check_privacy_profile_pic[0].options;
+                //console.log(excepted_users)
+                if(excepted_users!=''){
+                  excepted_users=JSON.parse(check_privacy_profile_pic[0].except_users);
+                }else{
+                  excepted_users=[];
+                }
+                
+                if(excepted_users.includes(sid)){
+                  user_details[0].profile_pic='uploads/default/profile.png';
+                }else{
+                  user_details[0].profile_pic=user_details[0].profile_pic;
+                }
+              }else if(profile_options==3){
+                user_details[0].profile_pic='uploads/default/profile.png';
+              }
+            }else{
+            // if(user_details[0].profile_pic){
+            //   user_details[0].profile_pic=user_details[0].profile_pic;
+            // }else{
+            //   user_details[0].profile_pic='';
+            // }
+            console.log(rid)
+              user_details[0].profile_pic=user_details[0].profile_pic;
+            }
+          //set base url in profile pic
+          if(user_details[0].profile_pic!=''){
+            user_details[0].profile_pic=BASE_URL+user_details[0].profile_pic;
+          }else{
+            //give default profile url
+            user_details[0].profile_pic=BASE_URL+'uploads/default/profile.png';
+          }
+          let setresponse = {
+            "status": true, "statuscode": 200, "message": "success", "data": {
+              "name": user_details[0].name,
+              "profile": user_details[0].profile_pic,
+              "id": rid,
+              "user_block_status":block_status,
+              "phone_number": user_details[0].phone,
+              "mute_status": mute_status,
+              "list":message_list_response
+            }
+          }
+//console.log('looped msg', message_list_response)
+      return setresponse;
+}
 async function individual_message_using_pagination(sid,rid,room,limit,message_id){
   //let current_datetime=get_datetime()
     //var result= await queries.send_indv_message(rid,room);
@@ -3201,6 +3953,8 @@ async function group_message_using_pagination(user_id,group_id,limit,message_id)
         }
       }
     }
+
+    
     //set group set up information
     let group_started_data={
       id:'',
@@ -3227,10 +3981,10 @@ async function group_message_using_pagination(user_id,group_id,limit,message_id)
       optional_text: '',
       thumbnail: ''
     }
-    group_messages.push(group_started_data);
+    //group_messages.push(group_started_data);
     //split group created_date
     let split_created_date=group_created_date.split(" ");
-    date_array.push(split_created_date[0]);
+    //date_array.push(split_created_date[0]);
     let group_profile_history_index=2;
     //set group created by data
     //created message
@@ -3266,13 +4020,35 @@ async function group_message_using_pagination(user_id,group_id,limit,message_id)
       optional_text: '',
       thumbnail: ''
     }
-    group_messages.push(group_created_by_data);
+    //group_messages.push(group_created_by_data);
+    // console.log(get_all_group_messages);
+    // exit();
     //get group message from db
-
     let get_all_group_messages=await queries.group_room_using_pagination(user_id,set_user_id,group_id,limit,message_id);
-
-    //console.log(get_all_group_messages);
-    //exit();
+    get_all_group_messages=get_all_group_messages.reverse();
+    if(get_all_group_messages.length>0){
+      //console.log(get_all_group_messages[0])
+      let list_small_message_id=get_all_group_messages[0].small_id
+      //console.log(list_small_message_id)
+      //check small id value exist in message id list
+      let check_id_exist_in_message_array=await sub_function.check_id_exist_in_message_array(list_small_message_id,get_all_group_messages);
+      console.log(check_id_exist_in_message_array);
+      //exit ()
+      if(check_id_exist_in_message_array){
+        group_messages.push(group_started_data);
+        group_messages.push(group_created_by_data);
+      }
+    }else{
+      //check message_id is last_id  
+      let get_last_message_id=await queries.get_last_message_id(user_id,group_id);
+      console.log('val ',get_last_message_id)
+      if(get_last_message_id!=''){
+        if(get_last_message_id==message_id){
+          group_messages.push(group_started_data);
+          group_messages.push(group_created_by_data);
+        }
+      }
+    }
     if(get_all_group_messages.length>0){
       for(var i=0; i<get_all_group_messages.length;i++){
         //console.log('message data ',get_all_group_messages[i]);
@@ -3619,6 +4395,29 @@ async function group_message_using_pagination(user_id,group_id,limit,message_id)
                 get_all_group_messages[i].message_type='';
                 get_all_group_messages[i].type='notification';
               }
+            }else if(get_all_group_messages[i].message_type=='date'){
+              //console.log('ssss',get_all_group_messages[i].senter_id);
+              get_all_group_messages[i].senter_id='';
+              get_all_group_messages[i].message='';
+              //get_all_group_messages[i].message_type='';
+              get_all_group_messages[i].duration='';
+              get_all_group_messages[i].room='';
+              get_all_group_messages[i].message_status='0';
+              get_all_group_messages[i].name='';
+              get_all_group_messages[i].type='date';
+              //group_status_json[j].status='';
+              replay_id='';
+              replay_message='';
+              replay_message_type='';
+              replay_senter='';
+              forward_id='';
+              forward_message_count='';
+              forward_message_status='',
+              delete_status='';
+              starred_status='';
+              read_receipt='';
+              get_all_group_messages[i].optional_text='';
+              get_all_group_messages[i].thumbnail='';
             }else if(get_all_group_messages[i].message_type=='text'){
               //console.log('message')
               
@@ -3698,114 +4497,62 @@ async function group_message_using_pagination(user_id,group_id,limit,message_id)
                 //   }
                 // }
                 get_all_group_messages[i].message_type='text';
-                //check date already exist in array
-                if(date_array.includes(split_date[0])){
-                  //console.log('date is already exist')
-                  group_messages.push({
-                    id:get_all_group_messages[i].id.toString(),
-                    date:get_all_group_messages[i].date,
-                    senter_id:get_all_group_messages[i].senter_id.toString(),
-                    message:get_all_group_messages[i].message,
-                    message_type:get_all_group_messages[i].message_type,
-                    duration: get_all_group_messages[i].duration.toString(),
-                    room:get_all_group_messages[i].room,
-                    message_status:get_all_group_messages[i].message_status.toString(),
-                    name:get_all_group_messages[i].name,
-                    type:get_all_group_messages[i].type,
-                    status:group_status_json[j].status.toString(),
-                    replay_id:replay_id.toString(),
-                    replay_message:replay_message,
-                    replay_message_type:replay_message_type,
-                    replay_senter:replay_senter,
-                    forward_id:forward_id.toString(),
-                    forward_count:forward_message_count.toString(),
-                    forward_message_status:forward_message_status.toString(),
-                    delete_status:'0',
-                    starred_status: starred_status.toString(),
-                    read_receipt: read_receipt.toString(),
-                    optional_text: get_all_group_messages[i].optional_text,
-                    thumbnail: get_all_group_messages[i].thumbnail
-                  });
-                }else{
-                  group_profile_history_index=group_profile_history_index+1;
-                  date_array.push(split_date[0]);
-                  //add date array date
-                  group_messages.push({
-                    id:'',
-                    date:get_all_group_messages[i].date,
-                    senter_id:'',
-                    message:'',
-                    message_type:'',
-                    duration: '',
-                    room:'',
-                    message_status:'0',
-                    name:'',
-                    type:'date',
-                    status:'',
-                    replay_id:'',
-                    replay_message:'',
-                    replay_message_type:'',
-                    replay_senter:'',
-                    forward_id:'',
-                    forward_count:'',
-                    forward_message_status:'',
-                    delete_status:'',
-                    starred_status: '',
-                    read_receipt: '',
-                    optional_text: '',
-                    thumbnail: ''
-                  });
-                  //add message data
-                  group_messages.push({
-                    id:get_all_group_messages[i].id.toString(),
-                    date:get_all_group_messages[i].date,
-                    senter_id:get_all_group_messages[i].senter_id.toString(),
-                    message:get_all_group_messages[i].message,
-                    message_type:get_all_group_messages[i].message_type,
-                    duration: get_all_group_messages[i].duration.toString(),
-                    room:get_all_group_messages[i].room,
-                    message_status:get_all_group_messages[i].message_status.toString(),
-                    name:get_all_group_messages[i].name,
-                    type:get_all_group_messages[i].type,
-                    status:group_status_json[j].status.toString(),
-                    replay_id:replay_id.toString(),
-                    replay_message:replay_message,
-                    replay_message_type:replay_message_type,
-                    replay_senter:replay_senter,
-                    forward_id:forward_id.toString(),
-                    forward_count:forward_message_count.toString(),
-                    forward_message_status:forward_message_status.toString(),
-                    delete_status:'0',
-                    starred_status: starred_status.toString(),
-                    read_receipt: read_receipt.toString(),
-                    optional_text: get_all_group_messages[i].optional_text,
-                    thumbnail: get_all_group_messages[i].thumbnail
-                  });
-                  //console.log('date is not exist')
-                }
+                //add message data
+                group_messages.push({
+                  id:get_all_group_messages[i].id.toString(),
+                  date:get_all_group_messages[i].date,
+                  senter_id:get_all_group_messages[i].senter_id.toString(),
+                  message:get_all_group_messages[i].message,
+                  message_type:get_all_group_messages[i].message_type,
+                  duration: get_all_group_messages[i].duration.toString(),
+                  room:get_all_group_messages[i].room,
+                  message_status:get_all_group_messages[i].message_status.toString(),
+                  name:get_all_group_messages[i].name,
+                  type:get_all_group_messages[i].type,
+                  status:group_status_json[j].status.toString(),
+                  replay_id:replay_id.toString(),
+                  replay_message:replay_message,
+                  replay_message_type:replay_message_type,
+                  replay_senter:replay_senter,
+                  forward_id:forward_id.toString(),
+                  forward_count:forward_message_count.toString(),
+                  forward_message_status:forward_message_status.toString(),
+                  delete_status:'0',
+                  starred_status: starred_status.toString(),
+                  read_receipt: read_receipt.toString(),
+                  optional_text: get_all_group_messages[i].optional_text,
+                  thumbnail: get_all_group_messages[i].thumbnail
+                });
+                
                 
               }else if(group_status_json[j].status==1 && group_status_json[j].user_id==user_id){
                 //console.log('not deleted')
                 //check read receipt 
-                console.log('not deleted id ',get_all_group_messages[i].id)
-                if('read_receipt' in group_status_json[j]){
-                  read_receipt=group_status_json[j].read_receipt
+                console.log(get_all_group_messages[i].message_type)
+                if(get_all_group_messages[i].message_type=='date'){
+                  console.log(get_all_group_messages[i].message_type)
+                  get_all_group_messages[i].message_type='';
+                  read_receipt='';
                 }else{
-                  read_receipt=0;
-                }
-                if(read_receipt==0){
-                  if(read_receipt_datetime!=''){
-                    if(read_receipt_datetime<get_all_group_messages[i].date){
-                      //exit ();
-                      read_receipt=default_read_receipt;
-                    }else{
-                      read_receipt=0;
-                    }
+                  if('read_receipt' in group_status_json[j]){
+                    read_receipt=group_status_json[j].read_receipt
                   }else{
                     read_receipt=0;
                   }
+                  if(read_receipt==0){
+                    if(read_receipt_datetime!=''){
+                      if(read_receipt_datetime<get_all_group_messages[i].date){
+                        //exit ();
+                        read_receipt=default_read_receipt;
+                      }else{
+                        read_receipt=0;
+                      }
+                    }else{
+                      read_receipt=0;
+                    }
+                  }
                 }
-                console.log(get_all_group_messages[i].delivered_status)
+                //console.log(get_all_group_messages[i].delivered_status)
                 //exit ()
                 if(get_all_group_messages[i].delivered_status==0){
                   get_all_group_messages[i].message_status=get_all_group_messages[i].message_status;
@@ -3824,90 +4571,33 @@ async function group_message_using_pagination(user_id,group_id,limit,message_id)
                 //     }
                 //   }
                 // }
-                if(date_array.includes(split_date[0])){
-                  //console.log('date is already exist')
-                  group_messages.push({
-                    id:get_all_group_messages[i].id.toString(),
-                    date:get_all_group_messages[i].date,
-                    senter_id:get_all_group_messages[i].senter_id.toString(),
-                    message:get_all_group_messages[i].message,
-                    message_type:get_all_group_messages[i].message_type,
-                    duration: get_all_group_messages[i].duration.toString(),
-                    room:get_all_group_messages[i].room,
-                    message_status:get_all_group_messages[i].message_status.toString(),
-                    name:get_all_group_messages[i].name,
-                    type:get_all_group_messages[i].type,
-                    status:group_status_json[j].status.toString(),
-                    replay_id:replay_id.toString(),
-                    replay_message:replay_message,
-                    replay_message_type:replay_message_type,
-                    replay_senter:replay_senter,
-                    forward_id:forward_id.toString(),
-                    forward_count:forward_message_count.toString(),
-                    forward_message_status:forward_message_status.toString(),
-                    delete_status:'1',
-                    starred_status: starred_status.toString(),
-                    read_receipt: read_receipt.toString(),
-                    optional_text: get_all_group_messages[i].optional_text,
-                    thumbnail: get_all_group_messages[i].thumbnail
-                  });
-                }else{
-                  group_profile_history_index=group_profile_history_index+1;
-                  date_array.push(split_date[0]);
-                  //add date array date
-                  group_messages.push({
-                    id:'',
-                    date:get_all_group_messages[i].date,
-                    senter_id:'',
-                    message:'',
-                    message_type:'',
-                    duration: '',
-                    room:'',
-                    message_status:'0',
-                    name:'',
-                    type:'date',
-                    status:'',
-                    replay_id:'',
-                    replay_message:'',
-                    replay_message_type:'',
-                    replay_senter:'',
-                    forward_id:'',
-                    forward_count:'',
-                    forward_message_status:'',
-                    delete_status:'',
-                    starred_status: '',
-                    read_receipt: '',
-                    optional_text: '',
-                    thumbnail: ''
-                  });
-                  //add message data
-                  group_messages.push({
-                    id:get_all_group_messages[i].id.toString(),
-                    date:get_all_group_messages[i].date,
-                    senter_id:get_all_group_messages[i].senter_id.toString(),
-                    message:get_all_group_messages[i].message,
-                    message_type:get_all_group_messages[i].message_type,
-                    duration: get_all_group_messages[i].duration.toString(),
-                    room:get_all_group_messages[i].room,
-                    message_status:get_all_group_messages[i].message_status.toString(),
-                    name:get_all_group_messages[i].name,
-                    type:get_all_group_messages[i].type,
-                    status:'1',
-                    replay_id:replay_id.toString(),
-                    replay_message:replay_message,
-                    replay_message_type:replay_message_type,
-                    replay_senter:replay_senter,
-                    forward_id:forward_id.toString(),
-                    forward_count:forward_message_count.toString(),
-                    forward_message_status:forward_message_status.toString(),
-                    delete_status:'1',
-                    starred_status: starred_status.toString(),
-                    read_receipt: read_receipt.toString(),
-                    optional_text: get_all_group_messages[i].optional_text,
-                    thumbnail: get_all_group_messages[i].thumbnail
-                  });
-                  //console.log('date is not exist')
-                }
+                
+                group_messages.push({
+                  id:get_all_group_messages[i].id.toString(),
+                  date:get_all_group_messages[i].date,
+                  senter_id:get_all_group_messages[i].senter_id.toString(),
+                  message:get_all_group_messages[i].message,
+                  message_type:get_all_group_messages[i].message_type,
+                  duration: get_all_group_messages[i].duration.toString(),
+                  room:get_all_group_messages[i].room,
+                  message_status:get_all_group_messages[i].message_status.toString(),
+                  name:get_all_group_messages[i].name,
+                  type:get_all_group_messages[i].type,
+                  status:group_status_json[j].status.toString(),
+                  replay_id:replay_id.toString(),
+                  replay_message:replay_message,
+                  replay_message_type:replay_message_type,
+                  replay_senter:replay_senter,
+                  forward_id:forward_id.toString(),
+                  forward_count:forward_message_count.toString(),
+                  forward_message_status:forward_message_status.toString(),
+                  delete_status:'1',
+                  starred_status: starred_status.toString(),
+                  read_receipt: read_receipt.toString(),
+                  optional_text: get_all_group_messages[i].optional_text,
+                  thumbnail: get_all_group_messages[i].thumbnail
+                });
+                
 
                 //console.log(get_all_group_messages[i].new_profile_pic,get_all_group_messages[i].previous_profile_pic)
                 if(get_all_group_messages[i].new_profile_pic!='' && get_all_group_messages[i].new_profile_pic!=undefined && get_all_group_messages[i].previous_profile_pic!='' && get_all_group_messages[i].previous_profile_pic!=undefined){
@@ -3940,13 +4630,16 @@ async function group_message_using_pagination(user_id,group_id,limit,message_id)
       }
 
       //console.log('all data',get_all_group_messages)
+    }else{
+      group_messages.push(group_started_data);
+      group_messages.push(group_created_by_data);
     }
 
 
     //console.log(date_array); 
     
     
-    
+    //console.log('yes')
     //if(current_group_members.length>0){}
     let setresponse={
       "status": true,

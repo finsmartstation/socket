@@ -621,7 +621,7 @@ io.sockets.on('connection',async function (socket) {
       var thumbnail=data.thumbnail ? data.thumbnail : '';
       // var room=data.room;
       //entering to group chat
-       
+       //check message_type='date' is removed or not
       if (data.room) {
         //group chat
         //check user room is exist in deleted chat list
@@ -636,7 +636,7 @@ io.sockets.on('connection',async function (socket) {
         var current_date = new Date();
         var date = current_date.toISOString().slice(0, 10);
         var datetime = get_datetime();
-
+        console.log(date)
         //check message_id exist for replay_id
         let message_id=0;
         if(data.message_id){
@@ -727,7 +727,19 @@ io.sockets.on('connection',async function (socket) {
             
           // })
           // var member_json_data = JSON.stringify(group_status_array);
-          
+          let check_date_message_is_cleared=await queries.check_date_message_is_cleared(s_id,data.room,date);
+          //console.log(check_date_message_is_cleared)
+          if(check_date_message_is_cleared.length){
+            //update to undelete
+            let date_group_status=JSON.parse(check_date_message_is_cleared[0].group_status);
+            for(var date_i=0; date_i<date_group_status.length;date_i++){
+              if(date_group_status[date_i].user_id==s_id && date_group_status[date_i].status==2){
+                //exit ();
+                date_group_status[date_i].status=1;
+              }
+            }
+            let update_user_date_msg_status=await queries.update_user_date_msg_status(check_date_message_is_cleared[0].id,JSON.stringify(date_group_status));
+          }
           if(type=='text'){
             await queries.post_text_message(datetime,s_id,message,data.room,member_json_data,message_id,optional_text)
           }else if(type=='image'){
@@ -1120,6 +1132,20 @@ io.sockets.on('connection',async function (socket) {
           console.log(individual_Date[0],individual_Date[0].length)
           //exit ()
           if (individual_Date[0].length > 0) {
+            console.log(s_id,room,date)
+            let check_date_message_is_cleared=await queries.check_date_message_is_cleared(data.sid,room,date);
+            console.log(check_date_message_is_cleared)
+            if(check_date_message_is_cleared.length){
+              //update to undelete
+              let date_group_status=JSON.parse(check_date_message_is_cleared[0].group_status);
+              for(var date_i=0; date_i<date_group_status.length;date_i++){
+                if(date_group_status[date_i].user_id==data.sid && date_group_status[date_i].status==2){
+                  //exit ();
+                  date_group_status[date_i].status=1;
+                }
+              }
+              let update_user_date_msg_status=await queries.update_user_date_msg_status(check_date_message_is_cleared[0].id,JSON.stringify(date_group_status));
+            }
             if (type == 'text') {
               var result=await queries.individual_text_msg(datetime,data.sid,data.rid,message,room,group_status_json_data,message_id,optional_text)
             }else if (type == 'image') {
