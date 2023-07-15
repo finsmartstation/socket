@@ -116,6 +116,20 @@ async function individual_room_using_pagination(sid,rid, room,limit,message_id){
     
     return results;
 }
+
+async function get_send_private_message(sid,rid, room){
+    let json_object_0='{"user_id":"'+sid+'","status":0}';
+    let json_object_1='{"user_id":"'+sid+'","status":1}';
+    const results = await db.sequelize.query("SELECT t1.id,DATE_FORMAT(t1.date,'%Y-%m-%d %H:%i:%s') as date,t1.senter_id,t1.receiver_id,t1.replay_id,t1.forward_id,t1.message,t1.message_type,t1.optional_text,t1.thumbnail,t1.duration,t1.delivered_status,t1.message_status,t1.room, IF(t1.receiver_id='"+rid+"', 'sent', 'receive') as type,t1.group_status  FROM `chat_list` t1 JOIN `user` t2 on t2.id='"+rid+"' where t1.room='"+room+"' and (JSON_CONTAINS(t1.group_status,'"+json_object_0+"') or JSON_CONTAINS(t1.group_status,'"+json_object_1+"')) order by id desc limit 1");
+    return results;
+}
+
+async function get_last_private_date_message(sid,rid, room){
+    let json_object_1='{"user_id":"'+sid+'","status":1}';
+    const results = await db.sequelize.query("SELECT t1.id,DATE_FORMAT(t1.date,'%Y-%m-%d %H:%i:%s') as date,t1.senter_id,t1.receiver_id,t1.replay_id,t1.forward_id,t1.message,t1.message_type,t1.optional_text,t1.thumbnail,t1.duration,t1.delivered_status,t1.message_status,t1.room, IF(t1.receiver_id='"+rid+"', 'sent', 'receive') as type,t1.group_status  FROM `chat_list` t1 JOIN `user` t2 on t2.id='"+rid+"' where t1.message_type='date' and t1.room='"+room+"' and JSON_CONTAINS(t1.group_status,'"+json_object_1+"') order by id desc limit 1");
+    return results[0];
+}
+
 async function get_recent_chat_accessToken(rid){
     const results=await db.sequelize.query("select `accessToken`,`deviceType` from `user` where id='" + rid + "'");
     return results;
@@ -182,6 +196,20 @@ async function group_room_using_pagination(sid,user_id_quotes,room,limit,message
     
     return results[0];
 }
+
+async function get_group_room_message(sid,room){
+    let json_object_0='{"user_id":"'+sid+'","status":0}';
+    let json_object_1='{"user_id":"'+sid+'","status":1}';
+    const results=await db.sequelize.query("SELECT (select min(id) from chat_list where room='"+room+"' and ((JSON_CONTAINS(group_status, '"+json_object_0+"') or JSON_CONTAINS(group_status, '"+json_object_1+"')))) as small_id,t1.id,DATE_FORMAT(t1.date,'%Y-%m-%d %H:%i:%s') as date,t1.senter_id,t1.message,t1.replay_id,t1.forward_id,t1.message_type,t1.optional_text,t1.thumbnail,t1.duration,t1.room,t1.delivered_status,t1.message_status, t2.name,if(t1.senter_id='"+sid+"','sent','receive') as type,t1.group_status FROM `chat_list` t1 join `user` t2 on t1.Senter_id=t2.id where t1.room='"+room+"' and t1.private_group='1' and (JSON_CONTAINS(t1.group_status, '"+json_object_0+"') or JSON_CONTAINS(t1.group_status, '"+json_object_1+"')) order by id DESC limit 1");
+    return results[0];
+}
+
+async function get_last_group_date_message(sid,room){
+    let json_object_1='{"user_id":"'+sid+'","status":1}';
+    const results=await db.sequelize.query("SELECT t1.id,DATE_FORMAT(t1.date,'%Y-%m-%d %H:%i:%s') as date,t1.senter_id,t1.message,t1.replay_id,t1.forward_id,t1.message_type,t1.optional_text,t1.thumbnail,t1.duration,t1.room,t1.delivered_status,t1.message_status, t2.name,if(t1.senter_id='"+sid+"','sent','receive') as type,t1.group_status FROM `chat_list` t1 join `user` t2 on t1.Senter_id=t2.id where t1.message_type='date' and t1.room='"+room+"' and t1.private_group='1' and JSON_CONTAINS(t1.group_status, '"+json_object_1+"') order by id DESC limit 1");
+    return results[0];
+}
+
 async function get_receiver_details(rid){
     const results=await db.sequelize.query("select * from user where id='"+rid+"'")
     return results;
@@ -712,9 +740,30 @@ async function get_undelivered_messages(user_id,room){
     return results[0];
 }
 
+async function get_user_undelivered_messages(user_id){
+    const set_user_id='"'+user_id+'"';
+    const results=await db.sequelize.query("SELECT * FROM `chat_list` where delivered_status='1' and JSON_CONTAINS(JSON_EXTRACT(group_status, '$[*].user_id'), '"+set_user_id+"', '$')");
+    return results[0];
+}
+
 async function update_private_delivered_message(query){
     const results=await db.sequelize.query(query);
     return results[0];
+}
+
+async function update_private_message_delivered_status(id,group_status){
+    const result=await db.sequelize.query("update `chat_list` set delivered_status='0',group_status='"+group_status+"' where id='"+id+"'");
+    return result[0];
+}
+
+async function update_group_message_delivered_status(id,group_status,update_status){
+    var result;
+    if(update_status){
+        result=await db.sequelize.query("update `chat_list` set delivered_status='0',group_status='"+group_status+"' where id='"+id+"'");
+    }else{
+        result=await db.sequelize.query("update `chat_list` set group_status='"+group_status+"' where id='"+id+"'");
+    }
+    return result[0];
 }
 
 async function update_group_delivered_message(query){
@@ -931,5 +980,12 @@ module.exports = {
     group_room_using_pagination,
     get_last_message_id,
     check_date_message_is_cleared,
-    update_user_date_msg_status
+    update_user_date_msg_status,
+    get_send_private_message,
+    get_last_private_date_message,
+    get_group_room_message,
+    get_last_group_date_message,
+    get_user_undelivered_messages,
+    update_private_message_delivered_status,
+    update_group_message_delivered_status
 }
