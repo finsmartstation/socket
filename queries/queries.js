@@ -728,6 +728,11 @@ async function unmute_user_chat_list(user_id,receive_id,room){
     return results[0];
 }
 
+async function remove_mute_user_chat_list(user_id,room){
+    const results=await db.sequelize.query("delete from `mute_chat_notification` where user_id='"+user_id+"' and room='"+room+"'");
+    return results[0];
+}
+
 async function check_receiver_blocked_me(user_id,receiver_id,room){
     const results=await db.sequelize.query("select * from `block_chat` where user_id='"+receiver_id+"' and receiver_id='"+user_id+"' and room='"+room+"'");
     return results[0];
@@ -987,5 +992,6 @@ module.exports = {
     get_last_group_date_message,
     get_user_undelivered_messages,
     update_private_message_delivered_status,
-    update_group_message_delivered_status
+    update_group_message_delivered_status,
+    remove_mute_user_chat_list
 }

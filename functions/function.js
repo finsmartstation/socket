@@ -12,8 +12,7 @@ async function get_individual_chat_list_response(sid,rid,room){
     let mute_status="0";
     let check_private_chat_read_receipts=await queries.check_private_chat_read_receipts(sid,rid);
     let check_mute_chat_list=await queries.get_mute_notification(sid,rid);
-    console.log(check_mute_chat_list);
-    
+    //console.log(check_mute_chat_list);
     if(check_mute_chat_list.length>0){
       //console.log(check_mute_chat_list[0].type,check_mute_chat_list[0].end_datetime)
       if(check_mute_chat_list[0].type!='always' && check_mute_chat_list[0].end_datetime!='0000-00-00 00:00:00'){
@@ -226,7 +225,7 @@ async function get_individual_chat_list_response(sid,rid,room){
                             message_status:result[0][i].message_status,
                             room:result[0][i].room,
                             type:"notification",
-                            status:group_status_json[j].status.toString(),
+                            status:group_status_json[j].status ? group_status_json[j].status.toString() : '',
                             replay_id:(result[0][i].replay_id ? result[0][i].replay_id : ''),
                             replay_message:(result[0][i].reply_message ? result[0][i].reply_message : ''),
                             replay_message_type:(result[0][i].reply_message_type ? result[0][i].reply_message_type : ''),
@@ -285,7 +284,7 @@ async function get_individual_chat_list_response(sid,rid,room){
                             message_status:result[0][i].message_status,
                             room:result[0][i].room,
                             type:"notification",
-                            status:group_status_json[j].status.toString(),
+                            status:group_status_json[j].status ? group_status_json[j].status.toString() : '',
                             replay_id:(result[0][i].replay_id ? result[0][i].replay_id : ''),
                             replay_message:(result[0][i].reply_message ? result[0][i].reply_message : ''),
                             replay_message_type:(result[0][i].reply_message_type ? result[0][i].reply_message_type : ''),
@@ -322,7 +321,7 @@ async function get_individual_chat_list_response(sid,rid,room){
                             message_status:result[0][i].message_status,
                             room:result[0][i].room,
                             type:"notification",
-                            status:group_status_json[j].status.toString(),
+                            status:group_status_json[j].status ? group_status_json[j].status.toString() : '',
                             replay_id:(result[0][i].replay_id ? result[0][i].replay_id : ''),
                             replay_message:(result[0][i].reply_message ? result[0][i].reply_message : ''),
                             replay_message_type:(result[0][i].reply_message_type ? result[0][i].reply_message_type : ''),
@@ -380,7 +379,7 @@ async function get_individual_chat_list_response(sid,rid,room){
                             message_status:result[0][i].message_status,
                             room:result[0][i].room,
                             type:"notification",
-                            status:group_status_json[j].status.toString(),
+                            status:group_status_json[j].status ? group_status_json[j].status.toString() : '',
                             replay_id:(result[0][i].replay_id ? result[0][i].replay_id : ''),
                             replay_message:(result[0][i].reply_message ? result[0][i].reply_message : ''),
                             replay_message_type:(result[0][i].reply_message_type ? result[0][i].reply_message_type : ''),
@@ -420,7 +419,7 @@ async function get_individual_chat_list_response(sid,rid,room){
                             message_status:result[0][i].message_status,
                             room:result[0][i].room,
                             type:"notification",
-                            status:group_status_json[j].status.toString(),
+                            status:group_status_json[j].status ? group_status_json[j].status.toString() : '',
                             replay_id:(result[0][i].replay_id ? result[0][i].replay_id : ''),
                             replay_message:(result[0][i].reply_message ? result[0][i].reply_message : ''),
                             replay_message_type:(result[0][i].reply_message_type ? result[0][i].reply_message_type : ''),
@@ -478,7 +477,7 @@ async function get_individual_chat_list_response(sid,rid,room){
                             message_status:result[0][i].message_status,
                             room:result[0][i].room,
                             type:"notification",
-                            status:group_status_json[j].status.toString(),
+                            status:group_status_json[j].status ? group_status_json[j].status.toString() : '',
                             replay_id:(result[0][i].replay_id ? result[0][i].replay_id : ''),
                             replay_message:(result[0][i].reply_message ? result[0][i].reply_message : ''),
                             replay_message_type:(result[0][i].reply_message_type ? result[0][i].reply_message_type : ''),
@@ -516,7 +515,7 @@ async function get_individual_chat_list_response(sid,rid,room){
                         message_status:result[0][i].message_status,
                         room:result[0][i].room,
                         type:result[0][i].type,
-                        status:group_status_json[j].status.toString(),
+                        status:group_status_json[j].status ? group_status_json[j].status.toString() : '',
                         replay_id:(result[0][i].replay_id ? result[0][i].replay_id : ''),
                             replay_message:(result[0][i].reply_message ? result[0][i].reply_message : ''),
                             replay_message_type:(result[0][i].reply_message_type ? result[0][i].reply_message_type : ''),
@@ -573,7 +572,7 @@ async function get_individual_chat_list_response(sid,rid,room){
                         message_status:result[0][i].message_status,
                         room:result[0][i].room,
                         type:result[0][i].type,
-                        status:group_status_json[j].status.toString(),
+                        status:group_status_json[j].status ? group_status_json[j].status.toString() : '',
                         replay_id:(result[0][i].replay_id ? result[0][i].replay_id : ''),
                             replay_message:(result[0][i].reply_message ? result[0][i].reply_message : ''),
                             replay_message_type:(result[0][i].reply_message_type ? result[0][i].reply_message_type : ''),
@@ -638,6 +637,7 @@ async function get_individual_chat_list_response(sid,rid,room){
                       read_receipt=0;
                     }
                   }
+                  
                   //not deleted message
                   if(result[0][i]['message_type']=='notification'){
                     //console.log('yes notification ')
@@ -661,7 +661,7 @@ async function get_individual_chat_list_response(sid,rid,room){
                             message_status:result[0][i].message_status,
                             room:result[0][i].room,
                             type:"notification",
-                            status:group_status_json[j].status.toString(),
+                            status:group_status_json[j].status ? group_status_json[j].status.toString() : '',
                             replay_id:(result[0][i].replay_id ? result[0][i].replay_id : ''),
                             replay_message:(result[0][i].reply_message ? result[0][i].reply_message : ''),
                             replay_message_type:(result[0][i].reply_message_type ? result[0][i].reply_message_type : ''),
@@ -718,7 +718,7 @@ async function get_individual_chat_list_response(sid,rid,room){
                             message_status:result[0][i].message_status,
                             room:result[0][i].room,
                             type:"notification",
-                            status:group_status_json[j].status.toString(),
+                            status:group_status_json[j].status ? group_status_json[j].status.toString() : '',
                             replay_id:(result[0][i].replay_id ? result[0][i].replay_id : ''),
                             replay_message:(result[0][i].reply_message ? result[0][i].reply_message : ''),
                             replay_message_type:(result[0][i].reply_message_type ? result[0][i].reply_message_type : ''),
@@ -754,7 +754,7 @@ async function get_individual_chat_list_response(sid,rid,room){
                             message_status:result[0][i].message_status,
                             room:result[0][i].room,
                             type:"notification",
-                            status:group_status_json[j].status.toString(),
+                            status:group_status_json[j].status ? group_status_json[j].status.toString() : '',
                             replay_id:(result[0][i].replay_id ? result[0][i].replay_id : ''),
                             replay_message:(result[0][i].reply_message ? result[0][i].reply_message : ''),
                             replay_message_type:(result[0][i].reply_message_type ? result[0][i].reply_message_type : ''),
@@ -811,7 +811,7 @@ async function get_individual_chat_list_response(sid,rid,room){
                             message_status:result[0][i].message_status,
                             room:result[0][i].room,
                             type:"notification",
-                            status:group_status_json[j].status.toString(),
+                            status:group_status_json[j].status ? group_status_json[j].status.toString() : '',
                             replay_id:(result[0][i].replay_id ? result[0][i].replay_id : ''),
                             replay_message:(result[0][i].reply_message ? result[0][i].reply_message : ''),
                             replay_message_type:(result[0][i].reply_message_type ? result[0][i].reply_message_type : ''),
@@ -837,6 +837,7 @@ async function get_individual_chat_list_response(sid,rid,room){
                       //opponent user
                       //receiver side notification meesage
                       if(result[0][i]['message']=='phone_number_changed'){
+                        //console.log(group_status_json[j].status)
                         console.log('phone number changed');
                         let number_changed_msg=await queries.get_username(result[0][i]['senter_id'])+" changed their phone number. You're currently chatting with their new number. Tap to add it to your contacts.";
                         //console.log(number_changed_msg)
@@ -854,7 +855,7 @@ async function get_individual_chat_list_response(sid,rid,room){
                             message_status:result[0][i].message_status,
                             room:result[0][i].room,
                             type:"notification",
-                            status:group_status_json[j].status.toString(),
+                            status:group_status_json[j].status ? group_status_json[j].status.toString() : '',
                             replay_id:(result[0][i].replay_id ? result[0][i].replay_id : ''),
                             replay_message:(result[0][i].reply_message ? result[0][i].reply_message : ''),
                             replay_message_type:(result[0][i].reply_message_type ? result[0][i].reply_message_type : ''),
@@ -911,7 +912,7 @@ async function get_individual_chat_list_response(sid,rid,room){
                             message_status:result[0][i].message_status,
                             room:result[0][i].room,
                             type:"notification",
-                            status:group_status_json[j].status.toString(),
+                            status:group_status_json[j].status ? group_status_json[j].status.toString() : '',
                             replay_id:(result[0][i].replay_id ? result[0][i].replay_id : ''),
                             replay_message:(result[0][i].reply_message ? result[0][i].reply_message : ''),
                             replay_message_type:(result[0][i].reply_message_type ? result[0][i].reply_message_type : ''),
@@ -949,7 +950,7 @@ async function get_individual_chat_list_response(sid,rid,room){
                             message_status:result[0][i].message_status,
                             room:result[0][i].room,
                             type:"notification",
-                            status:group_status_json[j].status.toString(),
+                            status:group_status_json[j].status ? group_status_json[j].status.toString() : '',
                             replay_id:(result[0][i].replay_id ? result[0][i].replay_id : ''),
                             replay_message:(result[0][i].reply_message ? result[0][i].reply_message : ''),
                             replay_message_type:(result[0][i].reply_message_type ? result[0][i].reply_message_type : ''),
@@ -1008,7 +1009,7 @@ async function get_individual_chat_list_response(sid,rid,room){
                             message_status:result[0][i].message_status,
                             room:result[0][i].room,
                             type:"notification",
-                            status:group_status_json[j].status.toString(),
+                            status:group_status_json[j].status ? group_status_json[j].status.toString() : '',
                             replay_id:(result[0][i].replay_id ? result[0][i].replay_id : ''),
                             replay_message:(result[0][i].reply_message ? result[0][i].reply_message : ''),
                             replay_message_type:(result[0][i].reply_message_type ? result[0][i].reply_message_type : ''),
@@ -1049,7 +1050,7 @@ async function get_individual_chat_list_response(sid,rid,room){
                             message_status:result[0][i].message_status,
                             room:result[0][i].room,
                             type:"notification",
-                            status:group_status_json[j].status.toString(),
+                            status:group_status_json[j].status ? group_status_json[j].status.toString() : '',
                             replay_id:(result[0][i].replay_id ? result[0][i].replay_id : ''),
                             replay_message:(result[0][i].reply_message ? result[0][i].reply_message : ''),
                             replay_message_type:(result[0][i].reply_message_type ? result[0][i].reply_message_type : ''),
@@ -1108,7 +1109,7 @@ async function get_individual_chat_list_response(sid,rid,room){
                             message_status:result[0][i].message_status,
                             room:result[0][i].room,
                             type:"notification",
-                            status:group_status_json[j].status.toString(),
+                            status:group_status_json[j].status ? group_status_json[j].status.toString() : '',
                             replay_id:(result[0][i].replay_id ? result[0][i].replay_id : ''),
                             replay_message:(result[0][i].reply_message ? result[0][i].reply_message : ''),
                             replay_message_type:(result[0][i].reply_message_type ? result[0][i].reply_message_type : ''),
@@ -1156,7 +1157,7 @@ async function get_individual_chat_list_response(sid,rid,room){
                           message_status:result[0][i].message_status,
                           room:result[0][i].room,
                           type:result[0][i].type,
-                          status:group_status_json[j].status.toString(),
+                          status:group_status_json[j].status ? group_status_json[j].status.toString() : '',
                           replay_id:(result[0][i].replay_id ? result[0][i].replay_id : ''),
                               replay_message:(result[0][i].reply_message ? result[0][i].reply_message : ''),
                               replay_message_type:(result[0][i].reply_message_type ? result[0][i].reply_message_type : ''),
@@ -1214,7 +1215,7 @@ async function get_individual_chat_list_response(sid,rid,room){
                           message_status:result[0][i].message_status,
                           room:result[0][i].room,
                           type:result[0][i].type,
-                          status:group_status_json[j].status.toString(),
+                          status:group_status_json[j].status ? group_status_json[j].status.toString() : '',
                           replay_id:(result[0][i].replay_id ? result[0][i].replay_id : ''),
                               replay_message:(result[0][i].reply_message ? result[0][i].reply_message : ''),
                               replay_message_type:(result[0][i].reply_message_type ? result[0][i].reply_message_type : ''),
@@ -1250,7 +1251,7 @@ async function get_individual_chat_list_response(sid,rid,room){
                         message_status:result[0][i].message_status,
                         room:result[0][i].room,
                         type:result[0][i].type,
-                        status:group_status_json[j].status.toString(),
+                        status:group_status_json[j].status ? group_status_json[j].status.toString() : '',
                         replay_id:(result[0][i].replay_id ? result[0][i].replay_id : ''),
                             replay_message:(result[0][i].reply_message ? result[0][i].reply_message : ''),
                             replay_message_type:(result[0][i].reply_message_type ? result[0][i].reply_message_type : ''),
@@ -1308,7 +1309,7 @@ async function get_individual_chat_list_response(sid,rid,room){
                         message_status:result[0][i].message_status,
                         room:result[0][i].room,
                         type:result[0][i].type,
-                        status:group_status_json[j].status.toString(),
+                        status:group_status_json[j].status ? group_status_json[j].status.toString() : '',
                         replay_id:(result[0][i].replay_id ? result[0][i].replay_id : ''),
                             replay_message:(result[0][i].reply_message ? result[0][i].reply_message : ''),
                             replay_message_type:(result[0][i].reply_message_type ? result[0][i].reply_message_type : ''),
@@ -9264,13 +9265,18 @@ async function group_message_info(user_id, room, message_id){
 }
 
 async function get_user_id_using_mobile_number(mobile_number=''){
+  let user_id='';
   if(mobile_number!=''){
     let remove_symbol=mobile_number.replace(/[^a-zA-Z0-9 ]/g, "");
     let remove_space=remove_symbol.replace(/\s+/g, '');
-    console.log('removed symbol ',remove_symbol,remove_space,remove_space.length);
-    //exit ()
-    let check_user_id_based_mobile_number=await queries.check_user_id_based_mobile_number(mobile_number);
+    let number_length=remove_space.length;
+    //console.log('removed symbol ',remove_symbol,remove_space,remove_space.length);
+    if(number_length>5){
+      let check_user_id_based_mobile_number=await queries.check_user_id_based_mobile_number(mobile_number);
+      user_id=check_user_id_based_mobile_number[0].id;
+    }
   }
+  return user_id;
 }
 
 

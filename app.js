@@ -1210,19 +1210,20 @@ io.sockets.on('connection',async function (socket) {
               let contacts=[];
               for(var i=0; i<split_semicolon.length; i++){
                 console.log(split_semicolon[i])
-                let splipt_colon=split_semicolon[i].split(':');
-                console.log(splipt_colon);
+                let split_colon=split_semicolon[i].split(':');
+                console.log(split_colon);
                 //check contact number user is using smart station 
-                let get_user_id=await functions.get_user_id_using_mobile_number(splipt_colon[0]);
+                let get_user_id=await functions.get_user_id_using_mobile_number(split_colon[0]);
+                console.log(get_user_id)
                 
                 contacts.push({
-                  user_id: '',
-                  number: splipt_colon[0],
-                  contact_name: splipt_colon[1]
+                  user_id: get_user_id,
+                  number: split_colon[0],
+                  contact_name: split_colon[1]
                 });
               }
-              //console.log('contact data ',contacts)
-              //exit ()
+              console.log('contact data ',contacts)
+              //save to db
             } else {
               type = '';
             } 
@@ -5923,6 +5924,10 @@ io.sockets.on('connection',async function (socket) {
                   already_archived_count=already_archived_count+1;
                   //io.sockets.in(user_id+'_archived').emit('archived_chat_list', {status: false, statuscode: 200, message: "Already you archived this chat"});
                 }else{
+                  //removed from pin chat if it exist
+                  let remove_unpin=await queries.unpin_chat(user_id,rooms[i]); 
+                  //removed from mute chat list 
+                  let remove_mute=await queries.remove_mute_user_chat_list(user_id,rooms[i]);
                   //insert to archived_chat_list 
                   let save_archived_chat_list=await queries.save_archived_chat_list(user_id,current_datetime,rooms[i]);
                   if(save_archived_chat_list>0){
@@ -7428,7 +7433,7 @@ io.sockets.on('connection',async function (socket) {
     })
     socket.on('test_changes',async function(data){
       socket.join('test_changes');
-      io.sockets.in('test_changes').emit('test_changes',{status: true, statuscode: 200, message: "last changes affected upto 15-07-2023 (2)"});
+      io.sockets.in('test_changes').emit('test_changes',{status: true, statuscode: 200, message: "last changes affected upto 17-07-2023 (2)"});
       socket.leave('test_changes');
     });
     socket.on('private_chat_export_data',async function(data){
