@@ -1233,6 +1233,68 @@ async function get_individual_chat_list_response(sid,rid,room){
                         //console.log('inside data array data', date_array)
                       }
                     }
+                  }else if(result[0][i]['message_type']=='contact'){
+                    console.log('contact')
+                    let contact_msg=result[0][i].message;
+                    let set_contact_msg='';
+                    let optional_text='';
+                    if(contact_msg!=''){
+                      contact_msg=JSON.parse(result[0][i].message);
+                    }else{
+                      contact_msg=[];
+                    }
+                    for(var k=0; k<contact_msg.length; k++){
+                      console.log(contact_msg[k]);
+                      if(contact_msg[k].user_id!=''){
+                        //set_contact_msg=set_contact_msg+contact_msg[k].contact_name;
+                      }else{
+                        //set_contact_msg=set_contact_msg+contact_msg[k].number;
+                      }
+                    }
+                    //console.log(set_contact_msg)
+                    if(contact_msg.length>1){
+                      let remaning_user=contact_msg.length-1;
+                      if(contact_msg[0].contact_name!=''){
+                        set_contact_msg=contact_msg[0].contact_name+' and '+remaning_user+' other contact';
+                      }else{
+                        set_contact_msg=contact_msg[0].number+' and '+remaning_user+' other contact';
+                      }
+                    }else{
+                      if(contact_msg[0].contact_name!=''){
+                        set_contact_msg=contact_msg[0].contact_name;
+                      }else{
+                        set_contact_msg=contact_msg[0].number;
+                      }
+                    }
+                    console.log(set_contact_msg)
+                    //exit ()
+                    message_list_response.push({
+                      id: result[0][i].id.toString(),
+                      date: result[0][i].date,
+                      senter_id: result[0][i].senter_id,
+                      receiver_id: result[0][i].receiver_id,
+                      message: set_contact_msg,
+                      message_type:result[0][i].message_type,
+                      duration: result[0][i].duration.toString(),
+                      message_status:result[0][i].message_status,
+                      room:result[0][i].room,
+                      type:result[0][i].type,
+                      status:group_status_json[j].status ? group_status_json[j].status.toString() : '',
+                      replay_id:(result[0][i].replay_id ? result[0][i].replay_id : ''),
+                      replay_message:(result[0][i].reply_message ? result[0][i].reply_message : ''),
+                      replay_message_type:(result[0][i].reply_message_type ? result[0][i].reply_message_type : ''),
+                      replay_senter:(result[0][i].reply_senter ? result[0][i].reply_senter : ''),
+                      //replay_duration:(result[0][i].reply_duration ? result[0][i].replay_duration : ''),
+                      replay_duration: result[0][i].reply_duration ? result[0][i].reply_duration.toString() : '0',
+                      forward_id : result[0][i].forward_id ? result[0][i].forward_id.toString() : '0',
+                      forward_count : result[0][i].forward_count.toString(),
+                      forward_message_status : result[0][i].forward_message_status,
+                      delete_status : "1",
+                      starred_status: starred_status.toString(),
+                      read_receipt: read_receipt.toString(),
+                      optional_text: result[0][i].optional_text,
+                      thumbnail: ''
+                    })
                   }else{
                     //console.log('no others')
                     //push other msg to the array
@@ -1423,7 +1485,7 @@ async function get_individual_chat_list_response(sid,rid,room){
 async function send_individual_message(sid,rid,room,date_status){
   //var result=await queries.individual_room_using_pagination(sid,rid,room,limit,message_id);
   var result=await queries.get_send_private_message(sid,rid,room);
-  console.log(result);
+  //console.log(result);
   let message_list_response=[];
   let date_array=[];
   var get_current_datetime=get_datetime()
@@ -9273,7 +9335,12 @@ async function get_user_id_using_mobile_number(mobile_number=''){
     //console.log('removed symbol ',remove_symbol,remove_space,remove_space.length);
     if(number_length>5){
       let check_user_id_based_mobile_number=await queries.check_user_id_based_mobile_number(mobile_number);
-      user_id=check_user_id_based_mobile_number[0].id;
+      console.log(check_user_id_based_mobile_number)
+      if(check_user_id_based_mobile_number.length>0){
+        user_id=check_user_id_based_mobile_number[0].id;
+      }else{
+        user_id='';
+      }
     }
   }
   return user_id;

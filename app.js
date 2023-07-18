@@ -1212,18 +1212,22 @@ io.sockets.on('connection',async function (socket) {
                 console.log(split_semicolon[i])
                 let split_colon=split_semicolon[i].split(':');
                 console.log(split_colon);
-                //check contact number user is using smart station 
-                let get_user_id=await functions.get_user_id_using_mobile_number(split_colon[0]);
-                console.log(get_user_id)
-                
-                contacts.push({
-                  user_id: get_user_id,
-                  number: split_colon[0],
-                  contact_name: split_colon[1]
-                });
+                //split_colon[0]--number && split_colon[1]--name
+                if(split_colon[0]!=''){
+                  //check contact number user is using smart station 
+                  //check mobile number exist
+                  let get_user_id=await functions.get_user_id_using_mobile_number(split_colon[0]);
+                  //console.log(get_user_id)
+                  contacts.push({
+                    user_id: get_user_id,
+                    number: split_colon[0],
+                    contact_name: split_colon[1] ? split_colon[1] : ''
+                  });
+                }
               }
-              console.log('contact data ',contacts)
+              //console.log('contact data ',contacts)
               //save to db
+              var result=await queries.individual_contact_msg(datetime,data.sid,data.rid,JSON.stringify(contacts),room,group_status_json_data,message_id,optional_text);
             } else {
               type = '';
             } 
@@ -1315,7 +1319,7 @@ io.sockets.on('connection',async function (socket) {
             }else if(type=="location"){
               //save latitude and longitude of the map location
               let thumbnail_path=thumbnail ? thumbnail : '';
-              var result=await queries.individual_location_msg(datetime,data.sid,data.rid,message,room,group_status_json_data,duration,message_id,optional_text,thumbnail_path)
+              var result=await queries.individual_location_msg(datetime,data.sid,data.rid,message,room,group_status_json_data,duration,message_id,optional_text,thumbnail_path);
             } else {
               type = '';
             }
@@ -5514,7 +5518,7 @@ io.sockets.on('connection',async function (socket) {
         }
       }catch(e){
         console.error(e)
-        exit ()
+        //exit ()
       }
     });
     socket.on('read', async function(data){
@@ -7433,7 +7437,7 @@ io.sockets.on('connection',async function (socket) {
     })
     socket.on('test_changes',async function(data){
       socket.join('test_changes');
-      io.sockets.in('test_changes').emit('test_changes',{status: true, statuscode: 200, message: "last changes affected upto 17-07-2023 (2)"});
+      io.sockets.in('test_changes').emit('test_changes',{status: true, statuscode: 200, message: "last changes affected upto 18-07-2023 (2)"});
       socket.leave('test_changes');
     });
     socket.on('private_chat_export_data',async function(data){
