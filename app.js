@@ -1203,11 +1203,9 @@ io.sockets.on('connection',async function (socket) {
               let thumbnail_path=thumbnail ? thumbnail : '';
               var result=await queries.individual_location_msg(datetime,data.sid,data.rid,message,room,group_status_json_data,duration,message_id,optional_text,thumbnail_path)
             } else if(type=="contact"){
-              //if(message!=''){
-                let split_semicolon=message.split(';');
-              //}
-              console.log(split_semicolon);
+              let split_semicolon=message.split(';');
               let contacts=[];
+              let not_available_users=[];
               for(var i=0; i<split_semicolon.length; i++){
                 console.log(split_semicolon[i])
                 let split_colon=split_semicolon[i].split(':');
@@ -1217,15 +1215,13 @@ io.sockets.on('connection',async function (socket) {
                   //check contact number user is using smart station 
                   //check mobile number exist
                   let get_user_id=await functions.get_user_id_using_mobile_number(split_colon[0]);
-                  //console.log(get_user_id)
-                  contacts.push({
-                    user_id: get_user_id,
-                    number: split_colon[0],
-                    contact_name: split_colon[1] ? split_colon[1] : ''
-                  });
+                    contacts.push({
+                      user_id: get_user_id,
+                      number: split_colon[0],
+                      contact_name: split_colon[1] ? split_colon[1] : ''
+                    });
                 }
               }
-              //console.log('contact data ',contacts)
               //save to db
               var result=await queries.individual_contact_msg(datetime,data.sid,data.rid,JSON.stringify(contacts),room,group_status_json_data,message_id,optional_text);
             } else {
@@ -1320,7 +1316,29 @@ io.sockets.on('connection',async function (socket) {
               //save latitude and longitude of the map location
               let thumbnail_path=thumbnail ? thumbnail : '';
               var result=await queries.individual_location_msg(datetime,data.sid,data.rid,message,room,group_status_json_data,duration,message_id,optional_text,thumbnail_path);
-            } else {
+            } else if(type=="contact"){
+              let split_semicolon=message.split(';');
+              let contacts=[];
+              let not_available_users=[];
+              for(var i=0; i<split_semicolon.length; i++){
+                console.log(split_semicolon[i])
+                let split_colon=split_semicolon[i].split(':');
+                console.log(split_colon);
+                //split_colon[0]--number && split_colon[1]--name
+                if(split_colon[0]!=''){
+                  //check contact number user is using smart station 
+                  //check mobile number exist
+                  let get_user_id=await functions.get_user_id_using_mobile_number(split_colon[0]);
+                    contacts.push({
+                      user_id: get_user_id,
+                      number: split_colon[0],
+                      contact_name: split_colon[1] ? split_colon[1] : ''
+                    });
+                }
+              }
+              //save to db
+              var result=await queries.individual_contact_msg(datetime,data.sid,data.rid,JSON.stringify(contacts),room,group_status_json_data,message_id,optional_text);
+            }else {
               type = '';
             }
             // var result=await queries.send_indv_message(data.rid, room)

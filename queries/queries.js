@@ -846,6 +846,11 @@ async function update_user_date_msg_status(id,group_status){
     return results[0];
 }
 
+async function individual_contact_msg(datetime, sid, rid, message, room, group_status_json_data,message_id,optional_text) {
+    const results = await db.sequelize.query("INSERT INTO chat_list( date,senter_id,receiver_id,replay_id,message,message_type,optional_text,room,message_status,group_status) VALUES ('" + datetime + "','" + sid + "','" + rid + "','"+message_id+"','" + message + "','contact','"+optional_text+"','" + room + "','1','" + group_status_json_data + "')");
+    return results[0];
+}
+
 module.exports = {
     update_online_status,
     select_online_status,
@@ -993,5 +998,6 @@ module.exports = {
     get_user_undelivered_messages,
     update_private_message_delivered_status,
     update_group_message_delivered_status,
-    remove_mute_user_chat_list
+    remove_mute_user_chat_list,
+    individual_contact_msg
 }

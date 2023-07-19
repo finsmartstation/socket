@@ -1236,22 +1236,54 @@ async function get_individual_chat_list_response(sid,rid,room){
                   }else if(result[0][i]['message_type']=='contact'){
                     console.log('contact')
                     let contact_msg=result[0][i].message;
+                    console.log(contact_msg);
                     let set_contact_msg='';
-                    let optional_text='';
+                    let contact_user_profile_pic='';
+                    let user_available_status='not available';
                     if(contact_msg!=''){
                       contact_msg=JSON.parse(result[0][i].message);
+                      console.log(result[0][i].id,contact_msg);
+                      //contact_msg=contact_msg.sort((a,b)=>(a.contact_name > b.contact_name ? 1 : -1));
+                      contact_msg=contact_msg.sort((a, b) => {
+                        if (a.user_id !== "" && b.user_id === "") {
+                          return -1;
+                        } else if (a.user_id === "" && b.user_id !== "") {
+                          return 1;
+                        } else if (a.contact_name === "" && b.contact_name === "") {
+                          return 0;
+                        } else if (a.contact_name === "") {
+                          return 1;
+                        } else if (b.contact_name === "") {
+                          return -1;
+                        } else {
+                          return a.contact_name.localeCompare(b.contact_name);
+                        }
+                      });
+                      //console.log(contact_msg);
+                      //exit ()
                     }else{
                       contact_msg=[];
                     }
                     for(var k=0; k<contact_msg.length; k++){
-                      console.log(contact_msg[k]);
+                      //console.log(contact_msg[k]);
                       if(contact_msg[k].user_id!=''){
-                        //set_contact_msg=set_contact_msg+contact_msg[k].contact_name;
+                        user_available_status='available';
+                        // contact_user_profile_pic
+                        let privacy_profile_pic=await sub_function.check_profile_pic_privacy(contact_msg[k].user_id,sid);
+                        //console.log('privacy profile check ',sid,contact_msg[k].user_id,privacy_profile_pic);
+                        if(privacy_profile_pic){
+                          let get_user_profile=await queries.get_user_profile(contact_msg[k].user_id);
+                          contact_user_profile_pic=contact_user_profile_pic+BASE_URL+get_user_profile[0]['profile_pic']+',';
+                        }else{
+                          contact_user_profile_pic=contact_user_profile_pic+BASE_URL+'uploads/default/profile.png,';
+                        }
                       }else{
-                        //set_contact_msg=set_contact_msg+contact_msg[k].number;
+                        contact_user_profile_pic=contact_user_profile_pic+BASE_URL+'uploads/default/profile.png,';
                       }
                     }
-                    //console.log(set_contact_msg)
+                    contact_user_profile_pic=contact_user_profile_pic.replace(/,(?=[^,]*$)/, '');
+                    console.log(contact_user_profile_pic)
+                    //exit ();
                     if(contact_msg.length>1){
                       let remaning_user=contact_msg.length-1;
                       if(contact_msg[0].contact_name!=''){
@@ -1292,9 +1324,9 @@ async function get_individual_chat_list_response(sid,rid,room){
                       delete_status : "1",
                       starred_status: starred_status.toString(),
                       read_receipt: read_receipt.toString(),
-                      optional_text: result[0][i].optional_text,
-                      thumbnail: ''
-                    })
+                      optional_text: contact_user_profile_pic,
+                      thumbnail: user_available_status
+                    });
                   }else{
                     //console.log('no others')
                     //push other msg to the array
