@@ -759,11 +759,13 @@ io.sockets.on('connection',async function (socket) {
           //await queries.post_image_message(datetime,s_id,message,data.room,member_json_data,message_id) 
           }else if(type=='voice'){
             let split_path=message.split(',');
+            let split_duration=duration.split(',');
             for(var i=0;i<split_path.length;i++){
+              let duration_val=split_duration[i] ? split_duration[i] : '0';
               if(i==0){
-                await queries.post_voice_message(datetime,s_id,split_path[i],data.room,member_json_data,duration,message_id,optional_text) 
+                await queries.post_voice_message(datetime,s_id,split_path[i],data.room,member_json_data,duration_val,message_id,optional_text) 
               }else{
-                await queries.post_voice_message(datetime,s_id,split_path[i],data.room,member_json_data,duration,message_id,'') 
+                await queries.post_voice_message(datetime,s_id,split_path[i],data.room,member_json_data,duration_val,message_id,'') 
               }
             }
             //await queries.post_voice_message(datetime,s_id,message,data.room,member_json_data,duration,message_id) 
@@ -781,12 +783,14 @@ io.sockets.on('connection',async function (socket) {
           }else if(type=='video'){
             let split_path=message.split(',');
             let split_thumbnail=thumbnail.split(',');
+            let split_duration=duration.split(',');
             for(var i=0;i<split_path.length;i++){
               let thumbnail_path=split_thumbnail[i] ? split_thumbnail[i] : '';
+              let duration_val=split_duration[i] ? split_duration[i] : '0';
               if(i==0){
-                await queries.post_video_message(datetime,s_id,split_path[i],data.room,member_json_data,duration,message_id,optional_text,thumbnail_path) 
+                await queries.post_video_message(datetime,s_id,split_path[i],data.room,member_json_data,duration_val,message_id,optional_text,thumbnail_path) 
               }else{
-                await queries.post_video_message(datetime,s_id,split_path[i],data.room,member_json_data,duration,message_id,'',thumbnail_path) 
+                await queries.post_video_message(datetime,s_id,split_path[i],data.room,member_json_data,duration_val,message_id,'',thumbnail_path) 
               }
               
             }
@@ -795,6 +799,32 @@ io.sockets.on('connection',async function (socket) {
             //save latitude and longitude of the map location
             let thumbnail_path=thumbnail ? thumbnail : '';
             var result=await queries.group_location_msg(datetime,s_id,message,data.room,member_json_data,duration,message_id,optional_text,thumbnail_path);
+          }else if(type=="contact"){
+            //"message":"number:contact_name;number:contact_name","type":"contact"
+            let split_semicolon=message.split(';');
+              let contacts=[];
+              let not_available_users=[];
+              for(var i=0; i<split_semicolon.length; i++){
+                //console.log(split_semicolon[i])
+                let split_colon=split_semicolon[i].split(':');
+                //console.log(split_colon);
+                //split_colon[0]--number && split_colon[1]--name
+                if(split_colon[0]!=''){
+                  //check contact number user is using smart station 
+                  //check mobile number exist
+                  let get_user_id=await functions.get_user_id_using_mobile_number(split_colon[0]);
+                    contacts.push({
+                      user_id: get_user_id.toString(),
+                      number: split_colon[0],
+                      contact_name: split_colon[1] ? split_colon[1] : ''
+                    });
+                }
+              }
+              //save to db
+              //console.log(datetime,data.sid,data.rid,JSON.stringify(contacts),data.room,member_json_data,message_id,optional_text)
+              //console.log(data.room,member_json_data,message_id,optional_text);
+              //exit ()
+              var result=await queries.group_contact_msg(datetime,data.sid,JSON.stringify(contacts),data.room,member_json_data,message_id,optional_text);
           }else{
             type=''
           }
@@ -830,11 +860,13 @@ io.sockets.on('connection',async function (socket) {
             //await queries.post_image_message(datetime,s_id,message,data.room,member_json_data,message_id) 
           }else if(type=='voice'){
             let split_path=message.split(',');
+            let split_duration=duration.split(',');
             for(var i=0;i<split_path.length;i++){
+              let duration_val=split_duration[i] ? split_duration[i] : '0';
               if(i==0){
-                await queries.post_voice_message(datetime,s_id,split_path[i],data.room,member_json_data,duration,message_id,optional_text)
+                await queries.post_voice_message(datetime,s_id,split_path[i],data.room,member_json_data,duration_val,message_id,optional_text)
               }else{
-                await queries.post_voice_message(datetime,s_id,split_path[i],data.room,member_json_data,duration,message_id,'')
+                await queries.post_voice_message(datetime,s_id,split_path[i],data.room,member_json_data,duration_val,message_id,'')
               }
               
             }
@@ -853,20 +885,46 @@ io.sockets.on('connection',async function (socket) {
           }else if(type=='video'){
             let split_path=message.split(',');
             let split_thumbnail=thumbnail.split(',');
+            let split_duration=duration.split(',');
             for(var i=0;i<split_path.length;i++){
               let thumbnail_path=split_thumbnail[i] ? split_thumbnail[i] : '';
+              let duration_val=split_duration[i] ? split_duration[i] : '0';
               if(i==0){
-                await queries.post_video_message(datetime,s_id,split_path[i],data.room,member_json_data,duration,message_id,optional_text,thumbnail_path)
+                await queries.post_video_message(datetime,s_id,split_path[i],data.room,member_json_data,duration_val,message_id,optional_text,thumbnail_path)
               }else{
-                await queries.post_video_message(datetime,s_id,split_path[i],data.room,member_json_data,duration,message_id,'',thumbnail_path)
+                await queries.post_video_message(datetime,s_id,split_path[i],data.room,member_json_data,duration_val,message_id,'',thumbnail_path)
               }
-              
             }
             //await queries.post_video_message(datetime,s_id,message,data.room,member_json_data,duration,message_id) 
           }else if(type=="location"){
             //save latitude and longitude of the map location
             let thumbnail_path=thumbnail ? thumbnail : '';
             var result=await queries.group_location_msg(datetime,s_id,message,data.room,member_json_data,duration,message_id,optional_text,thumbnail_path);
+          }else if(type=="contact"){
+            let split_semicolon=message.split(';');
+              let contacts=[];
+              let not_available_users=[];
+              for(var i=0; i<split_semicolon.length; i++){
+                //console.log(split_semicolon[i])
+                let split_colon=split_semicolon[i].split(':');
+                //console.log(split_colon);
+                //split_colon[0]--number && split_colon[1]--name
+                if(split_colon[0]!=''){
+                  //check contact number user is using smart station 
+                  //check mobile number exist
+                  let get_user_id=await functions.get_user_id_using_mobile_number(split_colon[0]);
+                    contacts.push({
+                      user_id: get_user_id.toString(),
+                      number: split_colon[0],
+                      contact_name: split_colon[1] ? split_colon[1] : ''
+                    });
+                }
+              }
+              //save to db
+              // console.log(datetime,data.sid,data.rid,JSON.stringify(contacts),data.room,member_json_data,message_id,optional_text)
+              // console.log(data.room,member_json_data,message_id,optional_text);
+              //exit ()
+              var result=await queries.group_contact_msg(datetime,data.sid,JSON.stringify(contacts),data.room,member_json_data,message_id,optional_text);
           }else{
             type=''
           }
@@ -1167,11 +1225,13 @@ io.sockets.on('connection',async function (socket) {
               //var result=await queries.individual_image_msg(datetime,data.sid,data.rid,message,room,group_status_json_data,message_id) 
             }else if (type == "voice") {
               let split_path=message.split(',');
+              let split_duration=duration.split(',');
               for(var i=0;i<split_path.length;i++){
+                let duration_val=split_duration[i] ? split_duration[i] : '0';
                 if(i==0){
-                  var result=await queries.individual_voice_msg(datetime,data.sid,data.rid,split_path[i],room,group_status_json_data,duration,message_id,optional_text)
+                  var result=await queries.individual_voice_msg(datetime,data.sid,data.rid,split_path[i],room,group_status_json_data,duration_val,message_id,optional_text)
                 }else{
-                  var result=await queries.individual_voice_msg(datetime,data.sid,data.rid,split_path[i],room,group_status_json_data,duration,message_id,'')
+                  var result=await queries.individual_voice_msg(datetime,data.sid,data.rid,split_path[i],room,group_status_json_data,duration_val,message_id,'')
                 }
               }
               //var result=await queries.individual_voice_msg(datetime,data.sid,data.rid,message,room,group_status_json_data,duration,message_id)
@@ -1188,13 +1248,15 @@ io.sockets.on('connection',async function (socket) {
             }else if (type == "video") {
               let split_path=message.split(',');
               let split_thumbnail=thumbnail.split(',');
+              let split_duration=duration.split(',');
               //console.log(split_path)
               for(var i=0;i<split_path.length;i++){
                 let thumbnail_path=split_thumbnail[i] ? split_thumbnail[i] : '';
+                let duration_val=split_duration[i] ? split_duration[i] : '0';
                 if(i==0){
-                  var result=await queries.individual_video_msg(datetime,data.sid,data.rid,split_path[i],room,group_status_json_data,duration,message_id,optional_text,thumbnail_path) 
+                  var result=await queries.individual_video_msg(datetime,data.sid,data.rid,split_path[i],room,group_status_json_data,duration_val,message_id,optional_text,thumbnail_path) 
                 }else{
-                  var result=await queries.individual_video_msg(datetime,data.sid,data.rid,split_path[i],room,group_status_json_data,duration,message_id,'',thumbnail_path) 
+                  var result=await queries.individual_video_msg(datetime,data.sid,data.rid,split_path[i],room,group_status_json_data,duration_val,message_id,'',thumbnail_path) 
                 }
               }
               //var result=await queries.individual_video_msg(datetime,data.sid,data.rid,message,room,group_status_json_data,duration,message_id)
@@ -1216,7 +1278,7 @@ io.sockets.on('connection',async function (socket) {
                   //check mobile number exist
                   let get_user_id=await functions.get_user_id_using_mobile_number(split_colon[0]);
                     contacts.push({
-                      user_id: get_user_id,
+                      user_id: get_user_id.toString(),
                       number: split_colon[0],
                       contact_name: split_colon[1] ? split_colon[1] : ''
                     });
@@ -1277,11 +1339,13 @@ io.sockets.on('connection',async function (socket) {
             }
             else if (type == "voice") {
               let split_path=message.split(',');
+              let split_duration=duration.split(',');
               for(var i=0;i<split_path.length;i++){
+                let duration_val=split_duration[i] ? split_duration[i] : '0';
                 if(i==0){
-                  await queries.individual_voice_msg(datetime, data.sid, data.rid, split_path[i], room, group_status_json_data, duration,message_id,optional_text)
+                  await queries.individual_voice_msg(datetime, data.sid, data.rid, split_path[i], room, group_status_json_data, duration_val,message_id,optional_text)
                 }else{
-                  await queries.individual_voice_msg(datetime, data.sid, data.rid, split_path[i], room, group_status_json_data, duration,message_id,'')
+                  await queries.individual_voice_msg(datetime, data.sid, data.rid, split_path[i], room, group_status_json_data, duration_val,message_id,'')
                 }
                 
               }
@@ -1302,12 +1366,14 @@ io.sockets.on('connection',async function (socket) {
             else if (type == "video") {
               let split_path=message.split(',');
               let split_thumbnail=thumbnail.split(',');
+              let split_duration=duration.split(',');
               for(var i=0;i<split_path.length;i++){
                 let thumbnail_path=split_thumbnail[i] ? split_thumbnail[i] : '';
+                let duration_val=split_duration[i] ? split_duration[i] : '0';
                 if(i==0){
-                  await queries.individual_video_msg(datetime, data.sid, data.rid, split_path[i], room, group_status_json_data, duration,message_id,optional_text,thumbnail_path)
+                  await queries.individual_video_msg(datetime, data.sid, data.rid, split_path[i], room, group_status_json_data, duration_val,message_id,optional_text,thumbnail_path)
                 }else{
-                  await queries.individual_video_msg(datetime, data.sid, data.rid, split_path[i], room, group_status_json_data, duration,message_id,'',thumbnail_path)
+                  await queries.individual_video_msg(datetime, data.sid, data.rid, split_path[i], room, group_status_json_data, duration_val,message_id,'',thumbnail_path)
                 }
                 
               }
@@ -1330,7 +1396,7 @@ io.sockets.on('connection',async function (socket) {
                   //check mobile number exist
                   let get_user_id=await functions.get_user_id_using_mobile_number(split_colon[0]);
                     contacts.push({
-                      user_id: get_user_id,
+                      user_id: get_user_id.toString(),
                       number: split_colon[0],
                       contact_name: split_colon[1] ? split_colon[1] : ''
                     });
@@ -7455,7 +7521,7 @@ io.sockets.on('connection',async function (socket) {
     })
     socket.on('test_changes',async function(data){
       socket.join('test_changes');
-      io.sockets.in('test_changes').emit('test_changes',{status: true, statuscode: 200, message: "last changes affected upto 18-07-2023 (2)"});
+      io.sockets.in('test_changes').emit('test_changes',{status: true, statuscode: 200, message: "last changes affected upto 20-07-2023"});
       socket.leave('test_changes');
     });
     socket.on('private_chat_export_data',async function(data){

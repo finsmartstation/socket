@@ -1234,15 +1234,15 @@ async function get_individual_chat_list_response(sid,rid,room){
                       }
                     }
                   }else if(result[0][i]['message_type']=='contact'){
-                    console.log('contact')
+                    //console.log('contact')
                     let contact_msg=result[0][i].message;
-                    console.log(contact_msg);
+                    //console.log(contact_msg);
                     let set_contact_msg='';
                     let contact_user_profile_pic='';
                     let user_available_status='not available';
                     if(contact_msg!=''){
                       contact_msg=JSON.parse(result[0][i].message);
-                      console.log(result[0][i].id,contact_msg);
+                      //console.log(result[0][i].id,contact_msg);
                       //contact_msg=contact_msg.sort((a,b)=>(a.contact_name > b.contact_name ? 1 : -1));
                       contact_msg=contact_msg.sort((a, b) => {
                         if (a.user_id !== "" && b.user_id === "") {
@@ -1282,14 +1282,14 @@ async function get_individual_chat_list_response(sid,rid,room){
                       }
                     }
                     contact_user_profile_pic=contact_user_profile_pic.replace(/,(?=[^,]*$)/, '');
-                    console.log(contact_user_profile_pic)
+                    //console.log(contact_user_profile_pic)
                     //exit ();
                     if(contact_msg.length>1){
-                      let remaning_user=contact_msg.length-1;
+                      let remaining_user=contact_msg.length-1;
                       if(contact_msg[0].contact_name!=''){
-                        set_contact_msg=contact_msg[0].contact_name+' and '+remaning_user+' other contact';
+                        set_contact_msg=contact_msg[0].contact_name+' and '+remaining_user+' other contact';
                       }else{
-                        set_contact_msg=contact_msg[0].number+' and '+remaning_user+' other contact';
+                        set_contact_msg=contact_msg[0].number+' and '+remaining_user+' other contact';
                       }
                     }else{
                       if(contact_msg[0].contact_name!=''){
@@ -1298,35 +1298,92 @@ async function get_individual_chat_list_response(sid,rid,room){
                         set_contact_msg=contact_msg[0].number;
                       }
                     }
-                    console.log(set_contact_msg)
+                    //console.log(set_contact_msg)
                     //exit ()
-                    message_list_response.push({
-                      id: result[0][i].id.toString(),
-                      date: result[0][i].date,
-                      senter_id: result[0][i].senter_id,
-                      receiver_id: result[0][i].receiver_id,
-                      message: set_contact_msg,
-                      message_type:result[0][i].message_type,
-                      duration: result[0][i].duration.toString(),
-                      message_status:result[0][i].message_status,
-                      room:result[0][i].room,
-                      type:result[0][i].type,
-                      status:group_status_json[j].status ? group_status_json[j].status.toString() : '',
-                      replay_id:(result[0][i].replay_id ? result[0][i].replay_id : ''),
-                      replay_message:(result[0][i].reply_message ? result[0][i].reply_message : ''),
-                      replay_message_type:(result[0][i].reply_message_type ? result[0][i].reply_message_type : ''),
-                      replay_senter:(result[0][i].reply_senter ? result[0][i].reply_senter : ''),
-                      //replay_duration:(result[0][i].reply_duration ? result[0][i].replay_duration : ''),
-                      replay_duration: result[0][i].reply_duration ? result[0][i].reply_duration.toString() : '0',
-                      forward_id : result[0][i].forward_id ? result[0][i].forward_id.toString() : '0',
-                      forward_count : result[0][i].forward_count.toString(),
-                      forward_message_status : result[0][i].forward_message_status,
-                      delete_status : "1",
-                      starred_status: starred_status.toString(),
-                      read_receipt: read_receipt.toString(),
-                      optional_text: contact_user_profile_pic,
-                      thumbnail: user_available_status
-                    });
+                    if(date_array.includes(split_date[0])){
+                      message_list_response.push({
+                        id: result[0][i].id.toString(),
+                        date: result[0][i].date,
+                        senter_id: result[0][i].senter_id,
+                        receiver_id: result[0][i].receiver_id,
+                        message: set_contact_msg,
+                        message_type:result[0][i].message_type,
+                        duration: result[0][i].duration.toString(),
+                        message_status:result[0][i].message_status,
+                        room:result[0][i].room,
+                        type:result[0][i].type,
+                        status:group_status_json[j].status ? group_status_json[j].status.toString() : '',
+                        replay_id:(result[0][i].replay_id ? result[0][i].replay_id : ''),
+                        replay_message:(result[0][i].reply_message ? result[0][i].reply_message : ''),
+                        replay_message_type:(result[0][i].reply_message_type ? result[0][i].reply_message_type : ''),
+                        replay_senter:(result[0][i].reply_senter ? result[0][i].reply_senter : ''),
+                        //replay_duration:(result[0][i].reply_duration ? result[0][i].replay_duration : ''),
+                        replay_duration: result[0][i].reply_duration ? result[0][i].reply_duration.toString() : '0',
+                        forward_id : result[0][i].forward_id ? result[0][i].forward_id.toString() : '0',
+                        forward_count : result[0][i].forward_count.toString(),
+                        forward_message_status : result[0][i].forward_message_status,
+                        delete_status : "1",
+                        starred_status: starred_status.toString(),
+                        read_receipt: read_receipt.toString(),
+                        optional_text: user_available_status,
+                        thumbnail: contact_user_profile_pic
+                      });
+                    }else{
+                      date_array.push(split_date[0]);
+                      message_list_response.push({
+                        id: "",
+                        date: result[0][i].date,
+                        senter_id: "",
+                        receiver_id: "",
+                        message: "",
+                        message_type:"date",
+                        duration: "",
+                        message_status:"0",
+                        room:"",
+                        type:"date",
+                        status:"",
+                        replay_id:"",
+                        replay_message:"",
+                        replay_message_type:"",
+                        replay_senter:"",
+                        replay_duration:"",
+                        forward_id : "",
+                        forward_count : "",
+                        forward_message_status : "",
+                        delete_status : "",
+                        starred_status: "",
+                        read_receipt: "",
+                        optional_text: "",
+                        thumbnail: ""
+                      });
+                      message_list_response.push({
+                        id: result[0][i].id.toString(),
+                        date: result[0][i].date,
+                        senter_id: result[0][i].senter_id,
+                        receiver_id: result[0][i].receiver_id,
+                        message: set_contact_msg,
+                        message_type:result[0][i].message_type,
+                        duration: result[0][i].duration.toString(),
+                        message_status:result[0][i].message_status,
+                        room:result[0][i].room,
+                        type:result[0][i].type,
+                        status:group_status_json[j].status ? group_status_json[j].status.toString() : '',
+                        replay_id:(result[0][i].replay_id ? result[0][i].replay_id : ''),
+                        replay_message:(result[0][i].reply_message ? result[0][i].reply_message : ''),
+                        replay_message_type:(result[0][i].reply_message_type ? result[0][i].reply_message_type : ''),
+                        replay_senter:(result[0][i].reply_senter ? result[0][i].reply_senter : ''),
+                        //replay_duration:(result[0][i].reply_duration ? result[0][i].replay_duration : ''),
+                        replay_duration: result[0][i].reply_duration ? result[0][i].reply_duration.toString() : '0',
+                        forward_id : result[0][i].forward_id ? result[0][i].forward_id.toString() : '0',
+                        forward_count : result[0][i].forward_count.toString(),
+                        forward_message_status : result[0][i].forward_message_status,
+                        delete_status : "1",
+                        starred_status: starred_status.toString(),
+                        read_receipt: read_receipt.toString(),
+                        optional_text: user_available_status,
+                        thumbnail: contact_user_profile_pic
+                      });
+                    }
                   }else{
                     //console.log('no others')
                     //push other msg to the array
@@ -1347,11 +1404,11 @@ async function get_individual_chat_list_response(sid,rid,room){
                         type:result[0][i].type,
                         status:group_status_json[j].status ? group_status_json[j].status.toString() : '',
                         replay_id:(result[0][i].replay_id ? result[0][i].replay_id : ''),
-                            replay_message:(result[0][i].reply_message ? result[0][i].reply_message : ''),
-                            replay_message_type:(result[0][i].reply_message_type ? result[0][i].reply_message_type : ''),
-                            replay_senter:(result[0][i].reply_senter ? result[0][i].reply_senter : ''),
-                            //replay_duration:(result[0][i].reply_duration ? result[0][i].replay_duration : ''),
-                            replay_duration: result[0][i].reply_duration ? result[0][i].reply_duration.toString() : '0',
+                        replay_message:(result[0][i].reply_message ? result[0][i].reply_message : ''),
+                        replay_message_type:(result[0][i].reply_message_type ? result[0][i].reply_message_type : ''),
+                        replay_senter:(result[0][i].reply_senter ? result[0][i].reply_senter : ''),
+                        //replay_duration:(result[0][i].reply_duration ? result[0][i].replay_duration : ''),
+                        replay_duration: result[0][i].reply_duration ? result[0][i].reply_duration.toString() : '0',
                         forward_id : result[0][i].forward_id ? result[0][i].forward_id.toString() : '0',
                         forward_count : result[0][i].forward_count.toString(),
                         forward_message_status : result[0][i].forward_message_status,
@@ -1405,10 +1462,10 @@ async function get_individual_chat_list_response(sid,rid,room){
                         type:result[0][i].type,
                         status:group_status_json[j].status ? group_status_json[j].status.toString() : '',
                         replay_id:(result[0][i].replay_id ? result[0][i].replay_id : ''),
-                            replay_message:(result[0][i].reply_message ? result[0][i].reply_message : ''),
-                            replay_message_type:(result[0][i].reply_message_type ? result[0][i].reply_message_type : ''),
-                            replay_senter:(result[0][i].reply_senter ? result[0][i].reply_senter : ''),
-                            replay_duration: result[0][i].reply_duration ? result[0][i].reply_duration.toString() : '0',
+                        replay_message:(result[0][i].reply_message ? result[0][i].reply_message : ''),
+                        replay_message_type:(result[0][i].reply_message_type ? result[0][i].reply_message_type : ''),
+                        replay_senter:(result[0][i].reply_senter ? result[0][i].reply_senter : ''),
+                        replay_duration: result[0][i].reply_duration ? result[0][i].reply_duration.toString() : '0',
                         forward_id : result[0][i].forward_id? result[0][i].forward_id.toString() : '0',
                         forward_count : result[0][i].forward_count.toString(),
                         forward_message_status : result[0][i].forward_message_status,
@@ -3622,13 +3679,74 @@ async function get_group_chat_list_response(user_id,group_id){
               if(get_all_group_messages[i].thumbnail!=''){
                 get_all_group_messages[i].thumbnail=BASE_URL+get_all_group_messages[i]['thumbnail'];
               }
+            }else if(get_all_group_messages[i].message_type=='contact'){
+              let contact_msg=get_all_group_messages[i]['message'];
+              let set_contact_msg='';
+              let contact_user_profile_pic='';
+              let user_available_status='not available';
+              if(contact_msg!=''){
+                //console.log(`id ${get_all_group_messages[i].id} ${get_all_group_messages[i]['message']}`);
+                contact_msg=JSON.parse(get_all_group_messages[i]['message']);
+                contact_msg=contact_msg.sort((a, b) => {
+                  if (a.user_id !== "" && b.user_id === "") {
+                    return -1;
+                  } else if (a.user_id === "" && b.user_id !== "") {
+                    return 1;
+                  } else if (a.contact_name === "" && b.contact_name === "") {
+                    return 0;
+                  } else if (a.contact_name === "") {
+                    return 1;
+                  } else if (b.contact_name === "") {
+                    return -1;
+                  } else {
+                    return a.contact_name.localeCompare(b.contact_name);
+                  }
+                });
+                // console.log(`id ${get_all_group_messages[i].id}`);
+                // console.log(contact_msg)
+                //exit ()
+              }else{
+                contact_msg=[];
+              }
+
+              for(var k=0; k<contact_msg.length; k++){
+                if(contact_msg[k].user_id!=''){
+                  user_available_status='available';
+                  // contact_user_profile_pic
+                  let privacy_profile_pic=await sub_function.check_profile_pic_privacy(contact_msg[k].user_id,user_id);
+                  //console.log('privacy profile check ',sid,contact_msg[k].user_id,privacy_profile_pic);
+                  if(privacy_profile_pic){
+                    let get_user_profile=await queries.get_user_profile(contact_msg[k].user_id);
+                    contact_user_profile_pic=contact_user_profile_pic+BASE_URL+get_user_profile[0]['profile_pic']+',';
+                  }else{
+                    contact_user_profile_pic=contact_user_profile_pic+BASE_URL+'uploads/default/profile.png,';
+                  }
+                }else{
+                  contact_user_profile_pic=contact_user_profile_pic+BASE_URL+'uploads/default/profile.png,';
+                }
+              }
+              //console.log('profile data '+contact_user_profile_pic);
+              contact_user_profile_pic=contact_user_profile_pic.replace(/,(?=[^,]*$)/, '');
+              if(contact_msg.length>0){
+                let remaining_user=contact_msg.length-1;
+                if(contact_msg[0].contact_name!=''){
+                  set_contact_msg=contact_msg[0].contact_name+' and '+remaining_user+' other contact';
+                }else{
+                  set_contact_msg=contact_msg[0].number+' and '+remaining_user+' other contact';
+                }
+              }else{
+                if(contact_msg[0].contact_name!=''){
+                  set_contact_msg=contact_msg[0].contact_name;
+                }else{
+                  set_contact_msg=contact_msg[0].number;
+                }
+              }
+              get_all_group_messages[i]['message']=set_contact_msg;
+              get_all_group_messages[i]['optional_text']=user_available_status;
+              get_all_group_messages[i]['thumbnail']=contact_user_profile_pic;
+              // console.log(contact_user_profile_pic);
             }
-            // if(get_all_group_messages[i].id==3150){
-            //   console.log('testing loop')
-            //   console.log(get_all_group_messages[i].id)
-            //   console.log(get_all_group_messages[i].message)
-            //   //exit ()
-            // }
+            
         //get group_status
         //console.log('error testing ',get_all_group_messages[i])
         if(get_all_group_messages[i]!=undefined){
@@ -6998,9 +7116,12 @@ async function get_recent_chat_list_response(user_id){
                   //exit ()
                 }
               }
+            }else if(get_recent_chat[i].message_type=='contact'){
+              console.log('yes contact data')
+              //exit ()
             }
-            console.log(get_recent_chat[i].id);
-             console.log('opponent ',opponent_id,typeof(opponent_id),opponent_name,unread_count)
+            //console.log(get_recent_chat[i].id);
+            //console.log('opponent ',opponent_id,typeof(opponent_id),opponent_name,unread_count)
             // exit ()
             //push object to array chat list 
             chat_list_data.push({
