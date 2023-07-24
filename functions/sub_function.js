@@ -13,8 +13,8 @@ async function get_last_private_message(room_id,message_id,user_id,opponent_prof
     let last_message_array=[];
     let last_message_available=false;
     let unread_message_count=0;
-    let opponent_id;
-    let opponent_name;
+    // let opponent_id;
+    // let opponent_name;
     if(last_message_data.length>0){
         for(var i=0; i<last_message_data.length; i++){
             unread_message_count=await queries.get_unread_message_count(user_id,room_id);
@@ -51,7 +51,7 @@ async function get_last_private_message(room_id,message_id,user_id,opponent_prof
                 }
             }
 
-            console.log('profile data',message_id,opponent_id,opponent_name);
+            //console.log('profile data',message_id,opponent_id,opponent_name);
 
             //if message is not deleted then set to true
             //check message delete status
@@ -95,7 +95,7 @@ async function get_last_private_message(room_id,message_id,user_id,opponent_prof
                           }];
                           last_message_available=true;
                     }else if(check_message_status[j].user_id==user_id && check_message_status[j].status==1){
-                        console.log('message is not deleted');
+                        //console.log('message is not deleted');
                         let mark_as_unread=0;
                         if('mark_as_unread' in check_message_status[j]){
                             mark_as_unread=check_message_status[j].mark_as_unread;
@@ -256,6 +256,92 @@ async function get_last_private_message(room_id,message_id,user_id,opponent_prof
                                   }];
                                   last_message_available=true;
                             }
+                        }else if(last_message_data[i].message_type=='contact'){
+                            let contact_msg=last_message_data[i].message;
+                            let check_contact_user_available=false;
+                            console.log(contact_msg)
+                            if(contact_msg!=''){
+                                contact_msg=JSON.parse(last_message_data[i].message);
+                                contact_msg=contact_msg.sort((a, b) => {
+                                    if (a.user_id !== "" && b.user_id === "") {
+                                      return -1;
+                                    } else if (a.user_id === "" && b.user_id !== "") {
+                                      return 1;
+                                    } else if (a.contact_name === "" && b.contact_name === "") {
+                                      return 0;
+                                    } else if (a.contact_name === "") {
+                                      return 1;
+                                    } else if (b.contact_name === "") {
+                                      return -1;
+                                    } else {
+                                      return a.contact_name.localeCompare(b.contact_name);
+                                    }
+                                  });
+                            }else{
+                                contact_msg=[];
+                            }
+                            for(var k=0; k<contact_msg.length; k++){
+                                //console.log(contact_msg[k])
+                                if(contact_msg[k].user_id!=''){
+                                    check_contact_user_available=true;
+                                }
+                            }
+                            //console.log(check_contact_user_available)
+                            if(check_contact_user_available){
+                                //console.log('available')
+                                if(contact_msg.length>1){
+                                    let remaining_user=contact_msg.length-1;
+                                    let contact_text=' other contacts';
+                                    if(remaining_user==1){
+                                        contact_text=' other contact';
+                                    }
+                                    if(contact_msg[0].contact_name!=''){
+                                        last_message_data[i].message=contact_msg[0].contact_name+' and '+remaining_user+contact_text;
+                                    }else{
+                                        last_message_data[i].message=contact_msg[0].number+' and '+remaining_user+contact_text;
+                                    }
+                                }else{
+                                    if(contact_msg[0].contact_name!=''){
+                                        last_message_data[i].message=contact_msg[0].contact_name;
+                                    }else{
+                                        last_message_data[i].message=contact_msg[0].number;
+                                    }
+                                }
+                            }else{
+                                //console.log('not available')
+                                if(contact_msg.length>1){
+                                    last_message_data[i].message=contact_msg.length+' contacts';
+                                }else{
+                                    if(contact_msg[0].contact_name!=''){
+                                        last_message_data[i].message=contact_msg[0].contact_name;
+                                    }else{
+                                        last_message_data[i].message=contact_msg[0].number;
+                                    }
+                                }
+                            }
+                            // if(last_message_data[i].senter_id==user_id){
+                            //     last_message_data[i].message='You: '
+                            // }else{
+                            //     last_message_data[i].message=await queries.get_username(last_message_data[i].senter_id)+': 👤'+last_message_data[i].message;
+                            // }
+                            last_message_data[i].message='👤'+last_message_data[i].message;
+                            //console.log(last_message_data[i].message);
+                            last_message_array=[{
+                                id: last_message_data[i].id.toString(),
+                                date: last_message_data[i].date,
+                                message: last_message_data[i].message,
+                                unread_message: unread_message_count,
+                                user_id: opponent_id,
+                                name: opponent_name,
+                                profile: opponent_profile,
+                                phone: opponent_phone,
+                                room: last_message_data[i].room,
+                                message_type: last_message_data[i].message_type,
+                                chat_type: 'private',
+                                mark_as_unread: mark_as_unread,
+                                optional_text: last_message_data[i].optional_text
+                            }];
+                            last_message_available=true;
                         }else{
                             last_message_array=[{
                                 id: last_message_data[i].id.toString(),
@@ -316,7 +402,7 @@ async function get_last_private_message(room_id,message_id,user_id,opponent_prof
   }
 
   async function get_last_group_message(room_id,message_id,user_id,group_members,group_current_members,group_left_members,group_removed_members,subject_history){
-    console.log('parameter ',room_id,message_id,user_id,group_members,group_current_members,group_left_members,group_removed_members)
+    //console.log('parameter ',room_id,message_id,user_id,group_members,group_current_members,group_left_members,group_removed_members)
     
     let set_user_id='"'+user_id+'"';
     let last_message_array=[];
@@ -677,6 +763,90 @@ async function get_last_private_message(room_id,message_id,user_id,opponent_prof
                                 optional_text: last_message_data[i].optional_text
                               }];
                             last_message_available=true;
+                        }else if(last_message_data[i].message_type=='contact'){
+                            //console.log(last_message_data[i].id,last_message_data[i].message)
+                            let contact_msg=last_message_data[i].message;
+                            let contact_user_available=false;
+                            //console.log(contact_msg)
+                            if(contact_msg!=''){
+                                contact_msg=JSON.parse(last_message_data[i].message);
+                                contact_msg=contact_msg.sort((a, b) => {
+                                    if (a.user_id !== "" && b.user_id === "") {
+                                      return -1;
+                                    } else if (a.user_id === "" && b.user_id !== "") {
+                                      return 1;
+                                    } else if (a.contact_name === "" && b.contact_name === "") {
+                                      return 0;
+                                    } else if (a.contact_name === "") {
+                                      return 1;
+                                    } else if (b.contact_name === "") {
+                                      return -1;
+                                    } else {
+                                      return a.contact_name.localeCompare(b.contact_name);
+                                    }
+                                  });
+                            }else{
+                                contact_msg=[];
+                            }
+                            //console.log(contact_msg)
+                            for(var k=0; k<contact_msg.length; k++){
+                                //console.log(contact_msg[k]);
+                                if(contact_msg[k].user_id!=''){
+                                    contact_user_available=true;
+                                }
+                            }
+                            if(contact_user_available){
+                                //console.log('contact user available')
+                                if(contact_msg.length>1){
+                                    let remaining_user=contact_msg.length-1;
+                                    let other_contact_text=' other contacts';
+                                    if(remaining_user==1){
+                                        other_contact_text=' other contact';
+                                    }  
+                                    if(contact_msg[0].contact_name!=''){
+                                        last_message_data[i].message=contact_msg[0].contact_name+' and '+remaining_user+other_contact_text;
+                                    }else{
+                                        last_message_data[i].message=contact_msg[0].number+' and '+remaining_user+other_contact_text;
+                                    }
+                                }else{
+                                    if(contact_msg[0].contact_name!=''){
+                                        last_message_data[i].message=contact_msg[0].contact_name;
+                                    }else{
+                                        last_message_data[i].message=contact_msg[0].number;
+                                    }
+                                }
+                            }else{
+                                //console.log('no contact user found')
+                                if(contact_msg.length>1){
+                                    last_message_data[i].message=contact_msg.length+' contacts';
+                                }else{
+                                    if(contact_msg[0].contact_name!=''){
+                                        last_message_data[i].message=contact_msg[0].contact_name;
+                                    }else{
+                                        last_message_data[i].message=contact_msg[0].number;
+                                    }
+                                }
+                            }
+                            //console.log(last_message_data[i].message,last_message_data[i].id,last_message_data[i].senter_id,user_id);
+                            if(last_message_data[i].senter_id==user_id){
+                                last_message_data[i].message='You: 👤'+last_message_data[i].message;
+                            }else{
+                                last_message_data[i].message=await queries.get_username(last_message_data[i].senter_id)+': 👤'+last_message_data[i].message;
+                            }
+                            //console.log(last_message_data[i].message)
+                            last_message_array=[{
+                                id: last_message_data[i].id.toString(),
+                                date: last_message_data[i].date,
+                                message: last_message_data[i].message,
+                                room: last_message_data[i].room,
+                                message_type: last_message_data[i].message_type,
+                                chat_type: 'group',
+                                mark_as_unread: mark_as_unread,
+                                optional_text: last_message_data[i].optional_text
+                            }];
+                            //console.log(last_message_array);
+                            //exit ();
+                            last_message_available=true;
                         }
                     }else if(user_id==check_message_status[j].user_id && check_message_status[j].status==2){
                         let mark_as_unread=0;
@@ -698,7 +868,7 @@ async function get_last_private_message(room_id,message_id,user_id,opponent_prof
                     }
                 }
             }
-            console.log('old message',last_message_array,last_message_available)
+            //console.log('old message',last_message_array,last_message_available)
             if(last_message_available==true){
                 break;
             }

@@ -845,7 +845,8 @@ io.sockets.on('connection',async function (socket) {
           // })
           // var member_json_data = JSON.stringify(group_status_array);
           check_date_entry=true;
-          var grp=queries.date_inserting(datetime,s_id,data.room,member_json_data)
+          var grp=await queries.date_inserting(datetime,s_id,data.room,member_json_data)
+          //console.log('date');
           if(type=='text'){
             await queries.post_text_message(datetime,s_id,message,data.room,member_json_data,message_id,optional_text)
           }else if(type=='image'){
@@ -901,6 +902,8 @@ io.sockets.on('connection',async function (socket) {
             let thumbnail_path=thumbnail ? thumbnail : '';
             var result=await queries.group_location_msg(datetime,s_id,message,data.room,member_json_data,duration,message_id,optional_text,thumbnail_path);
           }else if(type=="contact"){
+            //console.log('group date')
+            //exit ()
             let split_semicolon=message.split(';');
               let contacts=[];
               let not_available_users=[];
@@ -1192,7 +1195,7 @@ io.sockets.on('connection',async function (socket) {
           //console.log(group_status_data)
           //exit ()
           var group_status_json_data = JSON.stringify(group_status_data);
-          console.log(individual_Date[0],individual_Date[0].length)
+          //console.log(individual_Date[0],individual_Date[0].length)
           //exit ()
           if (individual_Date[0].length > 0) {
             console.log(s_id,room,date)
@@ -7521,7 +7524,7 @@ io.sockets.on('connection',async function (socket) {
     })
     socket.on('test_changes',async function(data){
       socket.join('test_changes');
-      io.sockets.in('test_changes').emit('test_changes',{status: true, statuscode: 200, message: "last changes affected upto 20-07-2023"});
+      io.sockets.in('test_changes').emit('test_changes',{status: true, statuscode: 200, message: "last changes affected upto 24-07-2023"});
       socket.leave('test_changes');
     });
     socket.on('private_chat_export_data',async function(data){

@@ -1286,10 +1286,14 @@ async function get_individual_chat_list_response(sid,rid,room){
                     //exit ();
                     if(contact_msg.length>1){
                       let remaining_user=contact_msg.length-1;
+                      let other_contact_contact=' other contacts';
+                      if(remaining_user==1){
+                        other_contact_contact=' other contact';
+                      }
                       if(contact_msg[0].contact_name!=''){
-                        set_contact_msg=contact_msg[0].contact_name+' and '+remaining_user+' other contact';
+                        set_contact_msg=contact_msg[0].contact_name+' and '+remaining_user+other_contact_contact;
                       }else{
-                        set_contact_msg=contact_msg[0].number+' and '+remaining_user+' other contact';
+                        set_contact_msg=contact_msg[0].number+' and '+remaining_user+other_contact_contact;
                       }
                     }else{
                       if(contact_msg[0].contact_name!=''){
@@ -3124,7 +3128,6 @@ async function individual_message_using_pagination(sid,rid,room,limit,message_id
 
 async function get_group_chat_list_response(user_id,group_id){
   //console.log(`group details ${user_id} ${group_id}`)
-  
   let group_messages=[];
   let set_user_id='"'+user_id+'"';
   let date_array=[];
@@ -3729,10 +3732,14 @@ async function get_group_chat_list_response(user_id,group_id){
               contact_user_profile_pic=contact_user_profile_pic.replace(/,(?=[^,]*$)/, '');
               if(contact_msg.length>0){
                 let remaining_user=contact_msg.length-1;
+                let other_contact_contact=' other contacts';
+                if(remaining_user==1){
+                  other_contact_contact=' other contact';
+                }
                 if(contact_msg[0].contact_name!=''){
-                  set_contact_msg=contact_msg[0].contact_name+' and '+remaining_user+' other contact';
+                  set_contact_msg=contact_msg[0].contact_name+' and '+remaining_user+other_contact_contact;
                 }else{
-                  set_contact_msg=contact_msg[0].number+' and '+remaining_user+' other contact';
+                  set_contact_msg=contact_msg[0].number+' and '+remaining_user+other_contact_contact;
                 }
               }else{
                 if(contact_msg[0].contact_name!=''){
@@ -7117,7 +7124,69 @@ async function get_recent_chat_list_response(user_id){
                 }
               }
             }else if(get_recent_chat[i].message_type=='contact'){
-              console.log('yes contact data')
+              //console.log('yes contact data',get_recent_chat[i].id)
+              let contact_msg=get_recent_chat[i].message;
+              let check_contact_user_available=false;
+              if(contact_msg!=''){
+                contact_msg=JSON.parse(get_recent_chat[i].message);
+                contact_msg=contact_msg.sort((a, b) => {
+                  if (a.user_id !== "" && b.user_id === "") {
+                    return -1;
+                  } else if (a.user_id === "" && b.user_id !== "") {
+                    return 1;
+                  } else if (a.contact_name === "" && b.contact_name === "") {
+                    return 0;
+                  } else if (a.contact_name === "") {
+                    return 1;
+                  } else if (b.contact_name === "") {
+                    return -1;
+                  } else {
+                    return a.contact_name.localeCompare(b.contact_name);
+                  }
+                });
+                //console.log(contact_msg)
+              }else{
+                contact_msg=[];
+              }
+              //console.log(contact_msg);
+              for(var contacts=0; contacts<contact_msg.length; contacts++){
+                console.log(contact_msg[contacts])
+                if(contact_msg[contacts].user_id!=''){
+                  check_contact_user_available=true;
+                }
+              }
+              if(check_contact_user_available){
+                if(contact_msg.length>1){
+                  let remaining_user=contact_msg.length-1;
+                  let other_contact_contact=' other contacts';
+                  if(remaining_user==1){
+                    other_contact_contact=' other contact';
+                  }
+                  if(contact_msg[0].contact_name!=''){
+                    get_recent_chat[i].message=contact_msg[0].contact_name+' and '+remaining_user+other_contact_contact;
+                  }else{
+                    get_recent_chat[i].message=contact_msg[0].number+' and '+remaining_user+other_contact_contact
+                  }
+                }else{
+                  if(contact_msg[0].contact_name!=''){
+                    get_recent_chat[i].message=contact_msg[0].contact_name;
+                  }else{
+                    get_recent_chat[i].message=contact_msg[0].number;
+                  }
+                }
+              }else{
+                if(contact_msg.length>1){
+                  get_recent_chat[i].message=contact_msg.length+' contacts';
+                }else{
+                  if(contact_msg[0].contact_name!=''){
+                    get_recent_chat[i].message=contact_msg[0].contact_name;
+                  }else{
+                    get_recent_chat[i].message=contact_msg[0].number;
+                  }
+                }
+              }
+              get_recent_chat[i].message='👤'+get_recent_chat[i].message;
+              //console.log('contact msg is ',get_recent_chat[i].message)
               //exit ()
             }
             //console.log(get_recent_chat[i].id);
@@ -7343,6 +7412,8 @@ async function get_recent_chat_list_response(user_id){
                 optional_text: get_recent_chat[i].optional_text ? get_recent_chat[i].optional_text : '',
                 mark_as_unread: mark_as_unread.toString()
               });
+              //console.log(get_recent_chat[i]);
+              //exit ()
             }else if(group_status[j].user_id==user_id && group_status[j].status==1){
               let mark_as_unread=0;
               if('mark_as_unread' in group_status[j]){
@@ -7567,6 +7638,78 @@ async function get_recent_chat_list_response(user_id){
                 }else{
                   get_recent_chat[i].message=await queries.get_username(get_recent_chat[i].senter_id)+': ';
                 }
+              }else if(get_recent_chat[i].message_type=='contact'){
+                //console.log('group contact')
+                let contact_msg=get_recent_chat[i].message;
+                let contact_user_available=false;
+                if(contact_msg!=''){
+                  contact_msg=JSON.parse(contact_msg);
+                  // console.log(get_recent_chat[i].id)
+                  // console.log(contact_msg);
+                  contact_msg=contact_msg.sort((a, b) => {
+                    if (a.user_id !== "" && b.user_id === "") {
+                      return -1;
+                    } else if (a.user_id === "" && b.user_id !== "") {
+                      return 1;
+                    } else if (a.contact_name === "" && b.contact_name === "") {
+                      return 0;
+                    } else if (a.contact_name === "") {
+                      return 1;
+                    } else if (b.contact_name === "") {
+                      return -1;
+                    } else {
+                      return a.contact_name.localeCompare(b.contact_name);
+                    }
+                  });
+                }else{
+                  contact_msg=[];
+                }
+                //console.log(contact_msg)
+                for(contacts=0; contacts<contact_msg.length; contacts++){
+                  //console.log(contact_msg[contacts]);
+                  if(contact_msg[contacts].user_id!=''){
+                    contact_user_available=true;
+                  }
+                }
+                //console.log(contact_user_available)
+                if(contact_user_available){
+                  if(contact_msg.length>1){
+                    let remaining_user=contact_msg.length-1;
+                    let other_contact_contact=' other contacts';
+                    if(remaining_user==1){
+                      other_contact_contact=' other contact';
+                    }
+                    if(contact_msg[0].contact_name!=''){
+                      get_recent_chat[i].message=contact_msg[0].contact_name+' and '+remaining_user+other_contact_contact;
+                    }else{
+                      get_recent_chat[i].message=contact_msg[0].number+' and '+remaining_user+other_contact_contact
+                    }
+                  }else{
+                    if(contact_msg[0].contact_name!=''){
+                      get_recent_chat[i].message=contact_msg[0].contact_name;
+                    }else{
+                      get_recent_chat[i].message=contact_msg[0].number;
+                    }
+                  }
+                }else{
+                  if(contact_msg.length>1){
+                    get_recent_chat[i].message=contact_msg.length+' contacts';
+                  }else{
+                    if(contact_msg[0].contact_name!=''){
+                      get_recent_chat[i].message=contact_msg[0].contact_name;
+                    }else{
+                      get_recent_chat[i].message=contact_msg[0].number;
+                    }
+                  }
+                }
+                console.log(get_recent_chat[i].senter_id)
+                if(get_recent_chat[i].senter_id==user_id){
+                  get_recent_chat[i].message='You: 👤'+get_recent_chat[i].message;
+                }else{
+                  get_recent_chat[i].message=await queries.get_username(get_recent_chat[i].senter_id)+': 👤'+get_recent_chat[i].message;
+                }
+                console.log(get_recent_chat[i].id,get_recent_chat[i].message);
+                //exit ()
               }
 
               chat_list_data.push({
@@ -7590,7 +7733,6 @@ async function get_recent_chat_list_response(user_id){
               });
             }else if(group_status[j].user_id==user_id && group_status[j].status==2){
               console.log(get_recent_chat[i].room,get_recent_chat[i].id)
-              
               //needed to find last message of the group
               let get_last_group_message=await sub_function.get_last_group_message(get_recent_chat[i].room,get_recent_chat[i].id,user_id,group_members,group_current_members,group_left_members,group_removed_members,subject_history);
               console.log(get_last_group_message);
