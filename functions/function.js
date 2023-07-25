@@ -1497,8 +1497,11 @@ async function get_individual_chat_list_response(sid,rid,room){
             //console.log('result with new value ',message_list_response)
             let user_details=await queries.get_user_details(rid)
             let block_status=await queries.check_user_block_status(sid,rid)
-            //console.log(user_details)
-             //check privacy who can see my profile pic
+            let user_profile_pic=BASE_URL+'uploads/default/profile.png';
+            let user_phone='';
+            let user_name='';
+            if(user_details.length>0){
+              //check privacy who can see my profile pic
              let check_privacy_profile_pic=await queries.check_user_privacy(rid,'profile_pic');
              if(check_privacy_profile_pic.length>0){
                let profile_options=check_privacy_profile_pic[0].options;
@@ -1550,28 +1553,39 @@ async function get_individual_chat_list_response(sid,rid,room){
               // }else{
               //   user_details[0].profile_pic='';
               // }
-              console.log(rid)
-               user_details[0].profile_pic=user_details[0].profile_pic;
+              //console.log(rid)
+              user_details[0].profile_pic=user_details[0].profile_pic;
              }
-            //set base url in profile pic
-            if(user_details[0].profile_pic!=''){
-              user_details[0].profile_pic=BASE_URL+user_details[0].profile_pic;
-            }else{
-              //give default profile url
-              user_details[0].profile_pic=BASE_URL+'uploads/default/profile.png';
+              //set base url in profile pic
+              if(user_details[0].profile_pic!=''){
+                //user_details[0].profile_pic=BASE_URL+user_details[0].profile_pic;
+                user_profile_pic=BASE_URL+user_details[0].profile_pic;
+              }else{
+                //give default profile url
+                //user_details[0].profile_pic=BASE_URL+'uploads/default/profile.png';
+                user_profile_pic=BASE_URL+'uploads/default/profile.png';
+              }
+              user_name=user_details[0].name;
+              user_phone=user_details[0].phone;
+            
             }
+            //console.log(user_details)
+             
+            
             let setresponse = {
               "status": true, "statuscode": 200, "message": "success", "data": {
-                "name": user_details[0].name,
-                "profile": user_details[0].profile_pic,
+                //"name": user_details[0].name,
+                "name": user_name,
+                //"profile": user_details[0].profile_pic,
+                "profile": user_profile_pic,
                 "id": rid,
                 "user_block_status":block_status,
-                "phone_number": user_details[0].phone,
+                //"phone_number": user_details[0].phone,
+                "phone_number": user_phone,
                 "mute_status": mute_status,
                 "list":message_list_response
               }
             }
-//console.log('looped msg', message_list_response)
         return setresponse;
 }
 
@@ -2289,78 +2303,75 @@ async function send_individual_message(sid,rid,room,date_status){
           }
           //console.log('all dates', date_array)
           //console.log('result with new value ',message_list_response)
+          let user_phone='';
+          let user_name='';
+          let user_profile_pic=BASE_URL+'uploads/default/profile.png';
           let user_details=await queries.get_user_details(rid)
           let block_status=await queries.check_user_block_status(sid,rid)
-          //console.log(user_details)
+          if(user_details.length>0){
             //check privacy who can see my profile pic
-            let check_privacy_profile_pic=await queries.check_user_privacy(rid,'profile_pic');
-            if(check_privacy_profile_pic.length>0){
-              let profile_options=check_privacy_profile_pic[0].options;
-              if(profile_options==0){
+              let check_privacy_profile_pic=await queries.check_user_privacy(rid,'profile_pic');
+              if(check_privacy_profile_pic.length>0){
+                let profile_options=check_privacy_profile_pic[0].options;
+                if(profile_options==0){
+                  user_details[0].profile_pic=user_details[0].profile_pic;
+                }else if(profile_options==1){
+                  let excepted_users=check_privacy_profile_pic[0].options;
+                  //console.log(excepted_users)
+                  if(excepted_users!=''){
+                    excepted_users=JSON.parse(check_privacy_profile_pic[0].except_users);
+                  }else{
+                    excepted_users=[];
+                  }
+                  
+                  if(excepted_users.includes(sid)){
+                    user_details[0].profile_pic=user_details[0].profile_pic;
+                  }else{
+                    user_details[0].profile_pic='uploads/default/profile.png';
+                  }
+                }else if(profile_options==2){
+                  let excepted_users=check_privacy_profile_pic[0].options;
+                  //console.log(excepted_users)
+                  if(excepted_users!=''){
+                    excepted_users=JSON.parse(check_privacy_profile_pic[0].except_users);
+                  }else{
+                    excepted_users=[];
+                  }
+                  
+                  if(excepted_users.includes(sid)){
+                    user_details[0].profile_pic='uploads/default/profile.png';
+                  }else{
+                    user_details[0].profile_pic=user_details[0].profile_pic;
+                  }
+                }else if(profile_options==3){
+                  user_details[0].profile_pic='uploads/default/profile.png';
+                }
+              }else{
+              // if(user_details[0].profile_pic){
+              //   user_details[0].profile_pic=user_details[0].profile_pic;
+              // }else{
+              //   user_details[0].profile_pic='';
+              // }
+              console.log(rid)
                 user_details[0].profile_pic=user_details[0].profile_pic;
-              }else if(profile_options==1){
-                //check user is member of users chat_list
-                // let get_user_chat_list_data=await queries.user_chat_list_details(rid);
-                // let check_user_exist_in_chat_list=check_user_data_exist_in_array(sid,get_user_chat_list_data);
-                // if(check_user_exist_in_chat_list){
-                //   user_details[0].profile_pic=user_details[0].profile_pic;
-                // }else{
-                //   user_details[0].profile_pic='uploads/default/profile.png';
-                // }
-
-                let excepted_users=check_privacy_profile_pic[0].options;
-                //console.log(excepted_users)
-                if(excepted_users!=''){
-                  excepted_users=JSON.parse(check_privacy_profile_pic[0].except_users);
-                }else{
-                  excepted_users=[];
-                }
-                
-                if(excepted_users.includes(sid)){
-                  user_details[0].profile_pic=user_details[0].profile_pic;
-                }else{
-                  user_details[0].profile_pic='uploads/default/profile.png';
-                }
-              }else if(profile_options==2){
-                let excepted_users=check_privacy_profile_pic[0].options;
-                //console.log(excepted_users)
-                if(excepted_users!=''){
-                  excepted_users=JSON.parse(check_privacy_profile_pic[0].except_users);
-                }else{
-                  excepted_users=[];
-                }
-                
-                if(excepted_users.includes(sid)){
-                  user_details[0].profile_pic='uploads/default/profile.png';
-                }else{
-                  user_details[0].profile_pic=user_details[0].profile_pic;
-                }
-              }else if(profile_options==3){
-                user_details[0].profile_pic='uploads/default/profile.png';
               }
+            //set base url in profile pic
+            if(user_details[0].profile_pic!=''){
+              user_profile_pic=BASE_URL+user_details[0].profile_pic;
             }else{
-            // if(user_details[0].profile_pic){
-            //   user_details[0].profile_pic=user_details[0].profile_pic;
-            // }else{
-            //   user_details[0].profile_pic='';
-            // }
-            console.log(rid)
-              user_details[0].profile_pic=user_details[0].profile_pic;
+              //give default profile url
+              user_profile_pic=BASE_URL+'uploads/default/profile.png';
             }
-          //set base url in profile pic
-          if(user_details[0].profile_pic!=''){
-            user_details[0].profile_pic=BASE_URL+user_details[0].profile_pic;
-          }else{
-            //give default profile url
-            user_details[0].profile_pic=BASE_URL+'uploads/default/profile.png';
+            user_name=user_details[0].name;
+            user_phone=user_details[0].phone;
           }
           let setresponse = {
             "status": true, "statuscode": 200, "message": "success", "data": {
-              "name": user_details[0].name,
-              "profile": user_details[0].profile_pic,
+              "name": user_name,
+              "profile": user_profile_pic,
               "id": rid,
               "user_block_status":block_status,
-              "phone_number": user_details[0].phone,
+              "phone_number": user_phone,
               "mute_status": mute_status,
               "list":message_list_response
             }
@@ -3045,78 +3056,86 @@ async function individual_message_using_pagination(sid,rid,room,limit,message_id
             }
             //console.log('all dates', date_array)
             //console.log('result with new value ',message_list_response)
+            let user_phone='';
+            let user_name='';
+            let user_profile_pic=BASE_URL+'uploads/default/profile.png';
             let user_details=await queries.get_user_details(rid)
-            let block_status=await queries.check_user_block_status(sid,rid)
-            //console.log(user_details)
-             //check privacy who can see my profile pic
-             let check_privacy_profile_pic=await queries.check_user_privacy(rid,'profile_pic');
-             if(check_privacy_profile_pic.length>0){
-               let profile_options=check_privacy_profile_pic[0].options;
-               if(profile_options==0){
-                  user_details[0].profile_pic=user_details[0].profile_pic;
-               }else if(profile_options==1){
-                  //check user is member of users chat_list
-                  // let get_user_chat_list_data=await queries.user_chat_list_details(rid);
-                  // let check_user_exist_in_chat_list=check_user_data_exist_in_array(sid,get_user_chat_list_data);
-                  // if(check_user_exist_in_chat_list){
-                  //   user_details[0].profile_pic=user_details[0].profile_pic;
-                  // }else{
-                  //   user_details[0].profile_pic='uploads/default/profile.png';
-                  // }
+            let block_status=await queries.check_user_block_status(sid,rid);
+            if(user_details.length>0){
+              //check privacy who can see my profile pic
+              let check_privacy_profile_pic=await queries.check_user_privacy(rid,'profile_pic');
+              if(check_privacy_profile_pic.length>0){
+                let profile_options=check_privacy_profile_pic[0].options;
+                if(profile_options==0){
+                    user_details[0].profile_pic=user_details[0].profile_pic;
+                }else if(profile_options==1){
+                    //check user is member of users chat_list
+                    // let get_user_chat_list_data=await queries.user_chat_list_details(rid);
+                    // let check_user_exist_in_chat_list=check_user_data_exist_in_array(sid,get_user_chat_list_data);
+                    // if(check_user_exist_in_chat_list){
+                    //   user_details[0].profile_pic=user_details[0].profile_pic;
+                    // }else{
+                    //   user_details[0].profile_pic='uploads/default/profile.png';
+                    // }
 
-                  let excepted_users=check_privacy_profile_pic[0].options;
-                  //console.log(excepted_users)
-                  if(excepted_users!=''){
-                    excepted_users=JSON.parse(check_privacy_profile_pic[0].except_users);
-                  }else{
-                    excepted_users=[];
-                  }
-                  
-                  if(excepted_users.includes(sid)){
-                    user_details[0].profile_pic=user_details[0].profile_pic;
-                  }else{
-                    user_details[0].profile_pic='uploads/default/profile.png';
-                  }
-               }else if(profile_options==2){
-                  let excepted_users=check_privacy_profile_pic[0].options;
-                  //console.log(excepted_users)
-                  if(excepted_users!=''){
-                    excepted_users=JSON.parse(check_privacy_profile_pic[0].except_users);
-                  }else{
-                    excepted_users=[];
-                  }
-                  
-                  if(excepted_users.includes(sid)){
-                    user_details[0].profile_pic='uploads/default/profile.png';
-                  }else{
-                    user_details[0].profile_pic=user_details[0].profile_pic;
-                  }
-               }else if(profile_options==3){
-                 user_details[0].profile_pic='uploads/default/profile.png';
-               }
-             }else{
-              // if(user_details[0].profile_pic){
-              //   user_details[0].profile_pic=user_details[0].profile_pic;
-              // }else{
-              //   user_details[0].profile_pic='';
-              // }
-              console.log(rid)
-               user_details[0].profile_pic=user_details[0].profile_pic;
-             }
-            //set base url in profile pic
-            if(user_details[0].profile_pic!=''){
-              user_details[0].profile_pic=BASE_URL+user_details[0].profile_pic;
-            }else{
-              //give default profile url
-              user_details[0].profile_pic=BASE_URL+'uploads/default/profile.png';
+                    let excepted_users=check_privacy_profile_pic[0].options;
+                    //console.log(excepted_users)
+                    if(excepted_users!=''){
+                      excepted_users=JSON.parse(check_privacy_profile_pic[0].except_users);
+                    }else{
+                      excepted_users=[];
+                    }
+                    
+                    if(excepted_users.includes(sid)){
+                      user_details[0].profile_pic=user_details[0].profile_pic;
+                    }else{
+                      user_details[0].profile_pic='uploads/default/profile.png';
+                    }
+                }else if(profile_options==2){
+                    let excepted_users=check_privacy_profile_pic[0].options;
+                    //console.log(excepted_users)
+                    if(excepted_users!=''){
+                      excepted_users=JSON.parse(check_privacy_profile_pic[0].except_users);
+                    }else{
+                      excepted_users=[];
+                    }
+                    
+                    if(excepted_users.includes(sid)){
+                      user_details[0].profile_pic='uploads/default/profile.png';
+                    }else{
+                      user_details[0].profile_pic=user_details[0].profile_pic;
+                    }
+                }else if(profile_options==3){
+                  user_details[0].profile_pic='uploads/default/profile.png';
+                }
+              }else{
+                // if(user_details[0].profile_pic){
+                //   user_details[0].profile_pic=user_details[0].profile_pic;
+                // }else{
+                //   user_details[0].profile_pic='';
+                // }
+                console.log(rid)
+                user_details[0].profile_pic=user_details[0].profile_pic;
+              }
+              //set base url in profile pic
+              if(user_details[0].profile_pic!=''){
+                user_profile_pic=BASE_URL+user_details[0].profile_pic;
+              }else{
+                //give default profile url
+                user_profile_pic=BASE_URL+'uploads/default/profile.png';
+              }
+              user_name=user_details[0].name;
+              user_phone=user_details[0].phone;
             }
+            //console.log(user_details)
+             
             let setresponse = {
               "status": true, "statuscode": 200, "message": "success", "data": {
-                "name": user_details[0].name,
-                "profile": user_details[0].profile_pic,
+                "name": user_name,
+                "profile": user_profile_pic,
                 "id": rid,
                 "user_block_status":block_status,
-                "phone_number": user_details[0].phone,
+                "phone_number": user_phone,
                 "mute_status": mute_status,
                 "list":message_list_response
               }
@@ -7198,7 +7217,7 @@ async function get_recent_chat_list_response(user_id){
               date: get_recent_chat[i].date,
               message: get_recent_chat[i].message,
               unread_message: unread_count.toString(),
-              userid: opponent_id.toString(),
+              userid: opponent_id ? opponent_id.toString() : '',
               name: opponent_name,
               profile: opponent_profile,
               phone: opponent_phone,
