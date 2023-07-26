@@ -7148,9 +7148,9 @@ io.sockets.on('connection',async function (socket) {
         console.error(e);
       }
     });
-    socket.on('message_delivered',async function(data){
+    socket.on('message_delivered_loop',async function(data){
       //console.log('message delivered ',data);
-      //input -- {"user_id":"50","accessToken":"","room":""}
+      //input -- {"user_id":"50","accessToken":""}
       try{
         if(typeof(data)=='object'){
           let user_id=data.user_id ? data.user_id : '';
@@ -7316,9 +7316,9 @@ io.sockets.on('connection',async function (socket) {
         console.error(e);
       }
     });
-    socket.on('message_delivered_new',async function(data){
+    socket.on('message_delivered',async function(data){
       //console.log('message delivered ',data);
-      //input -- {"user_id":"50","accessToken":"","room":""}
+      //input -- {"user_id":"50","accessToken":""}
       try{
         if(typeof(data)=='object'){
           let user_id=data.user_id ? data.user_id : '';
@@ -7326,6 +7326,7 @@ io.sockets.on('connection',async function (socket) {
           let datetime=get_datetime();
           let room_data=[];
           let message_delivered_status=false;
+          let deliverd_room_user_data=[]
           if(user_id!='' && accessToken!=''){
             socket.join(user_id+'_message_delivered');
             //check user data is valid
@@ -7386,23 +7387,35 @@ io.sockets.on('connection',async function (socket) {
                       if(delivered_status_flag){
                         //exit ()
                         //update to db
-                        let update_private_message_delivered_status=await queries.update_private_message_delivered_status(message_id,JSON.stringify(group_status))
-                        //console.log(update_private_message_delivered_status)
-                        if(update_private_message_delivered_status.affectedRows>0){
-                          message_delivered_status=true;
-                          //emit data to receiver side
-                          let room_chat_list=await functions.get_individual_chat_list_response(senter_id,user_id,room);
-                          io.sockets.in(room+'_'+senter_id).emit('message',room_chat_list);
-                          let recent_chat_list=await functions.get_recent_chat_list_response(senter_id);
-                          io.sockets.in(senter_id.toString()).emit('chat_list',recent_chat_list);
-                        }
+                        // let update_private_message_delivered_status=await queries.update_private_message_delivered_status(message_id,JSON.stringify(group_status));
+                        // if(update_private_message_delivered_status.affectedRows>0){
+                        //   message_delivered_status=true;
+                        //   //emit data to receiver side
+                        //   let room_chat_list=await functions.get_individual_chat_list_response(senter_id,user_id,room);
+                        //   io.sockets.in(room+'_'+senter_id).emit('message',room_chat_list);
+                        //   let recent_chat_list=await functions.get_recent_chat_list_response(senter_id);
+                        //   io.sockets.in(senter_id.toString()).emit('chat_list',recent_chat_list);
+                        // }
                         //make single query
-                        // group_status_case=group_status_case+" when id='"+message_id+"' then '"+JSON.stringify(group_status)+"'";
-                        // delivererd_status_case=delivererd_status_case+" when id='"+message_id+"' then '0'";
-                        // ids=ids+"'"+message_id+"',";
+                        group_status_case=group_status_case+" when id='"+message_id+"' then '"+JSON.stringify(group_status)+"'";
+                        delivererd_status_case=delivererd_status_case+" when id='"+message_id+"' then '0'";
+                        ids=ids+"'"+message_id+"',";
+                        //check same senter_id and room already exist
+                        let check_user_and_room_exist_in_array=await functions.check_user_and_room_exist_in_array(senter_id,room,deliverd_room_user_data);
+                        console.log(check_user_and_room_exist_in_array);
+                        if(check_user_and_room_exist_in_array==false){
+                          deliverd_room_user_data.push({
+                            senter_id: senter_id,
+                            room: room,
+                            type: 'private',
+                            message_id: message_id
+                          });
+                        }
                       }
+                      //console.log(group_status_case,delivererd_status_case);
+                      //console.log(ids)
                     }
-                  }else{
+                  }else{ 
                     //group
                     if(senter_id!=user_id){
                       let undelivered_message_count=0;
@@ -7425,8 +7438,8 @@ io.sockets.on('connection',async function (socket) {
                               group_status[j].delivered_datetime=datetime;
                               delivered_status_flag=true;
                             }else{
-                              group_status[j].delivered_status=0;
-                              group_status[j].delivered_datetime=datetime;
+                              // group_status[j].delivered_status=0;
+                              // group_status[j].delivered_datetime=datetime;
                             }
                           }else{
                             //console.log('no')
@@ -7436,69 +7449,107 @@ io.sockets.on('connection',async function (socket) {
                           }
                         }
                       }
-                      // console.log(undelivered_message_count,delivered_status_flag,message_id)
+                      //console.log(undelivered_message_count,delivered_status_flag,message_id)
                       // console.log(message_id)
                       if(undelivered_message_count==1 && delivered_status_flag==true){
                         //update group_status json and delivered_status
-                        let update_group_message_delivered_status=await queries.update_group_message_delivered_status(message_id,JSON.stringify(group_status),true);
-                        if(update_group_message_delivered_status.affectedRows>0){
-                          message_delivered_status=true;
-                        }
+                        // let update_group_message_delivered_status=await queries.update_group_message_delivered_status(message_id,JSON.stringify(group_status),true);
+                        // if(update_group_message_delivered_status.affectedRows>0){
+                        //   message_delivered_status=true;
+                        // }
 
                         //make single query
-                        // group_status_case=group_status_case+" when id='"+message_id+"' then '"+JSON.stringify(group_status)+"'";
-                        // delivererd_status_case=delivererd_status_case+" when id='"+message_id+"' then '0'";
-                        // ids=ids+"'"+message_id+"',";
+                        group_status_case=group_status_case+" when id='"+message_id+"' then '"+JSON.stringify(group_status)+"'";
+                        delivererd_status_case=delivererd_status_case+" when id='"+message_id+"' then '0'";
+                        ids=ids+"'"+message_id+"',";
                       }else{
                         //update only delivers_status
-                         let update_group_message_delivered_status=await queries.update_group_message_delivered_status(message_id,JSON.stringify(group_status),false);
-                        if(update_group_message_delivered_status.affectedRows>0){
-                          message_delivered_status=true;
-                        }
-                        //group_status_case=group_status_case+" when id='"+message_id+"' then '"+JSON.stringify(group_status)+"'";
+                        //  let update_group_message_delivered_status=await queries.update_group_message_delivered_status(message_id,JSON.stringify(group_status),false);
+                        // if(update_group_message_delivered_status.affectedRows>0){
+                        //   message_delivered_status=true;
+                        // }
+                        //make as single query
+                        group_status_case=group_status_case+" when id='"+message_id+"' then '"+JSON.stringify(group_status)+"'";
                         //delivererd_status_case=delivererd_status_case+" when id='"+message_id+"' then '0'";
-                        //ids=ids+"'"+message_id+"',";
+                        ids=ids+"'"+message_id+"',";
                       }
-                      if(delivered_status_flag){
-                        let group_message_info=await functions.group_message_info(senter_id,room,message_id);
-                        io.sockets.in(senter_id+'_'+room+'_'+message_id+'_group_message_info').emit('group_message_info', group_message_info)
-                        //emit to message senter room
-                        let sender_group_room_chat_list=await functions.get_group_chat_list_response(senter_id,room);
-                        io.sockets.in(room+'_'+senter_id).emit('message',sender_group_room_chat_list);
-                        let recent_chat_list=await functions.get_recent_chat_list_response(senter_id);
-                        io.sockets.in(senter_id.toString()).emit('chat_list',recent_chat_list);
+                      //check same senter_id and room already exist
+                      let check_user_and_room_exist_in_array=await functions.check_user_and_room_exist_in_array(senter_id,room,deliverd_room_user_data);
+                      console.log(check_user_and_room_exist_in_array);
+                      if(check_user_and_room_exist_in_array==false){
+                        deliverd_room_user_data.push({
+                          senter_id: senter_id,
+                          room: room,
+                          type: 'group',
+                          message_id: message_id
+                        });
                       }
+                      // if(delivered_status_flag){
+                      //   let group_message_info=await functions.group_message_info(senter_id,room,message_id);
+                      //   io.sockets.in(senter_id+'_'+room+'_'+message_id+'_group_message_info').emit('group_message_info', group_message_info)
+                      //   //emit to message senter room
+                      //   let sender_group_room_chat_list=await functions.get_group_chat_list_response(senter_id,room);
+                      //   io.sockets.in(room+'_'+senter_id).emit('message',sender_group_room_chat_list);
+                      //   let recent_chat_list=await functions.get_recent_chat_list_response(senter_id);
+                      //   io.sockets.in(senter_id.toString()).emit('chat_list',recent_chat_list);
+                      // }
                     }
 
                   }
                   //exit ()
                 }
 
-                // ids=ids.replace(/(^,)|(,$)/g, "");
-                //   console.log('group case ',group_status_case);
-                //   console.log('delivererd status case',delivererd_status_case)
-                //   console.log('ids',ids)
-                //   let query='';
-                //   if(ids!=''){
-                //     if(delivererd_status_case!=''){
-                //       query="UPDATE chat_list set group_status=(case "+group_status_case+" end), delivered_status=(case "+delivererd_status_case+" end) where id in ("+ids+")";
-                //     }else{
-                //       query="UPDATE chat_list set group_status=(case "+group_status_case+" end) where id in ("+ids+")";
-                //     }
-                //     let update_data=await queries.update_group_delivered_message(query);
-                //     console.log(update_data)
-                //     if(update_data.affectedRows>0){
-                //       io.sockets.in(user_id+'_message_delivered').emit('message_delivered',{status: true, statuscode: 200, message: "success"});
-                //     }
-                //   }else{
-                //     //no message to update
-                //   }
+                ids=ids.replace(/(^,)|(,$)/g, "");
+                  // console.log('group case ',group_status_case);
+                  // console.log('delivererd status case',delivererd_status_case)
+                  // console.log('ids',ids)
+                  let query='';
+                  if(ids!=''){
+                    if(delivererd_status_case!=''){
+                      query="UPDATE chat_list set group_status=(case "+group_status_case+" end), delivered_status=(case "+delivererd_status_case+" end) where id in ("+ids+")";
+                      console.log(delivererd_status_case);
+                    }else{
+                      query="UPDATE chat_list set group_status=(case "+group_status_case+" end) where id in ("+ids+")";
+                    }
+                    console.log(query);
+                    let update_data=await queries.update_group_delivered_message(query);
+                    console.log(update_data)
+                    if(update_data.affectedRows>0){
+                      message_delivered_status=true;
+                      io.sockets.in(user_id+'_message_delivered').emit('message_delivered',{status: true, statuscode: 200, message: "success"});
+                      console.log('sss',deliverd_room_user_data)
+                      for(var k=0; k<deliverd_room_user_data.length; k++){
+                        if(deliverd_room_user_data[k].type=='private'){
+                          //console.log('emit to private room')
+                          //emit data to receiver side
+                          let room_chat_list=await functions.get_individual_chat_list_response(deliverd_room_user_data[k].senter_id,user_id,deliverd_room_user_data[k].room);
+                          io.sockets.in(deliverd_room_user_data[k].room+'_'+deliverd_room_user_data[k].senter_id).emit('message',room_chat_list);
+                          let recent_chat_list=await functions.get_recent_chat_list_response(deliverd_room_user_data[k].senter_id);
+                          io.sockets.in(deliverd_room_user_data[k].senter_id.toString()).emit('chat_list',recent_chat_list);
+                        }else{
+                          //console.log('emit to group')
+                          let group_message_info=await functions.group_message_info(deliverd_room_user_data[k].senter_id,deliverd_room_user_data[k].room,deliverd_room_user_data[k].message_id);
+                          io.sockets.in(deliverd_room_user_data[k].senter_id+'_'+deliverd_room_user_data[k].room+'_'+deliverd_room_user_data[k].message_id+'_group_message_info').emit('group_message_info', group_message_info)
+                          //emit to message senter room
+                          let sender_group_room_chat_list=await functions.get_group_chat_list_response(deliverd_room_user_data[k].senter_id,deliverd_room_user_data[k].room);
+                          io.sockets.in(deliverd_room_user_data[k].room+'_'+deliverd_room_user_data[k].senter_id).emit('message',sender_group_room_chat_list);
+                          let recent_chat_list=await functions.get_recent_chat_list_response(deliverd_room_user_data[k].senter_id);
+                          io.sockets.in(deliverd_room_user_data[k].senter_id.toString()).emit('chat_list',recent_chat_list);
+                        }
+                      }
+                    }else{
+                      io.sockets.in(user_id+'_message_delivered').emit('message_delivered',{status: true, statuscode: 200, message: "Not updated"});
+                    }
+                  }else{
+                    //no message to update
+                    io.sockets.in(user_id+'_message_delivered').emit('message_delivered',{status: true, statuscode: 200, message: "No message to update"});
+                  }
                   
-                if(message_delivered_status){
-                  io.sockets.in(user_id+'_message_delivered').emit('message_delivered',{status: true, statuscode: 200, message: "success"});
-                }else{
-                  io.sockets.in(user_id+'_message_delivered').emit('message_delivered',{status: true, statuscode: 200, message: "Not updated"});
-                }
+                // if(message_delivered_status){
+                //   io.sockets.in(user_id+'_message_delivered').emit('message_delivered',{status: true, statuscode: 200, message: "success"});
+                // }else{
+                //   io.sockets.in(user_id+'_message_delivered').emit('message_delivered',{status: true, statuscode: 200, message: "Not updated"});
+                // }
               }else{
                 io.sockets.in(user_id+'_message_delivered').emit('message_delivered',{status: true, statuscode: 200, message: "No message to update"});
               }
@@ -7524,7 +7575,7 @@ io.sockets.on('connection',async function (socket) {
     })
     socket.on('test_changes',async function(data){
       socket.join('test_changes');
-      io.sockets.in('test_changes').emit('test_changes',{status: true, statuscode: 200, message: "last changes affected upto 25-07-2023"});
+      io.sockets.in('test_changes').emit('test_changes',{status: true, statuscode: 200, message: "last changes affected upto 26-07-2023"});
       socket.leave('test_changes');
     });
     socket.on('private_chat_export_data',async function(data){
