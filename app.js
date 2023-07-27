@@ -7402,8 +7402,8 @@ io.sockets.on('connection',async function (socket) {
                         ids=ids+"'"+message_id+"',";
                         //check same senter_id and room already exist
                         let check_user_and_room_exist_in_array=await functions.check_user_and_room_exist_in_array(senter_id,room,deliverd_room_user_data);
-                        console.log(check_user_and_room_exist_in_array);
-                        if(check_user_and_room_exist_in_array==false){
+                        console.log(check_user_and_room_exist_in_array,senter_id,room,deliverd_room_user_data);
+                        if(check_user_and_room_exist_in_array==false){  
                           deliverd_room_user_data.push({
                             senter_id: senter_id,
                             room: room,
@@ -7575,7 +7575,7 @@ io.sockets.on('connection',async function (socket) {
     })
     socket.on('test_changes',async function(data){
       socket.join('test_changes');
-      io.sockets.in('test_changes').emit('test_changes',{status: true, statuscode: 200, message: "last changes affected upto 26-07-2023"});
+      io.sockets.in('test_changes').emit('test_changes',{status: true, statuscode: 200, message: "last changes affected upto 27-07-2023 (2)"});
       socket.leave('test_changes');
     });
     socket.on('private_chat_export_data',async function(data){
