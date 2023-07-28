@@ -280,8 +280,11 @@ async function get_unread_message_count(user_id,room){
 
 async function get_unread_message_count_for_group(user_id,room){
     //select count(*) as unread from chat_list where private_group='1' and senter_id!='1' and room='group_20230713154430' and message_type!='date' and JSON_CONTAINS(group_status, '{"user_id":"1","message_status":1}');
-    const results=await db.sequelize.query("select message_status,group_status from chat_list where private_group='1' and senter_id!='"+user_id+"' and room='"+room+"' and message_type!='date'");
-    return results[0];
+    //const results=await db.sequelize.query("select message_status,group_status from chat_list where private_group='1' and senter_id!='"+user_id+"' and room='"+room+"' and message_type!='date'");
+    let json_obj='{"user_id":"'+user_id+'","message_status":1}';
+    const results=await db.sequelize.query("select count(*) as unread from chat_list where private_group='1' and senter_id!='"+user_id+"' and room='"+room+"' and message_type!='date' and JSON_CONTAINS(group_status, '"+json_obj+"')");
+    //console.log(results[0][0].unread)
+    return results[0][0].unread;
 }
 
 async function get_mute_notification(user_id,receiver_id){

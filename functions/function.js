@@ -7625,28 +7625,28 @@ async function get_recent_chat_list_response(user_id){
         //group chat message
         let unread_count=0;
         let get_unread_message_count_for_group=await queries.get_unread_message_count_for_group(user_id,get_recent_chat[i].room);
-        console.log('group unread count ',get_unread_message_count_for_group.length);
-        
-        if(get_unread_message_count_for_group.length>0){
-          //console.log('---',get_unread_message_count_for_group[0].group_status,get_recent_chat[i].id);
-          let group_unread_message_status=JSON.parse(get_unread_message_count_for_group[0].group_status);
-          if(get_unread_message_count_for_group[0].message_status==1){
-            for(var k=0; k<group_unread_message_status.length; k++){
-              console.log(group_unread_message_status[k].message_status);
-              if(user_id==group_unread_message_status[k].user_id && group_unread_message_status[k].message_status==1){
-                unread_count=unread_count+1;
-              }else{
-                unread_count=unread_count+0;
-              }
-            }
-          }else{
-            unread_count=0;
-          }
-        }else{
-          unread_count=0;
-        }
-        console.log('unread ',unread_count)
-        exit ();
+        console.log('group unread count ',get_unread_message_count_for_group);
+        unread_count=get_unread_message_count_for_group;
+        // if(get_unread_message_count_for_group.length>0){
+        //   //console.log('---',get_unread_message_count_for_group[0].group_status,get_recent_chat[i].id);
+        //   let group_unread_message_status=JSON.parse(get_unread_message_count_for_group[0].group_status);
+        //   if(get_unread_message_count_for_group[0].message_status==1){
+        //     for(var k=0; k<group_unread_message_status.length; k++){
+        //       console.log(group_unread_message_status[k].message_status);
+        //       if(user_id==group_unread_message_status[k].user_id && group_unread_message_status[k].message_status==1){
+        //         unread_count=unread_count+1;
+        //       }else{
+        //         unread_count=unread_count+0;
+        //       }
+        //     }
+        //   }else{
+        //     unread_count=0;
+        //   }
+        // }else{
+        //   unread_count=0;
+        // }
+        // console.log('unread ',unread_count)
+        // exit ();
         //console.log('unread group count',unread_count)
         //check group is muted by this user
         //let check_group_mute_notification=await queries.check_group_mute_notification(user_id,get_recent_chat[i].room);
@@ -8686,27 +8686,28 @@ async function search_chat_list_response(user_id,search){
         //group chat message
         let unread_count=0;
         let get_unread_message_count_for_group=await queries.get_unread_message_count_for_group(user_id,get_recent_chat[i].room);
+        unread_count=get_unread_message_count_for_group;
         //console.log('group unread count ',get_unread_message_count_for_group);
-        if(get_unread_message_count_for_group.length>0){
-          console.log('---',get_unread_message_count_for_group[0].group_status,get_recent_chat[i].id);
-          let group_unread_message_status=JSON.parse(get_unread_message_count_for_group[0].group_status);
-          if(get_unread_message_count_for_group[0].message_status==1){
-            for(var k=0; k<group_unread_message_status; k++){
-              //console.log(group_unread_message_status[k]);
-              if(user_id==group_unread_message_status[k].user_id && group_unread_message_status[k].message_status==1){
-                unread_count=unread_count+1;
-              }else{
-                unread_count=unread_count+0;
-              }
-            }
-          }else{
-            unread_count=0;
-          }
+        // if(get_unread_message_count_for_group.length>0){
+        //   console.log('---',get_unread_message_count_for_group[0].group_status,get_recent_chat[i].id);
+        //   let group_unread_message_status=JSON.parse(get_unread_message_count_for_group[0].group_status);
+        //   if(get_unread_message_count_for_group[0].message_status==1){
+        //     for(var k=0; k<group_unread_message_status; k++){
+        //       //console.log(group_unread_message_status[k]);
+        //       if(user_id==group_unread_message_status[k].user_id && group_unread_message_status[k].message_status==1){
+        //         unread_count=unread_count+1;
+        //       }else{
+        //         unread_count=unread_count+0;
+        //       }
+        //     }
+        //   }else{
+        //     unread_count=0;
+        //   }
           
           
-        }else{
-          unread_count=0;
-        }
+        // }else{
+        //   unread_count=0;
+        // }
         
         //console.log('unread group count',unread_count)
         //check group is muted by this user
@@ -10002,6 +10003,12 @@ function check_user_and_room_exist_in_array(user_id, room, user_array){
   })
 }
 
+function check_user_and_room_exist_in_array_group(user_id, room, user_array, messsage_id){
+  return user_array.some(function(user){
+    return user.room == room && user.senter_id == user_id && user.messsage_id == messsage_id;
+  })
+}
+
 
 module.exports={
     get_individual_chat_list_response,
@@ -10025,5 +10032,6 @@ module.exports={
     group_message_using_pagination,
     send_individual_message,
     send_group_message,
-    check_user_and_room_exist_in_array
+    check_user_and_room_exist_in_array,
+    check_user_and_room_exist_in_array_group
 }
