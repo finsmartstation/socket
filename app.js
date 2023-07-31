@@ -805,19 +805,38 @@ io.sockets.on('connection',async function (socket) {
               let contacts=[];
               let not_available_users=[];
               for(var i=0; i<split_semicolon.length; i++){
-                //console.log(split_semicolon[i])
+                console.log('data ',split_semicolon[i])
+                
                 let split_colon=split_semicolon[i].split(':');
-                //console.log(split_colon);
+                console.log(split_colon);
+                console.log(split_colon[0]);
+                //exit ()
                 //split_colon[0]--number && split_colon[1]--name
                 if(split_colon[0]!=''){
                   //check contact number user is using smart station 
                   //check mobile number exist
-                  let get_user_id=await functions.get_user_id_using_mobile_number(split_colon[0]);
-                    contacts.push({
-                      user_id: get_user_id.toString(),
-                      number: split_colon[0],
-                      contact_name: split_colon[1] ? split_colon[1] : ''
-                    });
+                  //check multiple number exist
+                  let split_comma=split_colon[0].split(',');
+                  let get_user_id='';
+                  for(var j=0; j<split_comma.length; j++){
+                    get_user_id=await functions.get_user_id_using_mobile_number(split_comma[j]);
+                    if(get_user_id!=''){
+                      break;
+                    }
+                  }
+                  contacts.push({
+                    user_id: get_user_id.toString(),
+                    number: split_colon[0],
+                    contact_name: split_colon[1] ? split_colon[1] : ''
+                  });
+                }else{
+                  //console.log('empty')
+                  contacts.push({
+                    user_id: '',
+                    number: '',
+                    contact_name: split_colon[1] ? split_colon[1] : ''
+                  });
+                  //exit ()
                 }
               }
               //save to db
@@ -915,12 +934,28 @@ io.sockets.on('connection',async function (socket) {
                 if(split_colon[0]!=''){
                   //check contact number user is using smart station 
                   //check mobile number exist
-                  let get_user_id=await functions.get_user_id_using_mobile_number(split_colon[0]);
-                    contacts.push({
-                      user_id: get_user_id.toString(),
-                      number: split_colon[0],
-                      contact_name: split_colon[1] ? split_colon[1] : ''
-                    });
+                  //check multiple number exist
+                  let split_comma=split_colon[0].split(',');
+                  let get_user_id='';
+                  console.log(split_comma)
+                  //exit ()
+                  for(var j=0; j<split_comma.length; j++){
+                    get_user_id=await functions.get_user_id_using_mobile_number(split_comma[j]);
+                    if(get_user_id!=''){
+                      break;
+                    }
+                  }
+                  contacts.push({
+                    user_id: get_user_id.toString(),
+                    number: split_colon[0],
+                    contact_name: split_colon[1] ? split_colon[1] : ''
+                  });
+                }else{
+                  contacts.push({
+                    user_id: '',
+                    number: '',
+                    contact_name: split_colon[1] ? split_colon[1] : ''
+                  });
                 }
               }
               //save to db
@@ -1286,7 +1321,7 @@ io.sockets.on('connection',async function (socket) {
                   //let user_available_status=false;
                   let get_user_id='';
                   for(var j=0; j<split_comma.length; j++){
-                    console.log(split_comma[j]);
+                    //console.log('j - ',split_comma[j]);
                     get_user_id=await functions.get_user_id_using_mobile_number(split_comma[j]);
                     console.log('user data - ',get_user_id)
                     if(get_user_id!=''){
@@ -1303,8 +1338,17 @@ io.sockets.on('connection',async function (socket) {
                       number: split_colon[0],
                       contact_name: split_colon[1] ? split_colon[1] : ''
                     });
+                }else{
+                  contacts.push({
+                    user_id: '',
+                    number: '',
+                    contact_name: split_colon[1] ? split_colon[1] : ''
+                  });
                 }
               }
+
+              //console.log(contacts)
+              //exit ()
               //save to db
               var result=await queries.individual_contact_msg(datetime,data.sid,data.rid,JSON.stringify(contacts),room,group_status_json_data,message_id,optional_text);
             } else {
@@ -1415,12 +1459,29 @@ io.sockets.on('connection',async function (socket) {
                 if(split_colon[0]!=''){
                   //check contact number user is using smart station 
                   //check mobile number exist
-                  let get_user_id=await functions.get_user_id_using_mobile_number(split_colon[0]);
+                  //check multiple number exist -- split comma (,)
+                  let split_comma=split_colon[0].split(',');
+                  let get_user_id='';
+                  for(var j=0; j<split_comma.length; j++){
+
+                    get_user_id=await functions.get_user_id_using_mobile_number(split_comma[j]);
+                    console.log(get_user_id)
+                    if(get_user_id!=''){
+                      break;
+                    }
+                  }
+                  
                     contacts.push({
                       user_id: get_user_id.toString(),
                       number: split_colon[0],
                       contact_name: split_colon[1] ? split_colon[1] : ''
                     });
+                }else{
+                  contacts.push({
+                    user_id: '',
+                    number: '',
+                    contact_name: split_colon[1] ? split_colon[1] : ''
+                  });
                 }
               }
               //save to db
@@ -1492,6 +1553,11 @@ io.sockets.on('connection',async function (socket) {
             console.log(individual_chat_list_response_sender)
             // exit ()
             io.sockets.in(room+'_'+data.sid).emit('message',individual_chat_list_response_sender);
+
+            let get_recent_chat_response_senter=await functions.get_recent_chat_list_response(data.sid);
+            //io.sockets.in(room+'_'+data.sid).emit('chat_list', get_recent_chat_response_senter);
+            io.sockets.in(data.sid).emit('chat_list', get_recent_chat_response_senter);
+
             let individual_chat_list_response_receiver=await functions.get_individual_chat_list_response(data.rid,data.sid,room);
             //let individual_chat_list_response_receiver=await functions.send_individual_message(data.rid,data.sid,room,check_date_entry);
             //console.log(sockets,socket.id)
@@ -1516,9 +1582,9 @@ io.sockets.on('connection',async function (socket) {
             //   io.sockets.in(data.rid).emit('chat_list', get_recent_chat)
             //   io.sockets.in(room).emit('chat_list', get_recent_chat);
             // }
-            let get_recent_chat_response_senter=await functions.get_recent_chat_list_response(data.sid);
-            //io.sockets.in(room+'_'+data.sid).emit('chat_list', get_recent_chat_response_senter);
-            io.sockets.in(data.sid).emit('chat_list', get_recent_chat_response_senter);
+            // let get_recent_chat_response_senter=await functions.get_recent_chat_list_response(data.sid);
+            // //io.sockets.in(room+'_'+data.sid).emit('chat_list', get_recent_chat_response_senter);
+            // io.sockets.in(data.sid).emit('chat_list', get_recent_chat_response_senter);
             //get recent chat response
             let get_recent_chat_response_receiver=await functions.get_recent_chat_list_response(data.rid);
             //io.sockets.in(room+'_'+data.rid).emit('chat_list', get_recent_chat_response_receiver)
@@ -5678,7 +5744,9 @@ io.sockets.on('connection',async function (socket) {
                   if(update_read_message_status.affectedRows>0){
                     console.log('success')
                     //console.log(message_sender_id,id,room);
-                    
+                    //emit chat_list to the user
+                    let user_chat_list=await functions.get_recent_chat_list_response(user_id);
+                    io.sockets.in(user_id.toString()).emit('chat_list',user_chat_list);
                     //emit to read message data to group_message_info 
                     let group_message_info=await functions.group_message_info(message_sender_id,room,id);
                     io.sockets.in(message_sender_id+'_'+room+'_'+id+'_group_message_info').emit('group_message_info', group_message_info);
@@ -5697,6 +5765,8 @@ io.sockets.on('connection',async function (socket) {
                   console.log(update_read_message_status)
                   if(update_read_message_status.affectedRows>0){
                     console.log('success')
+                    let user_chat_list=await functions.get_recent_chat_list_response(user_id);
+                    io.sockets.in(user_id.toString()).emit('chat_list',user_chat_list);
                     //emit to read message data to group_message_info
                     let group_message_info=await functions.group_message_info(message_sender_id,room,id);
                     io.sockets.in(message_sender_id+'_'+room+'_'+id+'_group_message_info').emit('group_message_info', group_message_info);
@@ -5781,6 +5851,8 @@ io.sockets.on('connection',async function (socket) {
               //console.log(update_individual_message_as_read)
               if(update_individual_message_as_read.affectedRows>0){
                 console.log('updated')
+                let user_chat_list=await functions.get_recent_chat_list_response(user_id);
+                io.sockets.in(user_id.toString()).emit('chat_list',user_chat_list);
                 //emit message to private_message_info in rid
                 console.log(message_delivered_datetime,message_read_datetime)
                 for(var k=0; k<message_ids.length; k++){
@@ -7618,7 +7690,7 @@ io.sockets.on('connection',async function (socket) {
     })
     socket.on('test_changes',async function(data){
       socket.join('test_changes');
-      io.sockets.in('test_changes').emit('test_changes',{status: true, statuscode: 200, message: "last changes affected upto 28-07-2023"});
+      io.sockets.in('test_changes').emit('test_changes',{status: true, statuscode: 200, message: "last changes affected upto 31-07-2023"});
       socket.leave('test_changes');
     });
     socket.on('private_chat_export_data',async function(data){

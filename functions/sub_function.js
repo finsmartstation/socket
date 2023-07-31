@@ -879,7 +879,7 @@ async function get_last_private_message(room_id,message_id,user_id,opponent_prof
     return last_message_array;
   }
 
-  async function send_firebase_notification(user_id,device_token, title, body, type,profile_pic,message_type,sound,vibration){
+  async function send_firebase_notification(user_id,device_token, title, body, type,profile_pic,message_type,sound,vibration,room){
     //console.log(device_token, title, body, type,profile_pic,message_type)
     const message={
       to: device_token,
@@ -899,7 +899,8 @@ async function get_last_private_message(room_id,message_id,user_id,opponent_prof
          profile_pic: profile_pic,
          message_format: message_type,
          sound: sound,
-         vibration: vibration
+         vibration: vibration,
+         room: room
         }
     }
     //console.log(message)
@@ -917,7 +918,7 @@ async function get_last_private_message(room_id,message_id,user_id,opponent_prof
     }
   }
 
-  async function send_firebase_notification_group(group_id,device_token, title, body, type,group_profile_pic,message_type,sound,vibration){
+  async function send_firebase_notification_group(group_id,device_token, title, body, type,group_profile_pic,message_type,sound,vibration,room){
     //console.log('group id',group_id,'device token',device_token, 'title',title, 'body',body, 'type',type,'g profile',group_profile_pic,'me typ',message_type)
     //console.log(sound,vibration)
     const message={
@@ -938,7 +939,8 @@ async function get_last_private_message(room_id,message_id,user_id,opponent_prof
          profile_pic: group_profile_pic,
          message_format: message_type,
          sound: sound,
-         vibration: vibration
+         vibration: vibration,
+         room: room
     }
     }
     
