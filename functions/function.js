@@ -1240,6 +1240,7 @@ async function get_individual_chat_list_response(sid,rid,room){
                     let set_contact_msg='';
                     let contact_user_profile_pic='';
                     let user_available_status='not available';
+                    let available_user_id='';
                     if(contact_msg!=''){
                       contact_msg=JSON.parse(result[0][i].message);
                       //console.log(result[0][i].id,contact_msg);
@@ -1268,6 +1269,9 @@ async function get_individual_chat_list_response(sid,rid,room){
                       //console.log(contact_msg[k]);
                       if(contact_msg[k].user_id!=''){
                         user_available_status='available';
+                        //console.log(typeof contact_msg[k].user_id)
+                        //exit ()
+                        available_user_id=contact_msg[k].user_id;
                         // contact_user_profile_pic
                         let privacy_profile_pic=await sub_function.check_profile_pic_privacy(contact_msg[k].user_id,sid);
                         //console.log('privacy profile check ',sid,contact_msg[k].user_id,privacy_profile_pic);
@@ -1313,6 +1317,7 @@ async function get_individual_chat_list_response(sid,rid,room){
                     //console.log(set_contact_msg)
                     //exit ()
                     if(date_array.includes(split_date[0])){
+                      
                       message_list_response.push({
                         id: result[0][i].id.toString(),
                         date: result[0][i].date,
@@ -1337,9 +1342,10 @@ async function get_individual_chat_list_response(sid,rid,room){
                         delete_status : "1",
                         starred_status: starred_status.toString(),
                         read_receipt: read_receipt.toString(),
-                        optional_text: user_available_status,
+                        optional_text: available_user_id,
                         thumbnail: contact_user_profile_pic
                       });
+                      
                     }else{
                       date_array.push(split_date[0]);
                       message_list_response.push({
@@ -1392,7 +1398,7 @@ async function get_individual_chat_list_response(sid,rid,room){
                         delete_status : "1",
                         starred_status: starred_status.toString(),
                         read_receipt: read_receipt.toString(),
-                        optional_text: user_available_status,
+                        optional_text: available_user_id,
                         thumbnail: contact_user_profile_pic
                       });
                     }
@@ -2199,6 +2205,7 @@ async function send_individual_message(sid,rid,room,date_status){
                   let set_contact_msg='';
                   let contact_user_profile_pic='';
                   let user_available_status='not available';
+                  let available_user_id='';
                   if(contact_msg!=''){
                     contact_msg=JSON.parse(result[0][i].message);
                     //console.log(result[0][i].id,contact_msg);
@@ -2227,6 +2234,7 @@ async function send_individual_message(sid,rid,room,date_status){
                     //console.log(contact_msg[k]);
                     if(contact_msg[k].user_id!=''){
                       user_available_status='available';
+                      available_user_id=contact_msg[k].user_id;
                       // contact_user_profile_pic
                       let privacy_profile_pic=await sub_function.check_profile_pic_privacy(contact_msg[k].user_id,sid);
                       //console.log('privacy profile check ',sid,contact_msg[k].user_id,privacy_profile_pic);
@@ -2294,7 +2302,7 @@ async function send_individual_message(sid,rid,room,date_status){
                       delete_status : "1",
                       starred_status: starred_status.toString(),
                       read_receipt: read_receipt.toString(),
-                      optional_text: user_available_status,
+                      optional_text: available_user_id,
                       thumbnail: contact_user_profile_pic
                     });
                   
@@ -3058,6 +3066,7 @@ async function individual_message_using_pagination(sid,rid,room,limit,message_id
                     let set_contact_msg='';
                     let contact_user_profile_pic='';
                     let user_available_status='not available';
+                    let available_user_id='';
                     if(contact_msg!=''){
                       contact_msg=JSON.parse(result[0][i].message);
                       //console.log(result[0][i].id,contact_msg);
@@ -3086,6 +3095,7 @@ async function individual_message_using_pagination(sid,rid,room,limit,message_id
                       //console.log(contact_msg[k]);
                       if(contact_msg[k].user_id!=''){
                         user_available_status='available';
+                        available_user_id=contact_msg[k].user_id;
                         // contact_user_profile_pic
                         let privacy_profile_pic=await sub_function.check_profile_pic_privacy(contact_msg[k].user_id,sid);
                         //console.log('privacy profile check ',sid,contact_msg[k].user_id,privacy_profile_pic);
@@ -3153,7 +3163,7 @@ async function individual_message_using_pagination(sid,rid,room,limit,message_id
                         delete_status : "1",
                         starred_status: starred_status.toString(),
                         read_receipt: read_receipt.toString(),
-                        optional_text: user_available_status,
+                        optional_text: available_user_id,
                         thumbnail: contact_user_profile_pic
                       });
                     
@@ -3926,6 +3936,7 @@ async function get_group_chat_list_response(user_id,group_id){
               let set_contact_msg='';
               let contact_user_profile_pic='';
               let user_available_status='not available';
+              let available_user_id='';
               if(contact_msg!=''){
                 //console.log(`id ${get_all_group_messages[i].id} ${get_all_group_messages[i]['message']}`);
                 contact_msg=JSON.parse(get_all_group_messages[i]['message']);
@@ -3954,6 +3965,7 @@ async function get_group_chat_list_response(user_id,group_id){
               for(var k=0; k<contact_msg.length; k++){
                 if(contact_msg[k].user_id!=''){
                   user_available_status='available';
+                  available_user_id=contact_msg[k].user_id;
                   // contact_user_profile_pic
                   let privacy_profile_pic=await sub_function.check_profile_pic_privacy(contact_msg[k].user_id,user_id);
                   //console.log('privacy profile check ',sid,contact_msg[k].user_id,privacy_profile_pic);
@@ -3997,7 +4009,7 @@ async function get_group_chat_list_response(user_id,group_id){
                 }
               }
               get_all_group_messages[i]['message']=set_contact_msg;
-              get_all_group_messages[i]['optional_text']=user_available_status;
+              get_all_group_messages[i]['optional_text']=available_user_id;
               get_all_group_messages[i]['thumbnail']=contact_user_profile_pic;
               // console.log(contact_user_profile_pic);
             }
@@ -4945,6 +4957,7 @@ async function group_message_using_pagination(user_id,group_id,limit,message_id)
               let set_contact_msg='';
               let contact_user_profile_pic='';
               let user_available_status='not available';
+              let available_user_id='';
               if(contact_msg!=''){
                 //console.log(`id ${get_all_group_messages[i].id} ${get_all_group_messages[i]['message']}`);
                 contact_msg=JSON.parse(get_all_group_messages[i]['message']);
@@ -4973,6 +4986,7 @@ async function group_message_using_pagination(user_id,group_id,limit,message_id)
               for(var k=0; k<contact_msg.length; k++){
                 if(contact_msg[k].user_id!=''){
                   user_available_status='available';
+                  available_user_id=contact_msg[k].user_id;
                   // contact_user_profile_pic
                   let privacy_profile_pic=await sub_function.check_profile_pic_privacy(contact_msg[k].user_id,user_id);
                   //console.log('privacy profile check ',sid,contact_msg[k].user_id,privacy_profile_pic);
@@ -5016,7 +5030,7 @@ async function group_message_using_pagination(user_id,group_id,limit,message_id)
                 }
               }
               get_all_group_messages[i]['message']=set_contact_msg;
-              get_all_group_messages[i]['optional_text']=user_available_status;
+              get_all_group_messages[i]['optional_text']=available_user_id;
               get_all_group_messages[i]['thumbnail']=contact_user_profile_pic;
               // console.log(contact_user_profile_pic);
             }
@@ -5857,6 +5871,7 @@ async function send_group_message(user_id,group_id,date_status){
               let set_contact_msg='';
               let contact_user_profile_pic='';
               let user_available_status='not available';
+              let available_user_id='';
               if(contact_msg!=''){
                 //console.log(`id ${get_all_group_messages[i].id} ${get_all_group_messages[i]['message']}`);
                 contact_msg=JSON.parse(get_all_group_messages[i]['message']);
@@ -5885,6 +5900,7 @@ async function send_group_message(user_id,group_id,date_status){
               for(var k=0; k<contact_msg.length; k++){
                 if(contact_msg[k].user_id!=''){
                   user_available_status='available';
+                  available_user_id=contact_msg[k].user_id;
                   // contact_user_profile_pic
                   let privacy_profile_pic=await sub_function.check_profile_pic_privacy(contact_msg[k].user_id,user_id);
                   //console.log('privacy profile check ',sid,contact_msg[k].user_id,privacy_profile_pic);
@@ -5928,7 +5944,7 @@ async function send_group_message(user_id,group_id,date_status){
                 }
               }
               get_all_group_messages[i]['message']=set_contact_msg;
-              get_all_group_messages[i]['optional_text']=user_available_status;
+              get_all_group_messages[i]['optional_text']=available_user_id;
               get_all_group_messages[i]['thumbnail']=contact_user_profile_pic;
               // console.log(contact_user_profile_pic);
             }else if(get_all_group_messages[i].message_type=='date'){
