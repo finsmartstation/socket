@@ -402,7 +402,7 @@ async function get_individual_chat_list_response(sid,rid,room){
                       if(result[0][i]['message']=='phone_number_changed'){
                         //console.log('phone number changed');
 
-                        let number_changed_msg=await queries.get_username(result[0][i]['senter_id'])+" changed their phone number. You're currently chatting with their new number. Tap to add it to your contacts.";
+                        //let number_changed_msg=await queries.get_username(result[0][i]['senter_id'])+" changed their phone number. You're currently chatting with their new number. Tap to add it to your contacts.";
                         //console.log(number_changed_msg)
                         
                         if(date_array.includes(split_date[0])){
@@ -839,9 +839,16 @@ async function get_individual_chat_list_response(sid,rid,room){
                       if(result[0][i]['message']=='phone_number_changed'){
                         //console.log(group_status_json[j].status)
                         console.log('phone number changed');
-                        let number_changed_msg=await queries.get_username(result[0][i]['senter_id'])+" changed their phone number. You're currently chatting with their new number. Tap to add it to your contacts.";
-                        //console.log(number_changed_msg)
-
+                        console.log(result[0][i].optional_text)
+                        let split_phone_number=result[0][i].optional_text.split(',')
+                        console.log(split_phone_number);
+                        
+                        let new_phone_number=split_phone_number[1]!=undefined ? split_phone_number[1] : '';
+                        
+                        //let number_changed_msg=await queries.get_username(result[0][i]['senter_id'])+" changed their phone number. You're currently chatting with their new number. Tap to add it to your contacts.";
+                        let number_changed_msg=await queries.get_username(result[0][i]['senter_id'])+" changed their phone number to "+new_phone_number+".";
+                        console.log(number_changed_msg)
+                        
                         if(date_array.includes(split_date[0])){
                           // console.log('yes date exist')
                           message_list_response.push({
@@ -850,7 +857,7 @@ async function get_individual_chat_list_response(sid,rid,room){
                             senter_id: result[0][i].senter_id,
                             receiver_id: result[0][i].receiver_id,
                             message: number_changed_msg,
-                            message_type:"notification",
+                            message_type:"phone_number_changed",
                             duration: result[0][i].duration.toString(),
                             message_status:result[0][i].message_status,
                             room:result[0][i].room,
@@ -907,7 +914,7 @@ async function get_individual_chat_list_response(sid,rid,room){
                             senter_id: result[0][i].senter_id,
                             receiver_id: result[0][i].receiver_id,
                             message: number_changed_msg,
-                            message_type:"notification",
+                            message_type:"phone_number_changed",
                             duration: result[0][i].duration.toString(),
                             message_status:result[0][i].message_status,
                             room:result[0][i].room,
@@ -1916,8 +1923,11 @@ async function send_individual_message(sid,rid,room,date_status){
                   }else{
                     if(result[0][i]['message']=='phone_number_changed'){
                       //console.log('phone number changed');
-
-                      let number_changed_msg=await queries.get_username(result[0][i]['senter_id'])+" changed their phone number. You're currently chatting with their new number. Tap to add it to your contacts.";
+                      let split_phone_number=result[0][i].optional_text.split(',')
+                      console.log(split_phone_number);
+                      let new_phone_number=split_phone_number[1]!=undefined ? split_phone_number[1] : '';
+                      //let number_changed_msg=await queries.get_username(result[0][i]['senter_id'])+" changed their phone number. You're currently chatting with their new number. Tap to add it to your contacts.";
+                      let number_changed_msg=await queries.get_username(result[0][i]['senter_id'])+" changed their phone number to "+new_phone_number+".";
                       //console.log(number_changed_msg)
                       //add block message data entry
                       message_list_response.push({
@@ -1927,7 +1937,7 @@ async function send_individual_message(sid,rid,room,date_status){
                         receiver_id: result[0][i].receiver_id,
                         //message: number_changed_msg,
                         message: result[0][i]['message'],
-                        message_type:"notification",
+                        message_type:"phone_number_changed",
                         duration: result[0][i].duration.toString(),
                         message_status:result[0][i].message_status,
                         room:result[0][i].room,
@@ -2105,7 +2115,11 @@ async function send_individual_message(sid,rid,room,date_status){
                     //receiver side notification meesage
                     if(result[0][i]['message']=='phone_number_changed'){
                       console.log('phone number changed');
-                      let number_changed_msg=await queries.get_username(result[0][i]['senter_id'])+" changed their phone number. You're currently chatting with their new number. Tap to add it to your contacts.";
+                      let split_phone_number=result[0][i].optional_text.split(',')
+                      console.log(split_phone_number);
+                      let new_phone_number=split_phone_number[1]!=undefined ? split_phone_number[1] : '';
+                      //let number_changed_msg=await queries.get_username(result[0][i]['senter_id'])+" changed their phone number. You're currently chatting with their new number. Tap to add it to your contacts.";
+                      let number_changed_msg=await queries.get_username(result[0][i]['senter_id'])+" changed their phone number to "+new_phone_number+".";
                       //console.log(number_changed_msg)
                       //add block message data entry
                       message_list_response.push({
@@ -2114,7 +2128,7 @@ async function send_individual_message(sid,rid,room,date_status){
                         senter_id: result[0][i].senter_id,
                         receiver_id: result[0][i].receiver_id,
                         message: number_changed_msg,
-                        message_type:"notification",
+                        message_type:"phone_number_changed",
                         duration: result[0][i].duration.toString(),
                         message_status:result[0][i].message_status,
                         room:result[0][i].room,
@@ -2778,7 +2792,7 @@ async function individual_message_using_pagination(sid,rid,room,limit,message_id
                       if(result[0][i]['message']=='phone_number_changed'){
                         //console.log('phone number changed');
 
-                        let number_changed_msg=await queries.get_username(result[0][i]['senter_id'])+" changed their phone number. You're currently chatting with their new number. Tap to add it to your contacts.";
+                        //let number_changed_msg=await queries.get_username(result[0][i]['senter_id'])+" changed their phone number. You're currently chatting with their new number. Tap to add it to your contacts.";
                         //console.log(number_changed_msg)
                         //add block message data entry
                         message_list_response.push({
@@ -2788,7 +2802,7 @@ async function individual_message_using_pagination(sid,rid,room,limit,message_id
                           receiver_id: result[0][i].receiver_id,
                           //message: number_changed_msg,
                           message: result[0][i]['message'],
-                          message_type:"notification",
+                          message_type:"phone_number_changed",
                           duration: result[0][i].duration.toString(),
                           message_status:result[0][i].message_status,
                           room:result[0][i].room,
@@ -2966,7 +2980,12 @@ async function individual_message_using_pagination(sid,rid,room,limit,message_id
                       //receiver side notification meesage
                       if(result[0][i]['message']=='phone_number_changed'){
                         console.log('phone number changed');
-                        let number_changed_msg=await queries.get_username(result[0][i]['senter_id'])+" changed their phone number. You're currently chatting with their new number. Tap to add it to your contacts.";
+                        let split_phone_number=result[0][i].optional_text.split(',')
+                        console.log(split_phone_number);
+                        let new_phone_number=split_phone_number[1]!=undefined ? split_phone_number[1] : '';
+                        //let number_changed_msg=await queries.get_username(result[0][i]['senter_id'])+" changed their phone number. You're currently chatting with their new number. Tap to add it to your contacts.";
+                        let number_changed_msg=await queries.get_username(result[0][i]['senter_id'])+" changed their phone number to "+new_phone_number;
+
                         //console.log(number_changed_msg)
                         //add block message data entry
                         message_list_response.push({
@@ -2975,7 +2994,7 @@ async function individual_message_using_pagination(sid,rid,room,limit,message_id
                           senter_id: result[0][i].senter_id,
                           receiver_id: result[0][i].receiver_id,
                           message: number_changed_msg,
-                          message_type:"notification",
+                          message_type:"phone_number_changed",
                           duration: result[0][i].duration.toString(),
                           message_status:result[0][i].message_status,
                           room:result[0][i].room,
@@ -3893,7 +3912,6 @@ async function get_group_chat_list_response(user_id,group_id){
                 get_all_group_messages[i].message_type='';
                 get_all_group_messages[i].type='notification';
               }else if(get_all_group_messages[i].message=='phone_number_changed'){
-                
                 if(get_all_group_messages[i].senter_id==user_id){
                   //exit ()
                   //not need
