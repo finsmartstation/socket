@@ -244,9 +244,14 @@ io.sockets.on('connection',async function (socket) {
               // old query var update_query = "update user set online_status='1',last_seen='" + last_seen + "' where id='" + room_data.sid + "'";
               //get online status to emit
               var online_s=await queries.select_online_status(room_data.rid);
-              //console.log('140 in app.js',online_s)
+              if(online_s.length==0){
+                //online_s[0].last_seen=''
+                online_s.push({
+                  last_seen:''
+                })
+              }
               // try{
-                console.log('online user', newRoom)
+                //console.log('online user', newRoom)
                 let data_array=[{
                   online_status:1,
                   last_seen: online_s[0].last_seen
@@ -407,13 +412,20 @@ io.sockets.on('connection',async function (socket) {
             } else {
               console.log('user is offline now');
               var online_s=await queries.select_online_status(room_data.rid);
-              console.log(online_s);
+              //console.log('data ',online_s);
+              if(online_s.length==0){
+                //online_s[0].last_seen=''
+                online_s.push({
+                  last_seen:''
+                })
+              }
+              console.log(online_s)
               let data_array=[{
                 online_status:0,
                 last_seen: online_s[0].last_seen
               }]
               //console.log(data_array)
-              console.log(check_user_privacy_for_last_seen_and_online)
+              //console.log(check_user_privacy_for_last_seen_and_online)
               if(check_user_privacy_for_last_seen_and_online.length){
                 if(check_user_privacy_for_last_seen_and_online.length==1){
                   console.log('count 1')
@@ -7691,7 +7703,7 @@ io.sockets.on('connection',async function (socket) {
     })
     socket.on('test_changes',async function(data){
       socket.join('test_changes');
-      io.sockets.in('test_changes').emit('test_changes',{status: true, statuscode: 200, message: "last changes affected upto 2-08-2023"});
+      io.sockets.in('test_changes').emit('test_changes',{status: true, statuscode: 200, message: "last changes affected upto 3-08-2023 (2)"});
       socket.leave('test_changes');
     });
     socket.on('private_chat_export_data',async function(data){

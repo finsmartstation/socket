@@ -1272,6 +1272,7 @@ async function get_individual_chat_list_response(sid,rid,room){
                     }else{
                       contact_msg=[];
                     }
+                    //console.log(contact_msg)
                     for(var k=0; k<contact_msg.length; k++){
                       //console.log(contact_msg[k]);
                       if(contact_msg[k].user_id!=''){
@@ -1284,7 +1285,12 @@ async function get_individual_chat_list_response(sid,rid,room){
                         //console.log('privacy profile check ',sid,contact_msg[k].user_id,privacy_profile_pic);
                         if(privacy_profile_pic){
                           let get_user_profile=await queries.get_user_profile(contact_msg[k].user_id);
-                          contact_user_profile_pic=contact_user_profile_pic+BASE_URL+get_user_profile[0]['profile_pic']+',';
+                          console.log(get_user_profile)
+                          if(get_user_profile[0] && get_user_profile[0]['profile_pic']!=''){
+                            contact_user_profile_pic=contact_user_profile_pic+BASE_URL+get_user_profile[0]['profile_pic']+',';
+                          }else{
+                            contact_user_profile_pic=contact_user_profile_pic+BASE_URL+'uploads/default/profile.png,';
+                          }
                         }else{
                           contact_user_profile_pic=contact_user_profile_pic+BASE_URL+'uploads/default/profile.png,';
                         }
@@ -2254,7 +2260,11 @@ async function send_individual_message(sid,rid,room,date_status){
                       //console.log('privacy profile check ',sid,contact_msg[k].user_id,privacy_profile_pic);
                       if(privacy_profile_pic){
                         let get_user_profile=await queries.get_user_profile(contact_msg[k].user_id);
-                        contact_user_profile_pic=contact_user_profile_pic+BASE_URL+get_user_profile[0]['profile_pic']+',';
+                        if(get_user_profile[0] && get_user_profile[0]['profile_pic']!=''){
+                          contact_user_profile_pic=contact_user_profile_pic+BASE_URL+get_user_profile[0]['profile_pic']+',';
+                        }else{
+                          contact_user_profile_pic=contact_user_profile_pic+BASE_URL+'uploads/default/profile.png,';
+                        }
                       }else{
                         contact_user_profile_pic=contact_user_profile_pic+BASE_URL+'uploads/default/profile.png,';
                       }
@@ -3120,7 +3130,11 @@ async function individual_message_using_pagination(sid,rid,room,limit,message_id
                         //console.log('privacy profile check ',sid,contact_msg[k].user_id,privacy_profile_pic);
                         if(privacy_profile_pic){
                           let get_user_profile=await queries.get_user_profile(contact_msg[k].user_id);
-                          contact_user_profile_pic=contact_user_profile_pic+BASE_URL+get_user_profile[0]['profile_pic']+',';
+                          if(get_user_profile[0] && get_user_profile[0]['profile_pic']!=''){
+                            contact_user_profile_pic=contact_user_profile_pic+BASE_URL+get_user_profile[0]['profile_pic']+',';
+                          }else{
+                            contact_user_profile_pic=contact_user_profile_pic+BASE_URL+'uploads/default/profile.png,';
+                          }
                         }else{
                           contact_user_profile_pic=contact_user_profile_pic+BASE_URL+'uploads/default/profile.png,';
                         }
@@ -3989,7 +4003,11 @@ async function get_group_chat_list_response(user_id,group_id){
                   //console.log('privacy profile check ',sid,contact_msg[k].user_id,privacy_profile_pic);
                   if(privacy_profile_pic){
                     let get_user_profile=await queries.get_user_profile(contact_msg[k].user_id);
-                    contact_user_profile_pic=contact_user_profile_pic+BASE_URL+get_user_profile[0]['profile_pic']+',';
+                    if(get_user_profile[0] && get_user_profile[0]['profile_pic']!=''){
+                      contact_user_profile_pic=contact_user_profile_pic+BASE_URL+get_user_profile[0]['profile_pic']+',';
+                    }else{
+                      contact_user_profile_pic=contact_user_profile_pic+BASE_URL+'uploads/default/profile.png,';
+                    }
                   }else{
                     contact_user_profile_pic=contact_user_profile_pic+BASE_URL+'uploads/default/profile.png,';
                   }
@@ -5010,7 +5028,11 @@ async function group_message_using_pagination(user_id,group_id,limit,message_id)
                   //console.log('privacy profile check ',sid,contact_msg[k].user_id,privacy_profile_pic);
                   if(privacy_profile_pic){
                     let get_user_profile=await queries.get_user_profile(contact_msg[k].user_id);
-                    contact_user_profile_pic=contact_user_profile_pic+BASE_URL+get_user_profile[0]['profile_pic']+',';
+                    if(get_user_profile[0] && get_user_profile[0]['profile_pic']!=''){
+                      contact_user_profile_pic=contact_user_profile_pic+BASE_URL+get_user_profile[0]['profile_pic']+',';
+                    }else{
+                      contact_user_profile_pic=contact_user_profile_pic+BASE_URL+'uploads/default/profile.png,';
+                    }
                   }else{
                     contact_user_profile_pic=contact_user_profile_pic+BASE_URL+'uploads/default/profile.png,';
                   }
@@ -5924,7 +5946,11 @@ async function send_group_message(user_id,group_id,date_status){
                   //console.log('privacy profile check ',sid,contact_msg[k].user_id,privacy_profile_pic);
                   if(privacy_profile_pic){
                     let get_user_profile=await queries.get_user_profile(contact_msg[k].user_id);
-                    contact_user_profile_pic=contact_user_profile_pic+BASE_URL+get_user_profile[0]['profile_pic']+',';
+                    if(get_user_profile[0] && get_user_profile[0]['profile_pic']!=''){
+                      contact_user_profile_pic=contact_user_profile_pic+BASE_URL+get_user_profile[0]['profile_pic']+',';
+                    }else{
+                      contact_user_profile_pic=contact_user_profile_pic+BASE_URL+'uploads/default/profile.png,';
+                    }
                   }else{
                     contact_user_profile_pic=contact_user_profile_pic+BASE_URL+'uploads/default/profile.png,';
                   }
@@ -6604,7 +6630,7 @@ async function get_recent_chat_list_response_old(user_id){
                   let get_last_private_message=await sub_function.get_last_private_message(get_recent_chat[i].room,get_recent_chat[i].id,user_id,opponent_profile,opponent_phone);
                   //console.log(get_last_private_message)
                   if(get_last_private_message==false){
-                    get_recent_chat[i].message=get_last_private_message[0].message;
+                    get_recent_chat[i].message='';
                     // chat_list_data.push({
                     //   id: get_recent_chat[i].id,
                     //   date: get_recent_chat[i].date,
@@ -7438,6 +7464,7 @@ async function get_recent_chat_list_response(user_id){
             //check message type
             if(get_recent_chat[i].message_type=='notification'){
               if(get_recent_chat[i].message=='block'){
+                //exit ()
                 if(user_id==get_recent_chat[i].senter_id){
                   get_recent_chat[i].message='You blocked this contact.';
                   //console.log('yes blocked',user_id,get_recent_chat[i].senter_id)
@@ -7446,9 +7473,13 @@ async function get_recent_chat_list_response(user_id){
                   //let get_last_private_message=get_last_private_message(get_recent_chat[i].room,get_recent_chat[i].id,user_id,opponent_profile,opponent_phone);
                   //let get_last_private_message=get_last_private_message();
                   let get_last_private_message=await sub_function.get_last_private_message(get_recent_chat[i].room,get_recent_chat[i].id,user_id,opponent_profile,opponent_phone);
-                  //console.log(get_last_private_message)
+                  console.log('private ',get_last_private_message)
                   if(get_last_private_message==false){
-                    get_recent_chat[i].message=get_last_private_message[0].message;
+                    console.log(get_recent_chat[i].message)
+                    console.log(get_recent_chat[i].id)
+                    //console.log(get_last_private_message[0].message)
+                    
+                    get_recent_chat[i].message='';
                     // chat_list_data.push({
                     //   id: get_recent_chat[i].id,
                     //   date: get_recent_chat[i].date,
@@ -7638,6 +7669,7 @@ async function get_recent_chat_list_response(user_id){
               //console.log('contact msg is ',get_recent_chat[i].message)
               //exit ()
             }
+            
             //console.log(get_recent_chat[i].id);
             //console.log('opponent ',opponent_id,typeof(opponent_id),opponent_name,unread_count)
             // exit ()
@@ -7661,6 +7693,10 @@ async function get_recent_chat_list_response(user_id){
               optional_text: get_recent_chat[i].optional_text ? get_recent_chat[i].optional_text : '',
               mark_as_unread: mark_as_unread.toString()
             })
+            // if(get_recent_chat[i].id==5716){
+            //   console.log('outer ',get_recent_chat[i].message)
+            //   console.log('chat list ',chat_list_data)
+            // }
             // if(get_recent_chat[i].id==650){
             //   console.log(get_recent_chat[i].message,get_recent_chat[i].message_type,chat_list_data)
             //   exit ()
@@ -8585,7 +8621,7 @@ async function search_chat_list_response(user_id,search){
                   let get_last_private_message=await sub_function.get_last_private_message(get_recent_chat[i].room,get_recent_chat[i].id,user_id,opponent_profile,opponent_phone);
                   //console.log(get_last_private_message)
                   if(get_last_private_message==false){
-                    get_recent_chat[i].message=get_last_private_message[0].message;
+                    get_recent_chat[i].message='';
                     // chat_list_data.push({
                     //   id: get_recent_chat[i].id,
                     //   date: get_recent_chat[i].date,
