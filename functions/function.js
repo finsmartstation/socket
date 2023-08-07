@@ -70,13 +70,13 @@ async function get_individual_chat_list_response(sid,rid,room){
                 let reply_message_details=await queries.reply_message_details(result[0][i]['replay_id']);
                 //console.log(reply_message_details[0]);
                 //exit ()
-                //console.log('reply msg', reply_message_details[0][0].message)
-                result[0][i]['reply_message']=reply_message_details[0][0].message;
-                result[0][i]['reply_message_type']=reply_message_details[0][0].message_type,
+                console.log('reply msg', reply_message_details[0][0])
+                result[0][i]['reply_message']=reply_message_details[0][0]!=undefined ? reply_message_details[0][0].message : '';
+                result[0][i]['reply_message_type']=reply_message_details[0][0]!=undefined ? reply_message_details[0][0].message_type : '',
                 //result[0][i]['reply_senter']=reply_message_details[0].senter_id;
-                result[0][i]['reply_duration']=reply_message_details[0][0].duration;
+                result[0][i]['reply_duration']=reply_message_details[0][0]!=undefined ? reply_message_details[0][0].duration : '0';
                 //console.log('id s',reply_message_details[0][0].id)
-                result[0][i]['replay_id']=reply_message_details[0][0].id.toString();
+                result[0][i]['replay_id']=reply_message_details[0][0]!=undefined ? reply_message_details[0][0].id.toString() : '0';
                 //reply_message type -- video
                 
                 if(result[0][i]['reply_message_type']=='video'){
@@ -1723,12 +1723,12 @@ async function send_individual_message(sid,rid,room,date_status){
               //console.log(reply_message_details[0]);
               //exit ()
               //console.log('reply msg', reply_message_details[0][0].message)
-              result[0][i]['reply_message']=reply_message_details[0][0].message;
-              result[0][i]['reply_message_type']=reply_message_details[0][0].message_type,
+              result[0][i]['reply_message']=reply_message_details[0][0]!=undefined ? reply_message_details[0][0].message : '';
+              result[0][i]['reply_message_type']=reply_message_details[0][0]!=undefined ? reply_message_details[0][0].message_type : '',
               //result[0][i]['reply_senter']=reply_message_details[0].senter_id;
-              result[0][i]['reply_duration']=reply_message_details[0][0].duration;
+              result[0][i]['reply_duration']=reply_message_details[0][0]!=undefined ? reply_message_details[0][0].duration : '0';
               //console.log('id s',reply_message_details[0][0].id)
-              result[0][i]['replay_id']=reply_message_details[0][0].id.toString();
+              result[0][i]['replay_id']=reply_message_details[0][0]!=undefined ? reply_message_details[0][0].id.toString() : '0';
               //reply_message type -- video
               
               if(result[0][i]['reply_message_type']=='video'){
@@ -2596,12 +2596,12 @@ async function individual_message_using_pagination(sid,rid,room,limit,message_id
                 //console.log(reply_message_details[0]);
                 //exit ()
                 //console.log('reply msg', reply_message_details[0][0].message)
-                result[0][i]['reply_message']=reply_message_details[0][0].message;
-                result[0][i]['reply_message_type']=reply_message_details[0][0].message_type,
+                result[0][i]['reply_message']=reply_message_details[0][0] ? reply_message_details[0][0].message : '';
+                result[0][i]['reply_message_type']=reply_message_details[0][0] ? reply_message_details[0][0].message_type : '',
                 //result[0][i]['reply_senter']=reply_message_details[0].senter_id;
-                result[0][i]['reply_duration']=reply_message_details[0][0].duration;
+                result[0][i]['reply_duration']=reply_message_details[0][0] ? reply_message_details[0][0].duration : '0';
                 //console.log('id s',reply_message_details[0][0].id)
-                result[0][i]['replay_id']=reply_message_details[0][0].id.toString();
+                result[0][i]['replay_id']=reply_message_details[0][0] ? reply_message_details[0][0].id.toString() : '0';
                 //reply_message type -- video
                 
                 if(result[0][i]['reply_message_type']=='video'){

@@ -627,7 +627,7 @@ io.sockets.on('connection',async function (socket) {
         
       var s_id = data.sid;
       var r_id = data.rid;
-      var message = data.message;
+      var message = data.message ? data.message : '';
       var type = data.type;
       var duration=data.duration ? data.duration : '0';
       var optional_text=data.optional_text ? data.optional_text : '';
@@ -771,6 +771,7 @@ io.sockets.on('connection',async function (socket) {
             //exit_s
           //await queries.post_image_message(datetime,s_id,message,data.room,member_json_data,message_id) 
           }else if(type=='voice'){
+            //console.log(message)
             let split_path=message.split(',');
             let split_duration=duration.split(',');
             for(var i=0;i<split_path.length;i++){
@@ -1676,7 +1677,7 @@ io.sockets.on('connection',async function (socket) {
     //   }
     // })
 
-    socket.on('typing_individual', function (data) {
+    socket.on('typing_individual',async function (data) {
       try{
         console.log(typeof(data))
         if(typeof(data)=='object'){
@@ -1696,13 +1697,13 @@ io.sockets.on('connection',async function (socket) {
             newRoom = '' + s_id + r_id;
             console.log('room id in else', newRoom);
           }
-
+          let username=await queries.get_username(data.sid);
           if (status == 1) {
             io.sockets.in(newRoom).emit('typing_individual_room', { "status": "true", "statuscode": "200", "message": "success", "typing": "1", "user_id": data.sid });
-            io.sockets.in(data.rid).emit('typing_individual_chatlist', { "status": "true", "statuscode": "200", "message": "success", "typing": "1", "user_id": data.sid });
+            io.sockets.in(data.rid).emit('typing_individual_chatlist', { "status": "true", "statuscode": "200", "message": "success", "typing": "1", "user_id": data.sid, "name":username, "typing_user_id": data.sid});
           } else {
             io.sockets.in(newRoom).emit('typing_individual_room', { "status": "true", "statuscode": "200", "message": "success", "typing": "0", "user_id": data.sid });
-            io.sockets.in(data.rid).emit('typing_individual_chatlist', { "status": "true", "statuscode": "200", "message": "success", "typing": "0", "user_id": data.sid });
+            io.sockets.in(data.rid).emit('typing_individual_chatlist', { "status": "true", "statuscode": "200", "message": "success", "typing": "0", "user_id": data.sid, "name":username, "typing_user_id": data.sid});
           }
         }else{
           console.log('Input datatype is string')
@@ -7703,7 +7704,7 @@ io.sockets.on('connection',async function (socket) {
     })
     socket.on('test_changes',async function(data){
       socket.join('test_changes');
-      io.sockets.in('test_changes').emit('test_changes',{status: true, statuscode: 200, message: "last changes affected upto 4-08-2023 (2)"});
+      io.sockets.in('test_changes').emit('test_changes',{status: true, statuscode: 200, message: "last changes affected upto 7-08-2023"});
       socket.leave('test_changes');
     });
     socket.on('private_chat_export_data',async function(data){
