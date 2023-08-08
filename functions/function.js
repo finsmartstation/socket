@@ -1527,6 +1527,8 @@ async function get_individual_chat_list_response(sid,rid,room){
             let user_profile_pic=BASE_URL+'uploads/default/profile.png';
             let user_phone='';
             let user_name='';
+            let device_token='';
+            let online_status='';
             if(user_details.length>0){
               //check privacy who can see my profile pic
              let check_privacy_profile_pic=await queries.check_user_privacy(rid,'profile_pic');
@@ -1594,7 +1596,8 @@ async function get_individual_chat_list_response(sid,rid,room){
               }
               user_name=user_details[0].name;
               user_phone=user_details[0].phone;
-            
+              device_token=user_details[0].deviceToken;
+              online_status=user_details[0].online_status;
             }
             //console.log(user_details)
              
@@ -1610,6 +1613,8 @@ async function get_individual_chat_list_response(sid,rid,room){
                 //"phone_number": user_details[0].phone,
                 "phone_number": user_phone,
                 "mute_status": mute_status,
+                "device_token":device_token,
+                "online_status": online_status.toString(),
                 "list":message_list_response
               }
             }
@@ -7203,8 +7208,9 @@ async function get_recent_chat_list_response_old(user_id){
 
 async function get_recent_chat_list_response(user_id){
   let get_recent_chat=await queries.get_recent_chat(user_id);
-  //console.log('recent chat ',get_recent_chat);
-  //exit ()
+  //console.log('recent chat ',get_recent_chat[0]);
+  //console.log(get_recent_chat[1])
+  
   //console.log('testing')
   let chat_list_data=[];
   //get current datetime
@@ -7451,7 +7457,8 @@ async function get_recent_chat_list_response(user_id){
               pin_status: get_recent_chat[i].pin_status.toString(),
               device_token: get_recent_chat[i].device_token,
               optional_text: get_recent_chat[i].optional_text,
-              mark_as_unread: mark_as_unread.toString()
+              mark_as_unread: mark_as_unread.toString(),
+              online_status: get_recent_chat[i].user_online_status
             })
           }else if(group_status[j].user_id==user_id && group_status[j].status==1){
             let mark_as_unread=0;
@@ -7691,7 +7698,8 @@ async function get_recent_chat_list_response(user_id){
               pin_status: get_recent_chat[i].pin_status.toString(),
               device_token: get_recent_chat[i].device_token,
               optional_text: get_recent_chat[i].optional_text ? get_recent_chat[i].optional_text : '',
-              mark_as_unread: mark_as_unread.toString()
+              mark_as_unread: mark_as_unread.toString(),
+              online_status: get_recent_chat[i].user_online_status
             })
             // if(get_recent_chat[i].id==5716){
             //   console.log('outer ',get_recent_chat[i].message)
@@ -7726,7 +7734,8 @@ async function get_recent_chat_list_response(user_id){
                 device_token: get_recent_chat[i].device_token,
                 //optional_text: get_recent_chat[i].optional_text,
                 optional_text: '',
-                mark_as_unread: "0"
+                mark_as_unread: "0",
+                online_status: get_recent_chat[i].user_online_status
               })
             }else{
               chat_list_data.push({
@@ -7746,7 +7755,8 @@ async function get_recent_chat_list_response(user_id){
                 pin_status: get_recent_chat[i].pin_status.toString(),
                 device_token: get_recent_chat[i].device_token,
                 optional_text: get_last_private_message[0].optional_text ? get_last_private_message[0].optional_text : '',
-                mark_as_unread: get_last_private_message[0].mark_as_unread.toString()
+                mark_as_unread: get_last_private_message[0].mark_as_unread.toString(),
+                online_status: get_recent_chat[i].user_online_status
               })
             }
           }
@@ -7895,7 +7905,8 @@ async function get_recent_chat_list_response(user_id){
                 pin_status: get_recent_chat[i].pin_status.toString(),
                 device_token: get_recent_chat[i].device_token,
                 optional_text: get_recent_chat[i].optional_text ? get_recent_chat[i].optional_text : '',
-                mark_as_unread: mark_as_unread.toString()
+                mark_as_unread: mark_as_unread.toString(),
+                online_status: get_recent_chat[i].user_online_status
               });
               //console.log(get_recent_chat[i]);
               //exit ()
@@ -8222,7 +8233,8 @@ async function get_recent_chat_list_response(user_id){
                 pin_status: get_recent_chat[i].pin_status.toString(),
                 device_token: get_recent_chat[i].device_token,
                 optional_text: get_recent_chat[i].optional_text ? get_recent_chat[i].optional_text : '',
-                mark_as_unread: mark_as_unread.toString()
+                mark_as_unread: mark_as_unread.toString(),
+                online_status: get_recent_chat[i].user_online_status
               });
             }else if(group_status[j].user_id==user_id && group_status[j].status==2){
               console.log(get_recent_chat[i].room,get_recent_chat[i].id)
@@ -8249,7 +8261,8 @@ async function get_recent_chat_list_response(user_id){
                   pin_status: get_recent_chat[i].pin_status.toString(),
                   device_token: get_recent_chat[i].device_token,
                   optional_text: get_recent_chat[i].optional_text ? get_recent_chat[i].optional_text : '',
-                  mark_as_unread: '0'
+                  mark_as_unread: '0',
+                  online_status: get_recent_chat[i].user_online_status
                 });
                 
               }else{
@@ -8271,7 +8284,8 @@ async function get_recent_chat_list_response(user_id){
                   pin_status: get_recent_chat[i].pin_status.toString(),
                   device_token: get_recent_chat[i].device_token,
                   optional_text: get_last_group_message[0].optional_text ? get_last_group_message[0].optional_text : '',
-                  mark_as_unread: get_last_group_message[0].mark_as_unread.toString()
+                  mark_as_unread: get_last_group_message[0].mark_as_unread.toString(),
+                  online_status: get_recent_chat[i].user_online_status
                 });
               }
               
@@ -9678,6 +9692,7 @@ async function get_group_info(user_id,accessToken,group_id){
         //console.log(get_user_profile_data[0].profile_pic)
         let name=get_user_profile_data[0].name;
         let device_token=get_user_profile_data[0].deviceToken;
+        let online_status=get_user_profile_data[0].online_status;
         //check who can see my profile pic
         let check_privacy_profile_pic=await queries.check_user_privacy(group_user_id,'profile_pic');
         //console.log('profile privacy ',group_user_id,check_privacy_profile_pic);
@@ -9821,7 +9836,8 @@ async function get_group_info(user_id,accessToken,group_id){
           profile_pic: BASE_URL+profile_pic,
           about: about,
           phone: phone,
-          device_token: device_token
+          device_token: device_token,
+          online_status: online_status.toString()
         })
       }
       //console.log(group_users)

@@ -5369,7 +5369,8 @@ io.sockets.on('connection',async function (socket) {
           let receiver_id=data.receiver_id ? data.receiver_id : '';
           let room=data.room ? data.room : '';
           let datetime=get_datetime();
-          if(user_id!='' && accessToken!='' && receiver_id!='' && room!=''){
+          //if(user_id!='' && accessToken!='' && receiver_id!='' && room!=''){
+            if(user_id!='' && accessToken!='' && room!=''){
             console.log('not empty',typeof(room))
            
             socket.join(user_id+'_pin_chat');
@@ -5506,7 +5507,8 @@ io.sockets.on('connection',async function (socket) {
           let receiver_id=data.receiver_id ? data.receiver_id : '';
           let room=data.room ? data.room : '';
           let datetime=get_datetime();
-          if(user_id!='' && accessToken!='' && receiver_id!='' && room!=''){
+          //if(user_id!='' && accessToken!='' && receiver_id!='' && room!=''){
+            if(user_id!='' && accessToken!='' && room!=''){
             //console.log('not empty')
             socket.join(user_id+'_unpin_chat');
             let receiver_ids=receiver_id.split(',');
@@ -7704,7 +7706,7 @@ io.sockets.on('connection',async function (socket) {
     })
     socket.on('test_changes',async function(data){
       socket.join('test_changes');
-      io.sockets.in('test_changes').emit('test_changes',{status: true, statuscode: 200, message: "last changes affected upto 7-08-2023"});
+      io.sockets.in('test_changes').emit('test_changes',{status: true, statuscode: 200, message: "last changes affected upto 8-08-2023 (2)"});
       socket.leave('test_changes');
     });
     socket.on('private_chat_export_data',async function(data){
