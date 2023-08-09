@@ -706,7 +706,8 @@ io.sockets.on('connection',async function (socket) {
             let read_receipt_status=0;
             //console.log('count ',check_group_chat_read_receipts.length)
             for(var read_receipt_i=0; read_receipt_i<check_group_chat_read_receipts.length; read_receipt_i++){
-              if(group_current_members[group_user].user_id==check_group_chat_read_receipts[read_receipt_i].user_id){
+              //if(group_current_members[group_user].user_id==check_group_chat_read_receipts[read_receipt_i].user_id){
+                if(group_current_members[group_user].user_id==check_group_chat_read_receipts[read_receipt_i].user_id){
                 read_receipt_status=1;
                 //console.log(read_receipt_status)
                 break;
@@ -7706,7 +7707,7 @@ io.sockets.on('connection',async function (socket) {
     })
     socket.on('test_changes',async function(data){
       socket.join('test_changes');
-      io.sockets.in('test_changes').emit('test_changes',{status: true, statuscode: 200, message: "last changes affected upto 8-08-2023 (2)"});
+      io.sockets.in('test_changes').emit('test_changes',{status: true, statuscode: 200, message: "last changes affected upto 9-08-2023 "});
       socket.leave('test_changes');
     });
     socket.on('private_chat_export_data',async function(data){

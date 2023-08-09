@@ -7217,7 +7217,7 @@ async function get_recent_chat_list_response(user_id){
   //let archived_chat_list=await queries.archived_chat_list_details(user_id);
   let get_archived_and_deleted_chat_list=await queries.archived_and_deleted_chat_list(user_id);
   let current_datetime=get_datetime();
-  if(get_recent_chat.length>0){
+  //if(get_recent_chat.length>0){
     for(var i=0; i<get_recent_chat.length; i++){
       let group_status=JSON.parse(get_recent_chat[i].group_status);
       let mute_status=0;
@@ -8296,7 +8296,7 @@ async function get_recent_chat_list_response(user_id){
       }
     }
     //set response based on archived_chat_list
-    archived_list=[];
+    let archived_list=[];
     //console.log('before',chat_list_data.length,chat_list_data)
     //if(archived_chat_list.length>0){
     if(get_archived_and_deleted_chat_list.length>0){
@@ -8342,26 +8342,30 @@ async function get_recent_chat_list_response(user_id){
     }
     
     //console.log('after',chat_list_data.length,chat_list_data)
+    let response_text_msg='No chat found';
+    if(chat_list_data.length>0){
+      response_text_msg="success";
+    }
     let setresponse={
       status: true,
       statuscode: 200,
-      message: "success", 
+      message: response_text_msg, 
       socket: true,
       archived_chat_list:archived_list,
       data:chat_list_data
     }
     return setresponse;
-  }else{
-    let setresponse={
-      status: true,
-      statuscode: 200,
-      message: "No chat found", 
-      socket: true,
-      archived_chat_list:[],
-      data:[]
-    }
-    return setresponse;
-  }
+  // }else{
+  //   let setresponse={
+  //     status: true,
+  //     statuscode: 200,
+  //     message: "No chat found", 
+  //     socket: true,
+  //     archived_chat_list:[],
+  //     data:[]
+  //   }
+  //   return setresponse;
+  // }
 } 
 
 async function search_chat_list_response(user_id,search){
