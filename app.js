@@ -1166,20 +1166,37 @@ io.sockets.on('connection',async function (socket) {
         console.log('individual date length',individual_Date,individual_Date.length)
         //exit ()
         //check user read receipt status
-        let senter_read_receipt=0;
-        let receiver_read_receipt=0;
+        let senter_read_receipt=1;
+        let receiver_read_receipt=1;
         let check_private_chat_read_receipts=await queries.check_private_chat_read_receipts(data.sid,data.rid);
+        console.log(check_private_chat_read_receipts);
+        //exit ()
         if(check_private_chat_read_receipts.length>0){
           //console.log(check_private_chat_read_receipts)
           for(var i=0;i<check_private_chat_read_receipts.length;i++){
             console.log(check_private_chat_read_receipts[i],check_private_chat_read_receipts[i].user_id)
             //exit ()
             if(check_private_chat_read_receipts[i].user_id==data.sid){
-              //console.log('senter id')
-              senter_read_receipt=1;
+              console.log('senter id')
+              
+              console.log(check_private_chat_read_receipts[i].options);
+              if(check_private_chat_read_receipts[i].options==0){
+                senter_read_receipt=0;
+              }else{
+                senter_read_receipt=1;
+              }
+              //console.log(senter_read_receipt)
+              //exit ()
             }else if(check_private_chat_read_receipts[i].user_id==data.rid){
-              console.log('receiver id')
-              receiver_read_receipt=1;
+              //console.log('receiver id')
+              //receiver_read_receipt=1;
+              if(check_private_chat_read_receipts[i].options==0){
+                receiver_read_receipt=0;
+              }else{
+                receiver_read_receipt=1;
+              }
+              //console.log(receiver_read_receipt)
+              //exit ()
             }
           }
         }

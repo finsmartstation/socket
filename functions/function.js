@@ -29,19 +29,39 @@ async function get_individual_chat_list_response(sid,rid,room){
       mute_status="0";
     }
     // console.log(mute_status,get_current_datetime)
-    let default_read_receipt=0;
-    //console.log(check_private_chat_read_receipts,check_private_chat_read_receipts.length)
+    // let default_read_receipt=0;
+    // //console.log(check_private_chat_read_receipts,check_private_chat_read_receipts.length)
+    // let read_receipt_datetime='';
+    // if(check_private_chat_read_receipts.length>0){
+    //   for(var rr=0;rr<check_private_chat_read_receipts.length;rr++){
+    //     if(check_private_chat_read_receipts[rr].user_id==sid){
+    //       default_read_receipt=1;
+    //       read_receipt_datetime=check_private_chat_read_receipts[rr].updated_datetime;
+    //     }
+    //   }
+    // }
+    // let read_receipt=0;
+    let default_read_receipt=1;
+    console.log(check_private_chat_read_receipts,check_private_chat_read_receipts.length)
     let read_receipt_datetime='';
     if(check_private_chat_read_receipts.length>0){
       for(var rr=0;rr<check_private_chat_read_receipts.length;rr++){
         if(check_private_chat_read_receipts[rr].user_id==sid){
-          default_read_receipt=1;
+          if(check_private_chat_read_receipts[rr].options==0){
+            default_read_receipt=0;
+            read_receipt_datetime=check_private_chat_read_receipts[rr].updated_datetime;
+          }else{
+            default_read_receipt=1;
+            read_receipt_datetime='';
+          }
+        }else if(check_private_chat_read_receipts[rr].user_id==rid){
+          default_read_receipt=check_private_chat_read_receipts[rr].options;
           read_receipt_datetime=check_private_chat_read_receipts[rr].updated_datetime;
         }
       }
     }
-    let read_receipt=0;
-    //console.log(default_read_receipt)
+    let read_receipt=1;
+    console.log(default_read_receipt,read_receipt_datetime)
     //exit ()
             //console.log('testing response', result[0],check_private_chat_read_receipts)
             //exit ()
@@ -186,20 +206,38 @@ async function get_individual_chat_list_response(sid,rid,room){
                   //     }
                   //   }
                   // }
+                  // if('read_receipt' in group_status_json[j]){
+                  //   read_receipt=group_status_json[j].read_receipt;
+                  // }else{
+                  //   read_receipt=0;
+                  // }
+                  // if(read_receipt==0){
+                  //   if(read_receipt_datetime!=''){
+                  //     if(read_receipt_datetime<result[0][i].date){
+                  //       read_receipt=default_read_receipt;
+                  //     }else{
+                  //       read_receipt=0;
+                  //     }
+                  //   }else{
+                  //     read_receipt=0;
+                  //   }
+                  // }
                   if('read_receipt' in group_status_json[j]){
                     read_receipt=group_status_json[j].read_receipt;
                   }else{
-                    read_receipt=0;
+                    read_receipt=1;
                   }
-                  if(read_receipt==0){
+                  //console.log(read_receipt,read_receipt_datetime)
+                  
+                  if(read_receipt==1){
                     if(read_receipt_datetime!=''){
                       if(read_receipt_datetime<result[0][i].date){
                         read_receipt=default_read_receipt;
                       }else{
-                        read_receipt=0;
+                        read_receipt=1;
                       }
                     }else{
-                      read_receipt=0;
+                      read_receipt=1;
                     }
                   }
                   //console.log(result[0][i]['message_type'])
@@ -618,26 +656,32 @@ async function get_individual_chat_list_response(sid,rid,room){
                   //   }
                   // }
                   //console.log(group_status_json[j])
+                  
+                  console.log(read_receipt)
                   if('read_receipt' in group_status_json[j]){
                     read_receipt=group_status_json[j].read_receipt;
+                    console.log('inner',read_receipt)
                   }else{
-                    read_receipt=0;
+                    read_receipt=1;
                   }
-                  // if(read_receipt==0){
-                  //   read_receipt=default_read_receipt;
-                  // }
-                  if(read_receipt==0){
+                  
+                  if(read_receipt==1){
                     if(read_receipt_datetime!=''){
+                      console.log(read_receipt_datetime,result[0][i].date,default_read_receipt)
                       if(read_receipt_datetime<result[0][i].date){
                         read_receipt=default_read_receipt;
                       }else{
-                        read_receipt=0;
+                        read_receipt=1;
                       }
                     }else{
-                      read_receipt=0;
+                      read_receipt=1;
                     }
                   }
-                  
+                  // if(result[0][i]['id']==837){
+                  //   console.log('data',read_receipt,read_receipt_datetime)
+                  //   exit ()
+                  // }
+                 
                   //not deleted message
                   if(result[0][i]['message_type']=='notification'){
                     //console.log('yes notification ')
