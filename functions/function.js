@@ -10219,6 +10219,52 @@ function check_user_and_room_exist_in_array_group(user_id, room, user_array, mes
   })
 }
 
+async function get_private_message_read_receipt(sid,rid,message_id,group_status,message_datetime){
+  //check any users read receipt ON or OFF
+  let sender_default_status=1;
+  let receiver_default_status=1;
+  let sender_datetime='';
+  let receiver_datetime='';
+  let check_user_read_receipts=await queries.check_private_chat_read_receipts(sid,rid);
+  console.log(check_user_read_receipts,check_user_read_receipts.length,message_datetime);
+  //exit ()
+  for(var i=0; i<check_user_read_receipts.length; i++){
+    //sender
+    if(sid==check_user_read_receipts[i].user_id){
+      sender_default_status=check_user_read_receipts[i].options;
+      sender_datetime=check_user_read_receipts[i].updated_datetime;
+    }
+    //receiver
+    if(rid==check_user_read_receipts[i].user_id){
+      receiver_default_status=check_user_read_receipts[i].options;
+      receiver_datetime=check_user_read_receipts[i].updated_datetime;
+    }
+  }
+  let read_receipt_value=1;
+  console.log(sender_default_status,receiver_default_status)
+  //exit ()
+  if((sender_default_status==1 && receiver_default_status==1) || (sender_default_status==1 && receiver_default_status==0) || (sender_default_status==0 && receiver_default_status==1)){
+    //check corresponding message
+    var read_receipt=1;
+    for(var j=0; j<group_status.length; j++){
+      if(group_status[j].user_id==rid){
+        if('read_receipt' in group_status[j]){
+          read_receipt=group_status[i].read_receipt;
+        }
+      }
+    }
+    if(read_receipt==1){
+      console.log('date',sender_datetime,message_datetime)
+      if(sender_datetime<message_datetime || receiver_datetime<message_datetime){
+        read_receipt_value=0;
+      }
+    }
+  }
+  console.log('read receipt value ',read_receipt_value);
+  exit ()
+  return read_receipt_value;
+}
+
 
 module.exports={
     get_individual_chat_list_response,
@@ -10243,5 +10289,6 @@ module.exports={
     send_individual_message,
     send_group_message,
     check_user_and_room_exist_in_array,
-    check_user_and_room_exist_in_array_group
+    check_user_and_room_exist_in_array_group,
+    get_private_message_read_receipt
 }

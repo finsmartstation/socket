@@ -7922,6 +7922,169 @@ io.sockets.on('connection',async function (socket) {
         console.error(e);
       }
     });
+    socket.on('private_message_info_new',async function(data){
+      try{
+        //input -- {"user_id":"50","accessToken":"50","receiver_id":"5","message_id":"34"}
+        if(typeof(data)=='object'){
+          let user_id=data.user_id ? data.user_id : '';
+          let accessToken=data.accessToken ? data.accessToken : '';
+          let receiver_id=data.receiver_id ? data.receiver_id : '';
+          let message_id=data.message_id ? data.message_id : '';
+          let datetime=get_datetime();
+          if(user_id!='' && accessToken!='' && receiver_id!='' && message_id!=''){
+            socket.join(user_id+'_'+message_id+'_private_message_info');
+            //check user data
+            let check_user_data=await queries.check_user_valid(user_id,accessToken);
+            if(check_user_data.length>0){
+              //console.log('user is valided')
+              //create room
+              let room='';
+              console.log(user_id,receiver_id)
+              if(Number(user_id)>Number(receiver_id)){
+                room=''+receiver_id+user_id;
+                //console.log('first loop')
+              }else{
+                //console.log('else loop')
+                room=''+user_id+receiver_id;
+              }
+              //console.log(room)
+              //check message_id is valided to the room
+              let set_user_id='"'+user_id+'"';
+              let check_message_id_is_valid_in_room=await queries.check_message_id_is_valid_in_room(user_id,set_user_id,message_id,room);
+              console.log(check_message_id_is_valid_in_room)
+              if(check_message_id_is_valid_in_room.length>0){
+                
+                console.log(check_message_id_is_valid_in_room)
+                let group_status=check_message_id_is_valid_in_room[0].group_status;
+                if(group_status!=''){
+                  group_status=JSON.parse(check_message_id_is_valid_in_room[0].group_status);
+                }else{
+                  group_status=[];
+                }
+                let get_private_message_read_receipt=await functions.get_private_message_read_receipt(user_id,receiver_id,message_id,group_status,check_message_id_is_valid_in_room[0].date);
+                
+                console.log(group_status);
+                let default_read_receipt=1;
+                let sender_default_read_receipt=1;
+                let check_private_chat_read_receipts=await queries.check_private_chat_read_receipts(user_id,receiver_id);
+                console.log(check_private_chat_read_receipts,check_private_chat_read_receipts.length)
+                let read_receipt_datetime='';
+                if(check_private_chat_read_receipts.length>0){
+                  for(var rr=0;rr<check_private_chat_read_receipts.length;rr++){
+                    if(check_private_chat_read_receipts[rr].user_id==user_id){
+                      if(check_private_chat_read_receipts[rr].options==0){
+                        default_read_receipt=0;
+                        read_receipt_datetime=check_private_chat_read_receipts[rr].updated_datetime;
+                        sender_default_read_receipt=0;
+                      }else{
+                        default_read_receipt=1;
+                        read_receipt_datetime='';
+                        sender_default_read_receipt=1;
+                      }
+                    }else if(check_private_chat_read_receipts[rr].user_id==receiver_id){
+                      default_read_receipt=check_private_chat_read_receipts[rr].options;
+                      read_receipt_datetime=check_private_chat_read_receipts[rr].updated_datetime;
+                    }
+                  }
+                }
+                console.log('default read receipt ',default_read_receipt,read_receipt_datetime)
+                
+                //exit ()
+                let response_data={};
+                for(var i=0; i<group_status.length; i++){
+                  
+                  let sender_read_receipt=1;
+                  // if(group_status[i].user_id==user_id){
+                  //   if('read_receipt' in group_status[i]){
+                  //     sender_read_receipt=group_status[i].read_receipt;
+                  //     console.log('yes')
+                  //   }
+                  // }
+                  console.log(sender_read_receipt,sender_default_read_receipt)
+                  //exit ()
+                  if(group_status[i].user_id==user_id){
+                    if(default_read_receipt==1){
+                      if('read_receipt' in group_status[i]){
+                        sender_read_receipt=group_status[i].read_receipt;
+                      }
+                    }
+                  }
+                  if(sender_read_receipt==1){
+                    //exit ()
+                    if(group_status[i].user_id==receiver_id){
+                      var read_receipt=1;
+                      console.log(default_read_receipt)
+                      //exit ()
+                      if(default_read_receipt==1){
+                        if('read_receipt' in group_status[i]){
+                          read_receipt=group_status[i].read_receipt;
+                          //console.log('receiver ',group_status[i].read_receipt)
+                        }
+                        console.log(sender_read_receipt,read_receipt)
+                        //exit ()
+                        if(sender_read_receipt==1){
+                          if(read_receipt_datetime!=''){
+                            if(read_receipt_datetime<check_message_id_is_valid_in_room[0].date){
+                              read_receipt=default_read_receipt;
+                            }else{
+                              read_receipt=1;
+                            }
+                          }else{
+                            read_receipt=1;
+                          }
+                        }
+
+                        let read_datetime=group_status[i].message_read_datetime
+                        if(read_receipt==0){
+                          read_datetime="";
+                        }
+                        console.log(group_status[i])
+                        response_data={
+                          read_datetime : read_datetime,
+                          delivered_datetime : group_status[i].delivered_datetime
+                        }
+                      }else{
+                        response_data={
+                          read_datetime : '',
+                          delivered_datetime : group_status[i].delivered_datetime
+                        }
+                      }
+                      
+                      //console.log(read_receipt)
+                      //exit ()
+                      
+                    }
+                  }else{
+                    response_data={
+                      read_datetime : '',
+                      delivered_datetime : group_status[i].delivered_datetime
+                    }
+                  }
+                    
+                  
+                  
+                }
+                io.sockets.in(user_id+'_'+message_id+'_private_message_info').emit('private_message_info',{status: true, statuscode: 200, message: "success", data: response_data})
+              }else{
+                io.sockets.in(user_id+'_'+message_id+'_private_message_info').emit('private_message_info',{status: false, statuscode: 200, message: "You doesn't have this message", data:{}});
+              }
+            }else{
+              //console.log('user is not valided')
+              io.sockets.in(user_id+'_'+message_id+'_private_message_info').emit('private_message_info',{status: false, statuscode: 200, message: "No user data found", data:{}});
+            }
+            //socket.leave(user_id+'_private_message_info');
+          }else{
+            socket.join(data.user_id+'_private_message_info');
+            io.sockets.in(data.user_id+'_private_message_info').emit('private_message_info',{status: false, statuscode: 200, message: "Data is empty", data:{}});
+            socket.leave(data.user_id+'_private_message_info');
+          }
+        }else{
+          console.error('Input type is string');
+        }
+      }catch(e){
+        console.error(e);
+      }
+    });
     socket.on('group_message_info', async function(data){
       try{
         //input -- {"user_id":"50","accessToken":"50","room":"5","message_id":"34"}
