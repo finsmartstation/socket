@@ -5845,6 +5845,7 @@ io.sockets.on('connection',async function (socket) {
               let message_delivered_datetime=[];
               let message_receiver_id=[];
               let message_read_datetime=[];
+              let message_group_status=[];
               //UPDATE chat_list SET status = (case when id = '1' then '622057' when id = '2' then '2913659' when id = '3' then '6160230' end) WHERE id in ('1', '2', '3')
               for(var i=0; i<get_room_messages.length; i++){
                 //console.log(get_room_messages[i].id)
@@ -5858,6 +5859,7 @@ io.sockets.on('connection',async function (socket) {
                 }else{
                   group_status=[];
                 }
+                message_group_status.push(group_status);
                 //console.log(group_status)
                 for(var j=0; j<group_status.length; j++){
                   console.log(group_status[j].user_id,user_id)
@@ -5894,6 +5896,10 @@ io.sockets.on('connection',async function (socket) {
                   console.log('message id',message_ids[k])
                   console.log('delivered ',message_delivered_datetime[k]);
                   console.log('read ',message_read_datetime[k])
+                  let get_private_message_read_receipt=await functions.get_private_message_read_receipt(message_group_status[k]);
+                  if(get_private_message_read_receipt==0){
+                    message_read_datetime[k]='';
+                  }
                   io.sockets.in(message_senter_id[k]+'_'+message_ids[k]+'_private_message_info').emit('private_message_info',{status: true, statuscode: 200, message: "success", data: {read_datetime:message_read_datetime[k],delivered_datetime:message_delivered_datetime[k]}});
                   //emit chat_list and room_message to message senter
                   let room_chat_list=await functions.get_individual_chat_list_response(message_senter_id[k],message_receiver_id[k],room);
@@ -7891,13 +7897,26 @@ io.sockets.on('connection',async function (socket) {
                   group_status=[];
                 }
                 console.log(group_status);
+                //check read receipt value. ie, if
+                // 0 - not show 
+                // 1 - to show 
+                let get_private_message_read_receipt=await functions.get_private_message_read_receipt(group_status);
+                console.log(get_private_message_read_receipt)
+                //exit ()
                 let response_data={};
                 for(var i=0; i<group_status.length; i++){
                   if(group_status[i].user_id==receiver_id){
                     console.log(group_status[i])
-                    response_data={
-                      read_datetime : group_status[i].message_read_datetime,
-                      delivered_datetime : group_status[i].delivered_datetime
+                    if(get_private_message_read_receipt==1){
+                      response_data={
+                        read_datetime : group_status[i].message_read_datetime,
+                        delivered_datetime : group_status[i].delivered_datetime
+                      }
+                    }else{
+                      response_data={
+                        read_datetime : '',
+                        delivered_datetime : group_status[i].delivered_datetime
+                      }
                     }
                   }
                 }
@@ -7961,8 +7980,9 @@ io.sockets.on('connection',async function (socket) {
                 }else{
                   group_status=[];
                 }
-                let get_private_message_read_receipt=await functions.get_private_message_read_receipt(user_id,receiver_id,message_id,group_status,check_message_id_is_valid_in_room[0].date);
-                
+                let get_private_message_read_receipt=await functions.get_private_message_read_receipt(group_status);
+                console.log(get_private_message_read_receipt);
+                exit ()
                 console.log(group_status);
                 let default_read_receipt=1;
                 let sender_default_read_receipt=1;

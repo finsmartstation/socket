@@ -1047,6 +1047,17 @@ async function get_last_private_message(room_id,message_id,user_id,opponent_prof
     })
   }
 
+  async function get_private_message_read_receipt(group_status){
+    var read_receipt=1;
+    for(var j=0; j<group_status.length; j++){
+      //check any one read receipt off
+      if(read_receipt==1){
+        read_receipt=group_status[j].read_receipt;
+      }
+    }
+    return read_receipt;
+  }
+
   
 
   module.exports={
@@ -1058,5 +1069,6 @@ async function get_last_private_message(room_id,message_id,user_id,opponent_prof
     check_profile_pic_privacy,
     check_user_data_exist_in_array,
     send_firebase_notification_group,
-    check_id_exist_in_message_array
+    check_id_exist_in_message_array,
+    get_private_message_read_receipt
   }
