@@ -3521,24 +3521,24 @@ async function get_group_chat_list_response(user_id,group_id){
     group_users=group_users.replace(/(^,)|(,$)/g, "");
     let set_query="select *,DATE_FORMAT(updated_datetime,'%Y-%m-%d %H:%i:%s') as updated_datetime from `user_chat_privacy` where user_id in ("+group_users+") and type='read_receipts' and options='1'";
     //console.log(set_query)
-    let check_group_read_receipt=await queries.check_group_chat_read_receipts(set_query);
+    //let check_group_read_receipt=await queries.check_group_chat_read_receipts(set_query);
     //console.log(check_group_read_receipt)
     let default_read_receipt=0;
     let read_receipt_datetime='';
-    let read_receipt=0;
-    if(check_group_read_receipt.length>0){
+    let read_receipt=1;
+    // if(check_group_read_receipt.length>0){
       
-      for(var read_receipt_i=0; read_receipt_i<check_group_read_receipt.length; read_receipt_i++){
-        //console.log(check_group_read_receipt[read_receipt_i].user_id);
-        if(check_group_read_receipt[read_receipt_i].user_id==user_id){
-          default_read_receipt=1;
-          read_receipt_datetime=check_group_read_receipt[read_receipt_i].updated_datetime;
-          //console.log('ss - ',read_receipt_datetime)
-          //exit ()
-        }
+    //   for(var read_receipt_i=0; read_receipt_i<check_group_read_receipt.length; read_receipt_i++){
+    //     //console.log(check_group_read_receipt[read_receipt_i].user_id);
+    //     if(check_group_read_receipt[read_receipt_i].user_id==user_id){
+    //       default_read_receipt=1;
+    //       read_receipt_datetime=check_group_read_receipt[read_receipt_i].updated_datetime;
+    //       //console.log('ss - ',read_receipt_datetime)
+    //       //exit ()
+    //     }
         
-      }
-    } 
+    //   }
+    // } 
     
     //check removed_members is empty string 
     if(check_user_in_group[0].removed_members!=''){
@@ -4118,23 +4118,23 @@ async function get_group_chat_list_response(user_id,group_id){
               if(group_status_json[j].status==0 && group_status_json[j].user_id==user_id){
                 //console.log('deleted')
                 //check read receipt 
-                if('read_receipt' in group_status_json[j]){
-                  read_receipt=group_status_json[j].read_receipt
-                }else{
-                  read_receipt=0;
-                }
-                if(read_receipt==0){
-                  if(read_receipt_datetime!=''){
-                    if(read_receipt_datetime<get_all_group_messages[i].date){
-                      //exit ();
-                      read_receipt=default_read_receipt;
-                    }else{
-                      read_receipt=0;
-                    }
-                  }else{
-                    read_receipt=0;
-                  }
-                }
+                // if('read_receipt' in group_status_json[j]){
+                //   read_receipt=group_status_json[j].read_receipt
+                // }else{
+                //   read_receipt=0;
+                // }
+                // if(read_receipt==0){
+                //   if(read_receipt_datetime!=''){
+                //     if(read_receipt_datetime<get_all_group_messages[i].date){
+                //       //exit ();
+                //       read_receipt=default_read_receipt;
+                //     }else{
+                //       read_receipt=0;
+                //     }
+                //   }else{
+                //     read_receipt=0;
+                //   }
+                // }
                 if(group_status_json[j].deleted_by){
                   if(group_status_json[j].deleted_by==user_id){
                     get_all_group_messages[i].message='You deleted this message';
@@ -4252,24 +4252,24 @@ async function get_group_chat_list_response(user_id,group_id){
                 //console.log('not deleted')
                 //check read receipt 
                 console.log('not deleted id ',get_all_group_messages[i].id)
-                if('read_receipt' in group_status_json[j]){
-                  read_receipt=group_status_json[j].read_receipt
-                }else{
-                  read_receipt=0;
-                }
-                if(read_receipt==0){
-                  if(read_receipt_datetime!=''){
-                    if(read_receipt_datetime<get_all_group_messages[i].date){
-                      //exit ();
-                      read_receipt=default_read_receipt;
-                    }else{
-                      read_receipt=0;
-                    }
-                  }else{
-                    read_receipt=0;
-                  }
-                }
-                console.log(get_all_group_messages[i].delivered_status)
+                // if('read_receipt' in group_status_json[j]){
+                //   read_receipt=group_status_json[j].read_receipt
+                // }else{
+                //   read_receipt=0;
+                // }
+                // if(read_receipt==0){
+                //   if(read_receipt_datetime!=''){
+                //     if(read_receipt_datetime<get_all_group_messages[i].date){
+                //       //exit ();
+                //       read_receipt=default_read_receipt;
+                //     }else{
+                //       read_receipt=0;
+                //     }
+                //   }else{
+                //     read_receipt=0;
+                //   }
+                // }
+                //console.log(get_all_group_messages[i].delivered_status)
                 //exit ()
                 if(get_all_group_messages[i].delivered_status==0){
                   get_all_group_messages[i].message_status=get_all_group_messages[i].message_status;

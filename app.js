@@ -650,7 +650,7 @@ io.sockets.on('connection',async function (socket) {
         var current_date = new Date();
         var date = current_date.toISOString().slice(0, 10);
         var datetime = get_datetime();
-        console.log(date)
+        //console.log(date)
         //check message_id exist for replay_id
         let message_id=0;
         if(data.message_id){
@@ -684,13 +684,14 @@ io.sockets.on('connection',async function (socket) {
           }
           get_group_users=get_group_users.replace(/(^,)|(,$)/g, "")
           console.log(get_group_users)
-          let set_query="SELECT * FROM `user_chat_privacy` where user_id in ("+get_group_users+") and type='read_receipts' and options='1'";
+          //let set_query="SELECT * FROM `user_chat_privacy` where user_id in ("+get_group_users+") and type='read_receipts' and options='1'";
+          let set_query="SELECT * FROM `user_chat_privacy` where user_id in ("+get_group_users+") and type='read_receipts'";
           //replace(/(^,)|(,$)/g, "")
-          //console.log(set_query)
+          console.log(set_query)
           //exit ()
           let check_group_chat_read_receipts=await queries.check_group_chat_read_receipts(set_query);
-          //console.log(check_group_chat_read_receipts);
-          
+          console.log(check_group_chat_read_receipts);
+          //exit ()
           for(var group_user=0; group_user<group_current_members.length; group_user++){
             //console.log('user id',group_current_members[group_user].user_id)
             let message_read_datetime='';
@@ -703,12 +704,16 @@ io.sockets.on('connection',async function (socket) {
               delivered_status=0;
               delivered_datetime=datetime;
             }
-            let read_receipt_status=0;
+            let read_receipt_status=1;
             //console.log('count ',check_group_chat_read_receipts.length)
             for(var read_receipt_i=0; read_receipt_i<check_group_chat_read_receipts.length; read_receipt_i++){
               //if(group_current_members[group_user].user_id==check_group_chat_read_receipts[read_receipt_i].user_id){
                 if(group_current_members[group_user].user_id==check_group_chat_read_receipts[read_receipt_i].user_id){
-                read_receipt_status=1;
+                  // if(group_current_members[group_user].user_id==2){
+                  //   console.log('enter in loop')
+                  //   exit ()
+                  // }
+                read_receipt_status=check_group_chat_read_receipts[read_receipt_i].options;
                 //console.log(read_receipt_status)
                 break;
               }
@@ -717,9 +722,8 @@ io.sockets.on('connection',async function (socket) {
             group_status_array.push({ user_id: group_current_members[group_user].user_id, username: group_current_members[group_user].username, datetime: datetime, delivered_status: delivered_status, delivered_datetime: delivered_datetime, message_status: message_status, message_read_datetime: message_read_datetime, read_receipt: read_receipt_status, status: 1 })
           }
 
-          // console.log(group_status_array)
-          // exit ()
-          
+           console.log(group_status_array)
+           //exit ()
         }
         var member_json_data = JSON.stringify(group_status_array);
         //checking  first message or not for the current date
@@ -7730,7 +7734,7 @@ io.sockets.on('connection',async function (socket) {
     })
     socket.on('test_changes',async function(data){
       socket.join('test_changes');
-      io.sockets.in('test_changes').emit('test_changes',{status: true, statuscode: 200, message: "last changes affected upto 9-08-2023 "});
+      io.sockets.in('test_changes').emit('test_changes',{status: true, statuscode: 200, message: "last changes affected upto 21-08-2023 (2)"});
       socket.leave('test_changes');
     });
     socket.on('private_chat_export_data',async function(data){
