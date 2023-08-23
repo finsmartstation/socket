@@ -10234,7 +10234,7 @@ async function get_private_message_read_receipt(group_status){
   for(var j=0; j<group_status.length; j++){
     //check any one read receipt off
     if(read_receipt==1){
-      read_receipt=group_status[j].read_receipt;
+      read_receipt=group_status[j].read_receipt ? group_status[j].read_receipt : 1;
     }
   }
   return read_receipt;

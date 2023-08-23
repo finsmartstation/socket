@@ -1052,7 +1052,7 @@ async function get_last_private_message(room_id,message_id,user_id,opponent_prof
     for(var j=0; j<group_status.length; j++){
       //check any one read receipt off
       if(read_receipt==1){
-        read_receipt=group_status[j].read_receipt;
+        read_receipt=group_status[j].read_receipt ? group_status[j].read_receipt : 1;
       }
     }
     return read_receipt;

@@ -5739,22 +5739,28 @@ io.sockets.on('connection',async function (socket) {
           let rid=data.rid ? data.rid : '';
           let room=data.room ? data.room : '';
           let current_datetime=get_datetime();
+          let message_sender_id=[];
+          let message_ids=[];
           //console.log('not empty')
           if(room!=''){
             console.log('group');
             let set_user_id='"'+user_id+'"';
-            let unread_message_count=0;
-            let unread_message=0;
+            
             //update remove mark_as_unread status
             let update_mark_as_unread_status=await functions.update_mark_as_unread_status(user_id,room);
-            let get_all_group_messages=await queries.group_chat_response(user_id,set_user_id,room)
+            //let get_all_group_messages=await queries.group_chat_response(user_id,set_user_id,room);
+            let get_all_group_messages=await queries.group_unread_messages(user_id,room)
             //console.log(get_all_group_messages)
+            let group_status_case='';
+            let id_case='';
+            let message_status_case='';
+            let update_message_read_status=false;
             for(var i=0; i<get_all_group_messages.length; i++){
-              //console.log(get_all_group_messages[i].id)
+              let unread_message_count=0;
+              let unread_message=0;
               if(get_all_group_messages[i].message_status==1){
                 let id=get_all_group_messages[i].id;
-                let message_sender_id=get_all_group_messages[i].senter_id;
-                console.log('not readed');
+                 
                 let group_status=get_all_group_messages[i].group_status;
                 if(group_status!=''){
                   group_status=JSON.parse(get_all_group_messages[i].group_status);
@@ -5762,6 +5768,7 @@ io.sockets.on('connection',async function (socket) {
                   group_status=[];
                 }
                 //to get message unread count
+                console.log(get_all_group_messages[i].id)
                 for(var get_unread_count=0; get_unread_count<group_status.length; get_unread_count++){
                   if(group_status[get_unread_count].message_status==1){
                     unread_message=unread_message+1;
@@ -5774,54 +5781,135 @@ io.sockets.on('connection',async function (socket) {
                     unread_message_count=unread_message_count+1;
                   }
                 }
-                console.log('unread_message_count ',unread_message_count,'unread_message ',unread_message)
-                if(unread_message==unread_message_count){
-                  console.log('all message')
-                  let update_read_message_status=await queries.update_group_message_as_read(current_datetime,JSON.stringify(group_status),id);
-                  console.log(update_read_message_status);
-                  if(update_read_message_status.affectedRows>0){
-                    console.log('success')
-                    //console.log(message_sender_id,id,room);
-                    //emit chat_list to the user
-                    let user_chat_list=await functions.get_recent_chat_list_response(user_id);
-                    io.sockets.in(user_id.toString()).emit('chat_list',user_chat_list);
-                    //emit to read message data to group_message_info 
-                    let group_message_info=await functions.group_message_info(message_sender_id,room,id);
-                    io.sockets.in(message_sender_id+'_'+room+'_'+id+'_group_message_info').emit('group_message_info', group_message_info);
-                    //emit chat_list and room_message to message senter
-                    let room_chat_list=await functions.get_group_chat_list_response(message_sender_id,room);
-                    io.sockets.in(room+'_'+message_sender_id).emit('message',room_chat_list);
-                    let recent_chat_list=await functions.get_recent_chat_list_response(message_sender_id);
-                    io.sockets.in(message_sender_id.toString()).emit('chat_list',recent_chat_list);
-                    //io.sockets.in(message_sender_ids[k]+'_'+room+'_'+message_ids[k]+'_group_message_info').emit('group_message_info', group_message_info)
-                  }else{
-                    console.log('not updated to db')
+                console.log('count ',unread_message_count)
+                if(unread_message_count==1){
+                  if(!message_sender_id.includes(get_all_group_messages[i].senter_id)){
+                    message_sender_id.push(get_all_group_messages[i].senter_id);
                   }
-                }else{
-                  console.log('single user message')
-                  let update_read_message_status=await queries.update_group_message_as_read_for_single_user(JSON.stringify(group_status),id);
-                  console.log(update_read_message_status)
-                  if(update_read_message_status.affectedRows>0){
-                    console.log('success')
-                    let user_chat_list=await functions.get_recent_chat_list_response(user_id);
-                    io.sockets.in(user_id.toString()).emit('chat_list',user_chat_list);
-                    //emit to read message data to group_message_info
-                    let group_message_info=await functions.group_message_info(message_sender_id,room,id);
-                    io.sockets.in(message_sender_id+'_'+room+'_'+id+'_group_message_info').emit('group_message_info', group_message_info);
-                    //emit chat_list and room_message to message senter
-                    let room_chat_list=await functions.get_group_chat_list_response(message_sender_id,room);
-                    io.sockets.in(room+'_'+message_sender_id).emit('message',room_chat_list);
-                    let recent_chat_list=await functions.get_recent_chat_list_response(message_sender_id);
-                    io.sockets.in(message_sender_id.toString()).emit('chat_list',recent_chat_list);
-                    //console.log(typeof message_sender_id);
-                  }else{
-                    console.log('not updated to db')
+                  //set query data
+                  console.log('user unread data')
+                  message_ids.push(id+'-'+get_all_group_messages[i].senter_id);
+                  group_status_case=group_status_case+"when id='"+id+"' then '"+JSON.stringify(group_status)+"' ";
+                  id_case=id_case+"'"+id+"',";
+                  console.log(group_status_case,id_case)
+                  if(unread_message==1){
+                    console.log('unread user message is 1')
+                    update_message_read_status=true;
+                    message_status_case=message_status_case+"when id='"+id+"' then '0'";
+                    console.log(message_status_case)
                   }
                 }
-              }else{
-                //console.log('message already readed ', get_all_group_messages[i].id)
               }
             }
+
+            id_case=id_case.replace(/,(?=[^,]*$)/, '');
+            //console.log(id_case)
+            let query='';
+            if(update_message_read_status){
+              //update message read status -- message_status
+              console.log('yes')
+              query="update `chat_list` set group_status=(case "+group_status_case+" end),message_status=(case "+message_status_case+" end),message_read_datetime='"+current_datetime+"' where id in ("+id_case+")";
+            }else{
+              console.log('no')
+              query="update `chat_list` set group_status=(case "+group_status_case+" end) where id in ("+id_case+")";
+            }
+            if(id_case!='' && group_status_case!=''){
+              console.log(query);
+              let execute_query=await queries.execute_raw_update_query(query);
+              console.log(execute_query);
+              if(execute_query.affectedRows>0){
+                console.log(message_sender_id,'ids',message_ids)
+                for(var k=0; k<message_ids.length; k++){
+                  let split_hypen=message_ids[k].split('-');
+                  let msg_id=split_hypen[0];
+                  let msg_senter_id=split_hypen[1];
+                  //emit to read message data to group_message_info 
+                  let group_message_info=await functions.group_message_info(msg_senter_id,room,msg_id);
+                  io.sockets.in(msg_senter_id+'_'+room+'_'+msg_id+'_group_message_info').emit('group_message_info', group_message_info);
+                }
+                for(var l=0; l<message_sender_id.length; l++){
+                  //emit chat_list and room_message to message senter
+                  let room_chat_list=await functions.get_group_chat_list_response(message_sender_id,room);
+                  io.sockets.in(room+'_'+message_sender_id).emit('message',room_chat_list);
+                  let recent_chat_list=await functions.get_recent_chat_list_response(message_sender_id);
+                  io.sockets.in(message_sender_id.toString()).emit('chat_list',recent_chat_list);
+                }
+              }
+            }
+            //exit ()
+            // for(var i=0; i<get_all_group_messages.length; i++){
+            //   //console.log(get_all_group_messages[i].id)
+            //   if(get_all_group_messages[i].message_status==1){
+            //     let id=get_all_group_messages[i].id;
+            //     let message_sender_id=get_all_group_messages[i].senter_id;
+            //     console.log('not readed');
+            //     let group_status=get_all_group_messages[i].group_status;
+            //     if(group_status!=''){
+            //       group_status=JSON.parse(get_all_group_messages[i].group_status);
+            //     }else{
+            //       group_status=[];
+            //     }
+            //     //to get message unread count
+            //     for(var get_unread_count=0; get_unread_count<group_status.length; get_unread_count++){
+            //       if(group_status[get_unread_count].message_status==1){
+            //         unread_message=unread_message+1;
+            //       }
+            //     }
+            //     for(var j=0; j<group_status.length; j++){
+            //       if(group_status[j].message_status==1 && group_status[j].user_id==user_id){
+            //         group_status[j].message_status=0;
+            //         group_status[j].message_read_datetime=current_datetime;
+            //         unread_message_count=unread_message_count+1;
+            //       }
+            //     }
+            //     console.log('unread_message_count ',unread_message_count,'unread_message ',unread_message)
+            //     if(unread_message==unread_message_count){
+            //       console.log('all message')
+            //       let update_read_message_status=await queries.update_group_message_as_read(current_datetime,JSON.stringify(group_status),id);
+            //       console.log(update_read_message_status);
+            //       if(update_read_message_status.affectedRows>0){
+            //         console.log('success')
+            //         //console.log(message_sender_id,id,room);
+            //         //emit chat_list to the user
+            //         let user_chat_list=await functions.get_recent_chat_list_response(user_id);
+            //         io.sockets.in(user_id.toString()).emit('chat_list',user_chat_list);
+            //         //emit to read message data to group_message_info 
+            //         let group_message_info=await functions.group_message_info(message_sender_id,room,id);
+            //         io.sockets.in(message_sender_id+'_'+room+'_'+id+'_group_message_info').emit('group_message_info', group_message_info);
+            //         //emit chat_list and room_message to message senter
+            //         let room_chat_list=await functions.get_group_chat_list_response(message_sender_id,room);
+            //         io.sockets.in(room+'_'+message_sender_id).emit('message',room_chat_list);
+            //         let recent_chat_list=await functions.get_recent_chat_list_response(message_sender_id);
+            //         io.sockets.in(message_sender_id.toString()).emit('chat_list',recent_chat_list);
+            //         //io.sockets.in(message_sender_ids[k]+'_'+room+'_'+message_ids[k]+'_group_message_info').emit('group_message_info', group_message_info)
+            //       }else{
+            //         console.log('not updated to db')
+            //       }
+            //     }else{
+            //       console.log('single user message')
+            //       let update_read_message_status=await queries.update_group_message_as_read_for_single_user(JSON.stringify(group_status),id);
+            //       console.log(update_read_message_status)
+            //       if(update_read_message_status.affectedRows>0){
+            //         console.log('success')
+            //         let user_chat_list=await functions.get_recent_chat_list_response(user_id);
+            //         io.sockets.in(user_id.toString()).emit('chat_list',user_chat_list);
+            //         //emit to read message data to group_message_info
+            //         let group_message_info=await functions.group_message_info(message_sender_id,room,id);
+            //         io.sockets.in(message_sender_id+'_'+room+'_'+id+'_group_message_info').emit('group_message_info', group_message_info);
+            //         //emit chat_list and room_message to message senter
+            //         let room_chat_list=await functions.get_group_chat_list_response(message_sender_id,room);
+            //         io.sockets.in(room+'_'+message_sender_id).emit('message',room_chat_list);
+            //         let recent_chat_list=await functions.get_recent_chat_list_response(message_sender_id);
+            //         io.sockets.in(message_sender_id.toString()).emit('chat_list',recent_chat_list);
+            //         //console.log(typeof message_sender_id);
+            //       }else{
+            //         console.log('not updated to db')
+            //       }
+            //     }
+            //   }else{
+            //     //console.log('message already readed ', get_all_group_messages[i].id)
+            //   }
+            // }
           }else{
             //console.log('private')
             if (Number(user_id) > Number(rid)) {
@@ -7734,7 +7822,7 @@ io.sockets.on('connection',async function (socket) {
     })
     socket.on('test_changes',async function(data){
       socket.join('test_changes');
-      io.sockets.in('test_changes').emit('test_changes',{status: true, statuscode: 200, message: "last changes affected upto 21-08-2023 (2)"});
+      io.sockets.in('test_changes').emit('test_changes',{status: true, statuscode: 200, message: "last changes affected upto 23-08-2023 (2)"});
       socket.leave('test_changes');
     });
     socket.on('private_chat_export_data',async function(data){

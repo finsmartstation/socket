@@ -183,6 +183,12 @@ async function group_chat_response(sid,user_id_quotes,room){
     return results[0];
 }
 
+async function group_unread_messages(user_id,room){
+    let json_object='{"user_id":"'+user_id+'","message_status":1}';
+    const results=await db.sequelize.query("select * from `chat_list` where JSON_CONTAINS(group_status, '"+json_object+"') and room='"+room+"'");
+    return results[0];
+}
+
 async function group_room_using_pagination(sid,user_id_quotes,room,limit,message_id){
     let json_object_0='{"user_id":"'+sid+'","status":0}';
     let json_object_1='{"user_id":"'+sid+'","status":1}';
@@ -862,6 +868,11 @@ async function group_contact_msg(datetime, sid, message, room, group_status_json
     return results[0];
 }
 
+async function execute_raw_update_query(query){
+    const results=await db.sequelize.query(query);
+    return results[0];
+}
+
 module.exports = {
     update_online_status,
     select_online_status,
@@ -1011,5 +1022,7 @@ module.exports = {
     update_group_message_delivered_status,
     remove_mute_user_chat_list,
     individual_contact_msg,
-    group_contact_msg
+    group_contact_msg,
+    execute_raw_update_query,
+    group_unread_messages
 }
