@@ -108,10 +108,10 @@ async function individual_room_using_pagination(sid,rid, room,limit,message_id){
     var results;
     if(message_id!=0){
         //results = await db.sequelize.query("SELECT t1.id,DATE_FORMAT(t1.date,'%Y-%m-%d %H:%i:%s') as date,t1.senter_id,t1.receiver_id,t1.replay_id,t1.forward_id,t1.message,t1.message_type,t1.optional_text,t1.thumbnail,t1.duration,t1.delivered_status,t1.message_status,t1.room, IF(t1.receiver_id='"+rid+"', 'sent', 'receive') as type,t1.group_status  FROM `chat_list` t1 JOIN `user` t2 on t2.id='"+rid+"' where t1.id<'"+message_id+"' and t1.room='"+room+"' and (JSON_CONTAINS(t1.group_status,'"+json_object_0+"') or JSON_CONTAINS(t1.group_status,'"+json_object_1+"')) order by id desc limit "+limit+" OFFSET "+page_number+"");
-        results = await db.sequelize.query("SELECT t1.id,DATE_FORMAT(t1.date,'%Y-%m-%d %H:%i:%s') as date,t1.senter_id,t1.receiver_id,t1.replay_id,t1.forward_id,t1.message,t1.message_type,t1.optional_text,t1.thumbnail,t1.duration,t1.delivered_status,t1.message_status,t1.room, IF(t1.receiver_id='"+rid+"', 'sent', 'receive') as type,t1.group_status  FROM `chat_list` t1 JOIN `user` t2 on t2.id='"+rid+"' where t1.id<'"+message_id+"' and t1.room='"+room+"' and (JSON_CONTAINS(t1.group_status,'"+json_object_0+"') or JSON_CONTAINS(t1.group_status,'"+json_object_1+"')) order by id desc limit "+limit+" ");
+        results = await db.sequelize.query("SELECT t1.id,DATE_FORMAT(t1.date,'%Y-%m-%d %H:%i:%s') as date,t1.senter_id,t1.receiver_id,t1.replay_id,t1.forward_id,t1.message,t1.message_type,t1.optional_text,t1.thumbnail,t1.duration,t1.delivered_status,t1.message_status,t1.room, IF(t1.receiver_id='"+rid+"', 'sent', 'receive') as type,t1.group_status  FROM `chat_list` t1 JOIN `user` t2 on t2.id='"+rid+"' where t1.id<'"+message_id+"' and t1.room='"+room+"' and t1.message_type!='date' and (JSON_CONTAINS(t1.group_status,'"+json_object_0+"') or JSON_CONTAINS(t1.group_status,'"+json_object_1+"')) order by id desc limit "+limit+" ");
     }else{
         //results = await db.sequelize.query("SELECT t1.id,DATE_FORMAT(t1.date,'%Y-%m-%d %H:%i:%s') as date,t1.senter_id,t1.receiver_id,t1.replay_id,t1.forward_id,t1.message,t1.message_type,t1.optional_text,t1.thumbnail,t1.duration,t1.delivered_status,t1.message_status,t1.room, IF(t1.receiver_id='"+rid+"', 'sent', 'receive') as type,t1.group_status  FROM `chat_list` t1 JOIN `user` t2 on t2.id='"+rid+"' where t1.room='"+room+"' and (JSON_CONTAINS(t1.group_status,'"+json_object_0+"') or JSON_CONTAINS(t1.group_status,'"+json_object_1+"')) order by id desc limit "+limit+" OFFSET "+page_number+"");
-        results = await db.sequelize.query("SELECT t1.id,DATE_FORMAT(t1.date,'%Y-%m-%d %H:%i:%s') as date,t1.senter_id,t1.receiver_id,t1.replay_id,t1.forward_id,t1.message,t1.message_type,t1.optional_text,t1.thumbnail,t1.duration,t1.delivered_status,t1.message_status,t1.room, IF(t1.receiver_id='"+rid+"', 'sent', 'receive') as type,t1.group_status  FROM `chat_list` t1 JOIN `user` t2 on t2.id='"+rid+"' where t1.room='"+room+"' and (JSON_CONTAINS(t1.group_status,'"+json_object_0+"') or JSON_CONTAINS(t1.group_status,'"+json_object_1+"')) order by id desc limit "+limit+" ");
+        results = await db.sequelize.query("SELECT t1.id,DATE_FORMAT(t1.date,'%Y-%m-%d %H:%i:%s') as date,t1.senter_id,t1.receiver_id,t1.replay_id,t1.forward_id,t1.message,t1.message_type,t1.optional_text,t1.thumbnail,t1.duration,t1.delivered_status,t1.message_status,t1.room, IF(t1.receiver_id='"+rid+"', 'sent', 'receive') as type,t1.group_status  FROM `chat_list` t1 JOIN `user` t2 on t2.id='"+rid+"' where t1.room='"+room+"' and t1.message_type!='date' and (JSON_CONTAINS(t1.group_status,'"+json_object_0+"') or JSON_CONTAINS(t1.group_status,'"+json_object_1+"')) order by id desc limit "+limit+" ");
     }
     
     return results;
@@ -185,7 +185,7 @@ async function group_chat_response(sid,user_id_quotes,room){
 
 async function group_unread_messages(user_id,room){
     let json_object='{"user_id":"'+user_id+'","message_status":1}';
-    const results=await db.sequelize.query("select * from `chat_list` where JSON_CONTAINS(group_status, '"+json_object+"') and room='"+room+"'");
+    const results=await db.sequelize.query("select * from `chat_list` where JSON_CONTAINS(group_status, '"+json_object+"') and room='"+room+"' and message_status='1'");
     return results[0];
 }
 

@@ -2582,6 +2582,7 @@ async function individual_message_using_pagination(sid,rid,room,limit,message_id
   //let current_datetime=get_datetime()
     //var result= await queries.send_indv_message(rid,room);
     var result=await queries.individual_room_using_pagination(sid,rid,room,limit,message_id);
+    //console.log(result);
     var get_current_datetime=get_datetime()
     console.log(result[0],result[0].length)
     result[0]=result[0].reverse();
@@ -3377,6 +3378,8 @@ async function individual_message_using_pagination(sid,rid,room,limit,message_id
             let user_profile_pic=BASE_URL+'uploads/default/profile.png';
             let user_details=await queries.get_user_details(rid)
             let block_status=await queries.check_user_block_status(sid,rid);
+            let device_token='';
+            let online_status='';
             if(user_details.length>0){
               //check privacy who can see my profile pic
               let check_privacy_profile_pic=await queries.check_user_privacy(rid,'profile_pic');
@@ -3442,6 +3445,8 @@ async function individual_message_using_pagination(sid,rid,room,limit,message_id
               }
               user_name=user_details[0].name;
               user_phone=user_details[0].phone;
+              device_token=user_details[0].deviceToken;
+              online_status=user_details[0].online_status;
             }
             //console.log(user_details)
              
@@ -3453,6 +3458,8 @@ async function individual_message_using_pagination(sid,rid,room,limit,message_id
                 "user_block_status":block_status,
                 "phone_number": user_phone,
                 "mute_status": mute_status,
+                "device_token":device_token,
+                "online_status": online_status.toString(),
                 "list":message_list_response
               }
             }
