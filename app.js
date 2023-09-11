@@ -5699,9 +5699,9 @@ io.sockets.on('connection',async function (socket) {
           //console.log('not empty')
           if(room!=''){
             //console.log('group',room+'_'+user_id)
-            let get_group_chat_list_response=await functions.get_group_chat_list_response(user_id,room);
+            //let get_group_chat_list_response=await functions.get_group_chat_list_response(user_id,room);
             //using pagination
-            //let get_group_chat_list_response=await functions.group_message_using_pagination(user_id,room,limit,message_id);
+            let get_group_chat_list_response=await functions.group_message_using_pagination(user_id,room,limit,message_id);
             //console.log(get_individual_chat_list_response)
             io.sockets.in(room+'_'+user_id).emit('message', get_group_chat_list_response);
           }else{
@@ -5714,9 +5714,9 @@ io.sockets.on('connection',async function (socket) {
               room = '' + user_id + rid;
               //console.log('room id in else', room);
             }
-            let get_individual_chat_list_response=await functions.get_individual_chat_list_response(user_id,rid,room);
+            //let get_individual_chat_list_response=await functions.get_individual_chat_list_response(user_id,rid,room);
             //using pagination
-            //let get_individual_chat_list_response=await functions.individual_message_using_pagination(user_id,rid,room,limit,message_id);
+            let get_individual_chat_list_response=await functions.individual_message_using_pagination(user_id,rid,room,limit,message_id);
             //console.log(get_individual_chat_list_response)
             io.sockets.in(room+'_'+user_id).emit('message', get_individual_chat_list_response);
           }
@@ -7822,7 +7822,7 @@ io.sockets.on('connection',async function (socket) {
     })
     socket.on('test_changes',async function(data){
       socket.join('test_changes');
-      io.sockets.in('test_changes').emit('test_changes',{status: true, statuscode: 200, message: "last changes affected upto 04-09-2023"});
+      io.sockets.in('test_changes').emit('test_changes',{status: true, statuscode: 200, message: "last changes affected upto 11-09-2023"});
       socket.leave('test_changes');
     });
     socket.on('private_chat_export_data',async function(data){
