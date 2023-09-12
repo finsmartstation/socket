@@ -4664,7 +4664,7 @@ async function group_message_using_pagination(user_id,group_id,limit,message_id)
     }else{
       //check message_id is last_id  
       let get_last_message_id=await queries.get_last_message_id(user_id,group_id);
-      console.log('val ',get_last_message_id)
+      //console.log('val ',get_last_message_id)
       if(get_last_message_id!=''){
         if(get_last_message_id==message_id){
           group_messages.push(group_started_data);

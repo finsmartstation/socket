@@ -1575,7 +1575,8 @@ async function get_last_private_message(room_id,message_id,user_id,opponent_prof
                     user_available_status='available';
                     available_user_id=contact_msg[k].user_id;
                     // contact_user_profile_pic
-                    let privacy_profile_pic=await sub_function.check_profile_pic_privacy(contact_msg[k].user_id,sid);
+                    //let privacy_profile_pic=await sub_function.check_profile_pic_privacy(contact_msg[k].user_id,sid);
+                    let privacy_profile_pic=await other_functions.check_profile_pic_privacy(contact_msg[k].user_id,sid);
                     //console.log('privacy profile check ',sid,contact_msg[k].user_id,privacy_profile_pic);
                     if(privacy_profile_pic){
                         let get_user_profile=await queries.get_user_profile(contact_msg[k].user_id);
@@ -2416,7 +2417,8 @@ async function get_last_private_message(room_id,message_id,user_id,opponent_prof
                     user_available_status='available';
                     available_user_id=contact_msg[k].user_id;
                     // contact_user_profile_pic
-                    let privacy_profile_pic=await sub_function.check_profile_pic_privacy(contact_msg[k].user_id,user_id);
+                    //let privacy_profile_pic=await sub_function.check_profile_pic_privacy(contact_msg[k].user_id,user_id);
+                    let privacy_profile_pic=await other_functions.check_profile_pic_privacy(contact_msg[k].user_id,sid);
                     //console.log('privacy profile check ',sid,contact_msg[k].user_id,privacy_profile_pic);
                     if(privacy_profile_pic){
                         let get_user_profile=await queries.get_user_profile(contact_msg[k].user_id);
@@ -3308,7 +3310,8 @@ async function get_last_private_message(room_id,message_id,user_id,opponent_prof
                     user_available_status='available';
                     available_user_id=contact_msg[k].user_id;
                     // contact_user_profile_pic
-                    let privacy_profile_pic=await sub_function.check_profile_pic_privacy(contact_msg[k].user_id,user_id);
+                    //let privacy_profile_pic=await sub_function.check_profile_pic_privacy(contact_msg[k].user_id,user_id);
+                    let privacy_profile_pic=await other_functions.check_profile_pic_privacy(contact_msg[k].user_id,sid);
                     //console.log('privacy profile check ',sid,contact_msg[k].user_id,privacy_profile_pic);
                     if(privacy_profile_pic){
                         let get_user_profile=await queries.get_user_profile(contact_msg[k].user_id);
