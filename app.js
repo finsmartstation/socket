@@ -1575,6 +1575,7 @@ io.sockets.on('connection',async function (socket) {
 
           //emit message
           //io.sockets.in(room).emit('message', setresponse);
+          
           if(blocked_status){
             console.log('yes blocked')
             let individual_chat_list_response_sender=await functions.get_individual_chat_list_response(data.sid,data.rid,room);
@@ -1584,8 +1585,8 @@ io.sockets.on('connection',async function (socket) {
             io.sockets.in(data.sid).emit('chat_list', get_recent_chat_response_senter);
           }else{
             console.log('not blocked')
-            let individual_chat_list_response_sender=await functions.get_individual_chat_list_response(data.sid,data.rid,room);
-            //let individual_chat_list_response_sender=await functions.send_individual_message(data.sid,data.rid,room,check_date_entry);
+            //let individual_chat_list_response_sender=await functions.get_individual_chat_list_response(data.sid,data.rid,room);
+             let individual_chat_list_response_sender=await functions.send_individual_message(data.sid,data.rid,room,check_date_entry);
             console.log(individual_chat_list_response_sender)
             // exit ()
             io.sockets.in(room+'_'+data.sid).emit('message',individual_chat_list_response_sender);
@@ -1594,8 +1595,8 @@ io.sockets.on('connection',async function (socket) {
             //io.sockets.in(room+'_'+data.sid).emit('chat_list', get_recent_chat_response_senter);
             io.sockets.in(data.sid).emit('chat_list', get_recent_chat_response_senter);
 
-            let individual_chat_list_response_receiver=await functions.get_individual_chat_list_response(data.rid,data.sid,room);
-            //let individual_chat_list_response_receiver=await functions.send_individual_message(data.rid,data.sid,room,check_date_entry);
+            //let individual_chat_list_response_receiver=await functions.get_individual_chat_list_response(data.rid,data.sid,room);
+            let individual_chat_list_response_receiver=await functions.send_individual_message(data.rid,data.sid,room,check_date_entry);
             //console.log(sockets,socket.id)
             //io.sockets.sockets[0].emit('message',sender_function_test_data)
             //socket.to(room).emit('message',sender_function_test_data);
@@ -7822,7 +7823,7 @@ io.sockets.on('connection',async function (socket) {
     })
     socket.on('test_changes',async function(data){
       socket.join('test_changes');
-      io.sockets.in('test_changes').emit('test_changes',{status: true, statuscode: 200, message: "last changes affected upto 12-09-2023"});
+      io.sockets.in('test_changes').emit('test_changes',{status: true, statuscode: 200, message: "last changes affected upto 13-09-2023"});
       socket.leave('test_changes');
     });
     socket.on('private_chat_export_data',async function(data){

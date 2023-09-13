@@ -1698,39 +1698,39 @@ async function send_individual_message(sid,rid,room,date_status){
     mute_status="0";
   }
 
-  if(date_status){
-    //find room last message date type
-    let get_last_private_date_message=await queries.get_last_private_date_message(sid,rid,room)
-    // console.log(get_last_private_date_message)
-    // console.log(sid,rid,room,date_status)
+  // if(date_status){
+  //   //find room last message date type
+  //   let get_last_private_date_message=await queries.get_last_private_date_message(sid,rid,room)
+  //   // console.log(get_last_private_date_message)
+  //   // console.log(sid,rid,room,date_status)
     
-    message_list_response.push({
-      id: get_last_private_date_message[0].id,
-      date: get_last_private_date_message[0].date,
-      senter_id: "",
-      receiver_id: "",
-      message: "",
-      message_type:"date",
-      duration: "",
-      message_status:"0",
-      room:"",
-      type:"date",
-      status:"",
-      replay_id:"",
-      replay_message:"",
-      replay_message_type:"",
-      replay_senter:"",
-      replay_duration:"",
-      forward_id : "",
-      forward_count : "",
-      forward_message_status : "",
-      delete_status : "",
-      starred_status: "",
-      read_receipt: "",
-      optional_text: "",
-      thumbnail: ''
-    });
-  }
+  //   message_list_response.push({
+  //     id: get_last_private_date_message[0].id,
+  //     date: get_last_private_date_message[0].date,
+  //     senter_id: "",
+  //     receiver_id: "",
+  //     message: "",
+  //     message_type:"date",
+  //     duration: "",
+  //     message_status:"0",
+  //     room:"",
+  //     type:"date",
+  //     status:"",
+  //     replay_id:"",
+  //     replay_message:"",
+  //     replay_message_type:"",
+  //     replay_senter:"",
+  //     replay_duration:"",
+  //     forward_id : "",
+  //     forward_count : "",
+  //     forward_message_status : "",
+  //     delete_status : "",
+  //     starred_status: "",
+  //     read_receipt: "",
+  //     optional_text: "",
+  //     thumbnail: ''
+  //   });
+  // }
   // console.log(mute_status,get_current_datetime)
   let default_read_receipt=0;
   //console.log(check_private_chat_read_receipts,check_private_chat_read_receipts.length)
@@ -7527,7 +7527,9 @@ async function get_recent_chat_list_response(user_id){
               mark_as_unread: mark_as_unread.toString(),
               online_status: get_recent_chat[i].user_online_status,
               message_history: get_last_private_message_history,
-              message_history1:get_last_private_message_history
+              message_history1:get_last_private_message_history,
+              user_left_status: '',
+              created_datetime: ''
             });
 
           }else if(group_status[j].user_id==user_id && group_status[j].status==1){
@@ -7771,7 +7773,9 @@ async function get_recent_chat_list_response(user_id){
               mark_as_unread: mark_as_unread.toString(),
               online_status: get_recent_chat[i].user_online_status,
               message_history: get_last_private_message_history,
-              message_history1:get_last_private_message_history
+              message_history1:get_last_private_message_history,
+              user_left_status: '',
+              created_datetime: ''
             });
             
             // if(get_recent_chat[i].id==5716){
@@ -7809,7 +7813,9 @@ async function get_recent_chat_list_response(user_id){
                 optional_text: '',
                 mark_as_unread: "0",
                 online_status: get_recent_chat[i].user_online_status,
-                message_history: get_last_private_message_history
+                message_history: get_last_private_message_history,
+                user_left_status: '',
+                created_datetime: ''
               })
             }else{
               chat_list_data.push({
@@ -7832,7 +7838,9 @@ async function get_recent_chat_list_response(user_id){
                 mark_as_unread: get_last_private_message[0].mark_as_unread.toString(),
                 online_status: get_recent_chat[i].user_online_status,
                 message_history: get_last_private_message_history,
-                message_history1:get_last_private_message_history
+                message_history1:get_last_private_message_history,
+                user_left_status: '',
+                created_datetime: ''
               })
             }
           }
@@ -7898,10 +7906,12 @@ async function get_recent_chat_list_response(user_id){
         let group_current_members;
         let group_left_members;
         let group_removed_members;
+        let group_created_datetime='';
         //if(group_details.length>0){
-          if(get_recent_chat[i].group_id!=null){
+        if(get_recent_chat[i].group_id!=null){
           group_name=get_recent_chat[i].opponent_name;
-          group_profile=get_recent_chat[i].opponent_profile_pic
+          group_profile=get_recent_chat[i].opponent_profile_pic;
+          group_created_datetime=get_recent_chat[i].group_created_datetime
           if(group_profile!=''){
             group_profile=BASE_URL+group_profile;
           }else{
@@ -7941,6 +7951,19 @@ async function get_recent_chat_list_response(user_id){
           group_left_members=[];
           group_removed_members=[];
           subject_history=[];
+        }
+
+        //check user left the group or not
+        let user_left_status='1';
+        if(group_current_members.length>0){ 
+          for(var member_i=0; member_i<group_current_members.length; member_i++){
+            //console.log('member',current_group_members[member_i].user_id)
+            if(group_current_members[member_i].user_id==user_id){
+              //console.log('ssss user exist')
+              user_left_status='0';
+              break;
+            }
+          }
         }
         
         //check message is deleted or not
@@ -7986,7 +8009,9 @@ async function get_recent_chat_list_response(user_id){
                 mark_as_unread: mark_as_unread.toString(),
                 online_status: get_recent_chat[i].user_online_status,
                 message_history:get_last_group_message_history,
-                message_history1:get_last_group_message_history_new
+                message_history1:get_last_group_message_history_new,
+                user_left_status: user_left_status,
+                created_datetime: group_created_datetime
               });
               //console.log(get_recent_chat[i]);
               //exit ()
@@ -8286,13 +8311,13 @@ async function get_recent_chat_list_response(user_id){
                     }
                   }
                 }
-                console.log(get_recent_chat[i].senter_id)
+                //console.log(get_recent_chat[i].senter_id)
                 if(get_recent_chat[i].senter_id==user_id){
                   get_recent_chat[i].message='You: 👤'+get_recent_chat[i].message;
                 }else{
                   get_recent_chat[i].message=await queries.get_username(get_recent_chat[i].senter_id)+': 👤'+get_recent_chat[i].message;
                 }
-                console.log(get_recent_chat[i].id,get_recent_chat[i].message);
+                //console.log(get_recent_chat[i].id,get_recent_chat[i].message);
                 //exit ()
               }
 
@@ -8316,7 +8341,9 @@ async function get_recent_chat_list_response(user_id){
                 mark_as_unread: mark_as_unread.toString(),
                 online_status: get_recent_chat[i].user_online_status,
                 message_history:get_last_group_message_history,
-                message_history1:get_last_group_message_history_new
+                message_history1:get_last_group_message_history_new,
+                user_left_status: user_left_status,
+                created_datetime: group_created_datetime
               });
             }else if(group_status[j].user_id==user_id && group_status[j].status==2){
               console.log(get_recent_chat[i].room,get_recent_chat[i].id)
@@ -8346,7 +8373,9 @@ async function get_recent_chat_list_response(user_id){
                   mark_as_unread: '0',
                   online_status: get_recent_chat[i].user_online_status,
                   message_history:get_last_group_message_history,
-                  message_history1:get_last_group_message_history_new
+                  message_history1:get_last_group_message_history_new,
+                  user_left_status: user_left_status,
+                  created_datetime: group_created_datetime
                 });
                 
               }else{
@@ -8371,7 +8400,9 @@ async function get_recent_chat_list_response(user_id){
                   mark_as_unread: get_last_group_message[0].mark_as_unread.toString(),
                   online_status: get_recent_chat[i].user_online_status,
                   message_history:get_last_group_message_history,
-                  message_history1:get_last_group_message_history_new
+                  message_history1:get_last_group_message_history_new,
+                  user_left_status: user_left_status,
+                  created_datetime: group_created_datetime
                 });
               }
               
