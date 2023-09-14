@@ -1035,8 +1035,8 @@ io.sockets.on('connection',async function (socket) {
         //                             "user_left_status":user_left_status,
         //                              "list":group_chat_response}}
         //io.sockets.in(data.room).emit('message', set_group_chat_response); 
-        let group_chat_response_data_for_sender=await functions.get_group_chat_list_response(data.sid,data.room);
-        //let group_chat_response_data_for_sender=await functions.send_group_message(data.sid,data.room,check_date_entry);
+        //let group_chat_response_data_for_sender=await functions.get_group_chat_list_response(data.sid,data.room);
+        let group_chat_response_data_for_sender=await functions.send_group_message(data.sid,data.room,check_date_entry);
         io.sockets.in(data.room+'_'+data.sid).emit('message', group_chat_response_data_for_sender);   
         //emit chat_list to the senter
         let get_recent_chat_response_senter=await functions.get_recent_chat_list_response(data.sid);
@@ -1047,8 +1047,8 @@ io.sockets.on('connection',async function (socket) {
           for(var emit_user=0; emit_user<group_status_array.length; emit_user++){
             //get group chat list response
             if(group_status_array[emit_user].user_id!=data.sid){
-              let group_chat_response_data=await functions.get_group_chat_list_response(group_status_array[emit_user].user_id,data.room);
-              //let group_chat_response_data=await functions.send_group_message(group_status_array[emit_user].user_id,data.room,check_date_entry);
+              //let group_chat_response_data=await functions.get_group_chat_list_response(group_status_array[emit_user].user_id,data.room);
+              let group_chat_response_data=await functions.send_group_message(group_status_array[emit_user].user_id,data.room,check_date_entry);
               io.sockets.in(data.room+'_'+group_status_array[emit_user].user_id).emit('message', group_chat_response_data);
               //io.in(data.room+'_'+group_status_array[emit_user].user_id).emit('message', group_chat_response_data);
 
@@ -1578,8 +1578,8 @@ io.sockets.on('connection',async function (socket) {
           
           if(blocked_status){
             console.log('yes blocked')
-            let individual_chat_list_response_sender=await functions.get_individual_chat_list_response(data.sid,data.rid,room);
-            //let individual_chat_list_response_sender=await functions.send_individual_message(data.sid,data.rid,room,check_date_entry);
+            //let individual_chat_list_response_sender=await functions.get_individual_chat_list_response(data.sid,data.rid,room);
+            let individual_chat_list_response_sender=await functions.send_individual_message(data.sid,data.rid,room,check_date_entry);
             io.sockets.in(room+'_'+data.sid).emit('message',individual_chat_list_response_sender);
             let get_recent_chat_response_senter=await functions.get_recent_chat_list_response(data.sid);
             io.sockets.in(data.sid).emit('chat_list', get_recent_chat_response_senter);
