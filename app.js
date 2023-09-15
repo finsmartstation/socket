@@ -1586,7 +1586,7 @@ io.sockets.on('connection',async function (socket) {
           }else{
             console.log('not blocked')
             //let individual_chat_list_response_sender=await functions.get_individual_chat_list_response(data.sid,data.rid,room);
-             let individual_chat_list_response_sender=await functions.send_individual_message(data.sid,data.rid,room,check_date_entry);
+            let individual_chat_list_response_sender=await functions.send_individual_message(data.sid,data.rid,room,check_date_entry);
             console.log(individual_chat_list_response_sender)
             // exit ()
             io.sockets.in(room+'_'+data.sid).emit('message',individual_chat_list_response_sender);
@@ -2245,7 +2245,6 @@ io.sockets.on('connection',async function (socket) {
                     var group_status_json_data = JSON.stringify(group_status_data);
                     //console.log(group_status_json_data);
                     //save forward message
-                    
                     let save_individual_forward_message=await queries.save_individual_forward_message(message_ids[i],datetime,input.sid,receiver_id,forward_message,forward_message_type,room,forward_duration,group_status_json_data,forward_optional_text,forward_thumbnail)
                     //console.log(save_individual_forward_message)
                     if(save_individual_forward_message.length>0){
@@ -5693,7 +5692,8 @@ io.sockets.on('connection',async function (socket) {
           let rid=data.rid ? data.rid : '';
           let room=data.room ? data.room : '';
           let page_number=data.page_number ? data.page_number : 0;
-          let limit=5;
+          //let limit=5;
+          let limit=data.limit ? data.limit : 10;
           //page_number=(page_number-1)*limit;
           //console.log(page_number);
           let message_id=data.message_id ? data.message_id : 0;
@@ -7823,7 +7823,7 @@ io.sockets.on('connection',async function (socket) {
     })
     socket.on('test_changes',async function(data){
       socket.join('test_changes');
-      io.sockets.in('test_changes').emit('test_changes',{status: true, statuscode: 200, message: "last changes affected upto 13-09-2023"});
+      io.sockets.in('test_changes').emit('test_changes',{status: true, statuscode: 200, message: "last changes affected upto 15-09-2023"});
       socket.leave('test_changes');
     });
     socket.on('private_chat_export_data',async function(data){
