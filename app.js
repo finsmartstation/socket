@@ -2135,6 +2135,8 @@ io.sockets.on('connection',async function (socket) {
               status: true,
               statuscode: 200,
               message: 'No user data found',
+              socket: true,
+              archived_chat_list: [],
               data: []
             }
             io.sockets.in(input.user_id).emit('chat_list', set_response);
@@ -2158,6 +2160,8 @@ io.sockets.on('connection',async function (socket) {
           status: true,
           statuscode: 200,
           message: 'Error found',
+          socket: true,
+          archived_chat_list: [],
           data: []
         }
         io.sockets.in(input.user_id).emit('chat_list', set_response);
@@ -7823,7 +7827,7 @@ io.sockets.on('connection',async function (socket) {
     })
     socket.on('test_changes',async function(data){
       socket.join('test_changes');
-      io.sockets.in('test_changes').emit('test_changes',{status: true, statuscode: 200, message: "last changes affected upto 15-09-2023"});
+      io.sockets.in('test_changes').emit('test_changes',{status: true, statuscode: 200, message: "last changes affected upto 18-09-2023 (2)"});
       socket.leave('test_changes');
     });
     socket.on('private_chat_export_data',async function(data){
@@ -8075,7 +8079,7 @@ io.sockets.on('connection',async function (socket) {
                 }
                 let get_private_message_read_receipt=await functions.get_private_message_read_receipt(group_status);
                 console.log(get_private_message_read_receipt);
-                exit ()
+                //exit ()
                 console.log(group_status);
                 let default_read_receipt=1;
                 let sender_default_read_receipt=1;
