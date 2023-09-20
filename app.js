@@ -2207,6 +2207,39 @@ io.sockets.on('connection',async function (socket) {
                   let type=id[1];
                   //type -- p = private, g = group
                   if(type=='p'){
+                    //check user read receipt status
+                    let senter_read_receipt=1;
+                    let receiver_read_receipt=1;
+                    let check_private_chat_read_receipts=await queries.check_private_chat_read_receipts(input.sid,receiver_id);
+                    if(check_private_chat_read_receipts.length>0){
+                      //console.log(check_private_chat_read_receipts)
+                      for(var read_receipt_i=0;i<check_private_chat_read_receipts.length;read_receipt_i++){
+                        console.log(check_private_chat_read_receipts[read_receipt_i],check_private_chat_read_receipts[read_receipt_i].user_id)
+                        //exit ()
+                        if(check_private_chat_read_receipts[read_receipt_i].user_id==input.sid){
+                          console.log('senter id')
+                          
+                          console.log(check_private_chat_read_receipts[read_receipt_i].options);
+                          if(check_private_chat_read_receipts[read_receipt_i].options==0){
+                            senter_read_receipt=0;
+                          }else{
+                            senter_read_receipt=1;
+                          }
+                          //console.log(senter_read_receipt)
+                          //exit ()
+                        }else if(check_private_chat_read_receipts[read_receipt_i].user_id==receiver_id){
+                          //console.log('receiver id')
+                          //receiver_read_receipt=1;
+                          if(check_private_chat_read_receipts[read_receipt_i].options==0){
+                            receiver_read_receipt=0;
+                          }else{
+                            receiver_read_receipt=1;
+                          }
+                          //console.log(receiver_read_receipt)
+                          //exit ()
+                        }
+                      }
+                    }
                     //private
                     console.log('private')
                     let room;
@@ -2225,8 +2258,11 @@ io.sockets.on('connection',async function (socket) {
                         "user_id": input.sid,
                         "username": "",
                         "datetime": datetime,
+                        "delivered_status": 0,
+                        "delivered_datetime": datetime,
                         "message_status": 0,
                         "message_read_datetime": datetime,
+                        "read_receipt": senter_read_receipt,
                         "status": 1
                       }];
                     }else{
@@ -2234,15 +2270,21 @@ io.sockets.on('connection',async function (socket) {
                         "user_id": input.sid,
                         "username": "",
                         "datetime": datetime,
+                        "delivered_status": 0,
+                        "delivered_datetime": datetime,
                         "message_status": 0,
                         "message_read_datetime": datetime,
+                        "read_receipt": senter_read_receipt,
                         "status": 1
                       }, {
                         "user_id": receiver_id,
                         "username": "",
+                        "delivered_status": 1,
+                        "delivered_datetime": "",
                         "datetime": datetime,
                         "message_status": 0,
                         "message_read_datetime": "",
+                        "read_receipt": receiver_read_receipt,
                         "status": 1
                       }]
                     }
@@ -2292,8 +2334,11 @@ io.sockets.on('connection',async function (socket) {
                             "user_id": group_current_users[group_user].user_id,
                             "username": "",
                             "datetime": datetime,
+                            "delivered_status": 0,
+                            "delivered_datetime": datetime,
                             "message_status": 0,
                             "message_read_datetime": datetime,
+                            "read_receipt": 1,
                             "status": 1
                           })
                           //save forward message for group
@@ -2303,8 +2348,11 @@ io.sockets.on('connection',async function (socket) {
                             "user_id": group_current_users[group_user].user_id,
                             "username": "",
                             "datetime": datetime,
+                            "delivered_status": 0,
+                            "delivered_datetime": datetime,
                             "message_status": 0,
                             "message_read_datetime": "",
+                            "read_receipt": 1,
                             "status": 1
                           })
                         }
@@ -2364,10 +2412,14 @@ io.sockets.on('connection',async function (socket) {
                   if(emit_users[k].type=='private'){
                     //console.log('private ',input.sid,emit_users[k].rid,emit_users[k].room)
                     //emit to senter 
-                    let individual_chat_list_response_senter=await functions.get_individual_chat_list_response(input.sid,emit_users[k].rid,emit_users[k].room);
+                    //let individual_chat_list_response_senter=await functions.get_individual_chat_list_response(input.sid,emit_users[k].rid,emit_users[k].room);
+                    //send single message only
+                    let individual_chat_list_response_senter=await functions.send_individual_message(input.sid,emit_users[k].rid,emit_users[k].room,false);
                     io.sockets.in(emit_users[k].room+'_'+input.sid).emit('message',individual_chat_list_response_senter);
                     //emit to receiver
-                    let individual_chat_list_response_receiver=await functions.get_individual_chat_list_response(emit_users[k].rid,input.sid,emit_users[k].room);
+                    //let individual_chat_list_response_receiver=await functions.get_individual_chat_list_response(emit_users[k].rid,input.sid,emit_users[k].room);
+                    //send single message only
+                    let individual_chat_list_response_receiver=await functions.send_individual_message(emit_users[k].rid,input.sid,emit_users[k].room,false);
                     io.sockets.in(emit_users[k].room+'_'+emit_users[k].rid).emit('message',individual_chat_list_response_receiver);
       
                     //emit chat list in future
@@ -2389,7 +2441,9 @@ io.sockets.on('connection',async function (socket) {
                     
                     //emit to receiver
                     console.log('group emit',emit_users[k].rid,emit_users[k].room)
-                    let group_chat_list_response_receiver=await functions.get_group_chat_list_response(emit_users[k].rid,emit_users[k].room);
+                    //let group_chat_list_response_receiver=await functions.get_group_chat_list_response(emit_users[k].rid,emit_users[k].room);
+                    //send single message
+                    let group_chat_list_response_receiver=await functions.send_group_message(emit_users[k].rid,emit_users[k].room);
                     io.sockets.in(emit_users[k].room+'_'+emit_users[k].rid).emit('message',group_chat_list_response_receiver);
       
                     //emit chat list in future
@@ -6085,33 +6139,33 @@ io.sockets.on('connection',async function (socket) {
                 //console.log('count',updated_starred_msg_count,room+'_'+user_id)
                // exit()
                 if(updated_starred_msg_count>0){
-                  io.sockets.in(data.user_id+'_starred').emit('starred_message', {status: true, statuscode: 200, message: "success"});
+                  io.sockets.in(data.user_id+'_starred').emit('starred_message', {status: true, statuscode: 200, message: "success", message_id:message_id});
                   //emit to the user 
-                  if(private_group_status==1){
-                    //group
-                    let chat_list_details=await functions.get_group_chat_list_response(user_id,room)
-                    io.sockets.in(room+'_'+user_id).emit('message',chat_list_details)
-                  }else{
-                    //private
-                    let chat_list_details=await functions.get_individual_chat_list_response(user_id,receiver_id,room);
-                    io.sockets.in(room+'_'+user_id).emit('message',chat_list_details)
-                    //console.log('success')
-                  }
+                  // if(private_group_status==1){
+                  //   //group
+                  //   let chat_list_details=await functions.get_group_chat_list_response(user_id,room)
+                  //   io.sockets.in(room+'_'+user_id).emit('message',chat_list_details)
+                  // }else{
+                  //   //private
+                  //   let chat_list_details=await functions.get_individual_chat_list_response(user_id,receiver_id,room);
+                  //   io.sockets.in(room+'_'+user_id).emit('message',chat_list_details)
+                  //   //console.log('success')
+                  // }
                   
                 }else{
-                  io.sockets.in(data.user_id+'_starred').emit('starred_message', {status: false, statuscode: 400, message: "Not updated to db"});
+                  io.sockets.in(data.user_id+'_starred').emit('starred_message', {status: false, statuscode: 400, message: "Not updated to db",message_id:""});
                 }
               }else{
-                io.sockets.in(data.user_id+'_starred').emit('starred_message', {status: false, statuscode: 200, message: "No message data found"});
+                io.sockets.in(data.user_id+'_starred').emit('starred_message', {status: false, statuscode: 200, message: "No message data found",message_id:""});
               }
               
             }else{
-              io.sockets.in(data.user_id+'_starred').emit('starred_message', {status: false, statuscode: 200, message: "No user data found"});
+              io.sockets.in(data.user_id+'_starred').emit('starred_message', {status: false, statuscode: 200, message: "No user data found",message_id:""});
             }
             socket.leave(user_id+'_starred');
           }else{
             socket.join(data.user_id+'_starred');
-            io.sockets.in(data.user_id+'_starred').emit('starred_message', {status: false, statuscode: 200, message: "Data is empty"});
+            io.sockets.in(data.user_id+'_starred').emit('starred_message', {status: false, statuscode: 200, message: "Data is empty",message_id:""});
             socket.leave(data.user_id+'_starred');
           }
         }else{
@@ -6180,33 +6234,33 @@ io.sockets.on('connection',async function (socket) {
                 //console.log('count',updated_starred_msg_count,room+'_'+user_id)
                // exit()
                 if(updated_unstarred_msg_count>0){
-                  io.sockets.in(data.user_id+'_unstarred').emit('unstarred_message', {status: true, statuscode: 200, message: "success"});
+                  io.sockets.in(data.user_id+'_unstarred').emit('unstarred_message', {status: true, statuscode: 200, message: "success",message_id:message_id});
                   //emit to the user 
-                  if(private_group_status==1){
-                    //group
-                    let chat_list_details=await functions.get_group_chat_list_response(user_id,room)
-                    io.sockets.in(room+'_'+user_id).emit('message',chat_list_details)
-                  }else{
-                    //private
-                    let chat_list_details=await functions.get_individual_chat_list_response(user_id,receiver_id,room);
-                    io.sockets.in(room+'_'+user_id).emit('message',chat_list_details)
-                    //console.log('success')
-                  }
+                  // if(private_group_status==1){
+                  //   //group
+                  //   let chat_list_details=await functions.get_group_chat_list_response(user_id,room)
+                  //   io.sockets.in(room+'_'+user_id).emit('message',chat_list_details)
+                  // }else{
+                  //   //private
+                  //   let chat_list_details=await functions.get_individual_chat_list_response(user_id,receiver_id,room);
+                  //   io.sockets.in(room+'_'+user_id).emit('message',chat_list_details)
+                  //   //console.log('success')
+                  // }
                   
                 }else{
-                  io.sockets.in(data.user_id+'_unstarred').emit('unstarred_message', {status: false, statuscode: 400, message: "Not updated to db"});
+                  io.sockets.in(data.user_id+'_unstarred').emit('unstarred_message', {status: false, statuscode: 400, message: "Not updated to db",message_id:""});
                 }
               }else{
-                io.sockets.in(data.user_id+'_unstarred').emit('unstarred_message', {status: false, statuscode: 200, message: "No message data found"});
+                io.sockets.in(data.user_id+'_unstarred').emit('unstarred_message', {status: false, statuscode: 200, message: "No message data found",message_id:""});
               }
               
             }else{
-              io.sockets.in(data.user_id+'_unstarred').emit('unstarred_message', {status: false, statuscode: 200, message: "No user data found"});
+              io.sockets.in(data.user_id+'_unstarred').emit('unstarred_message', {status: false, statuscode: 200, message: "No user data found",message_id:""});
             }
             socket.leave(user_id+'_unstarred');
           }else{
             socket.join(data.user_id+'_unstarred');
-            io.sockets.in(data.user_id+'_unstarred').emit('unstarred_message', {status: false, statuscode: 200, message: "Data is empty"});
+            io.sockets.in(data.user_id+'_unstarred').emit('unstarred_message', {status: false, statuscode: 200, message: "Data is empty",message_id:""});
             socket.leave(data.user_id+'_unstarred');
           }
         }else{
@@ -7827,7 +7881,7 @@ io.sockets.on('connection',async function (socket) {
     })
     socket.on('test_changes',async function(data){
       socket.join('test_changes');
-      io.sockets.in('test_changes').emit('test_changes',{status: true, statuscode: 200, message: "last changes affected upto 18-09-2023 (2)"});
+      io.sockets.in('test_changes').emit('test_changes',{status: true, statuscode: 200, message: "last changes affected upto 19-09-2023"});
       socket.leave('test_changes');
     });
     socket.on('private_chat_export_data',async function(data){
