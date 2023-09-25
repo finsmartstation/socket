@@ -117,10 +117,10 @@ async function individual_room_using_pagination(sid,rid, room,limit,message_id){
     return results;
 }
 
-async function get_send_private_message(sid,rid, room){
+async function get_send_private_message(sid,rid, room, message_limit){
     let json_object_0='{"user_id":"'+sid+'","status":0}';
     let json_object_1='{"user_id":"'+sid+'","status":1}';
-    const results = await db.sequelize.query("SELECT t1.id,DATE_FORMAT(t1.date,'%Y-%m-%d %H:%i:%s') as date,t1.senter_id,t1.receiver_id,t1.replay_id,t1.forward_id,t1.message,t1.message_type,t1.optional_text,t1.thumbnail,t1.duration,t1.delivered_status,t1.message_status,t1.room, IF(t1.receiver_id='"+rid+"', 'sent', 'receive') as type,t1.group_status  FROM `chat_list` t1 JOIN `user` t2 on t2.id='"+rid+"' where t1.room='"+room+"' and (JSON_CONTAINS(t1.group_status,'"+json_object_0+"') or JSON_CONTAINS(t1.group_status,'"+json_object_1+"')) order by id desc limit 1");
+    const results = await db.sequelize.query("SELECT t1.id,DATE_FORMAT(t1.date,'%Y-%m-%d %H:%i:%s') as date,t1.senter_id,t1.receiver_id,t1.replay_id,t1.forward_id,t1.message,t1.message_type,t1.optional_text,t1.thumbnail,t1.duration,t1.delivered_status,t1.message_status,t1.room, IF(t1.receiver_id='"+rid+"', 'sent', 'receive') as type,t1.group_status  FROM `chat_list` t1 JOIN `user` t2 on t2.id='"+rid+"' where t1.room='"+room+"' and (JSON_CONTAINS(t1.group_status,'"+json_object_0+"') or JSON_CONTAINS(t1.group_status,'"+json_object_1+"')) order by id desc limit "+message_limit+"");
     return results;
 }
 
@@ -205,10 +205,10 @@ async function group_room_using_pagination(sid,user_id_quotes,room,limit,message
     return results[0];
 }
 
-async function get_group_room_message(sid,room){
+async function get_group_room_message(sid,room,message_limit){
     let json_object_0='{"user_id":"'+sid+'","status":0}';
     let json_object_1='{"user_id":"'+sid+'","status":1}';
-    const results=await db.sequelize.query("SELECT (select min(id) from chat_list where room='"+room+"' and ((JSON_CONTAINS(group_status, '"+json_object_0+"') or JSON_CONTAINS(group_status, '"+json_object_1+"')))) as small_id,t1.id,DATE_FORMAT(t1.date,'%Y-%m-%d %H:%i:%s') as date,t1.senter_id,t1.message,t1.replay_id,t1.forward_id,t1.message_type,t1.optional_text,t1.thumbnail,t1.duration,t1.room,t1.delivered_status,t1.message_status, t2.name,if(t1.senter_id='"+sid+"','sent','receive') as type,t1.group_status FROM `chat_list` t1 join `user` t2 on t1.Senter_id=t2.id where t1.room='"+room+"' and t1.private_group='1' and (JSON_CONTAINS(t1.group_status, '"+json_object_0+"') or JSON_CONTAINS(t1.group_status, '"+json_object_1+"')) order by id DESC limit 1");
+    const results=await db.sequelize.query("SELECT (select min(id) from chat_list where room='"+room+"' and ((JSON_CONTAINS(group_status, '"+json_object_0+"') or JSON_CONTAINS(group_status, '"+json_object_1+"')))) as small_id,t1.id,DATE_FORMAT(t1.date,'%Y-%m-%d %H:%i:%s') as date,t1.senter_id,t1.message,t1.replay_id,t1.forward_id,t1.message_type,t1.optional_text,t1.thumbnail,t1.duration,t1.room,t1.delivered_status,t1.message_status, t2.name,if(t1.senter_id='"+sid+"','sent','receive') as type,t1.group_status FROM `chat_list` t1 join `user` t2 on t1.Senter_id=t2.id where t1.room='"+room+"' and t1.private_group='1' and (JSON_CONTAINS(t1.group_status, '"+json_object_0+"') or JSON_CONTAINS(t1.group_status, '"+json_object_1+"')) order by id DESC limit "+message_limit+"");
     return results[0];
 }
 
@@ -563,6 +563,11 @@ async function save_pin_chat(user_id,receiver_id,room,datetime){
 
 async function check_room_is_pinned(user_id,room){
     const results=await db.sequelize.query("select * from `pin_chat` where user_id='"+user_id+"' and room='"+room+"'");
+    return results[0];
+}
+
+async function get_pinned_chat_list(user_id,rooms){
+    const results=await db.sequelize.query("select * from `pin_chat` where user_id='"+user_id+"' and room in ("+rooms+")");
     return results[0];
 }
 
@@ -1025,5 +1030,6 @@ module.exports = {
     individual_contact_msg,
     group_contact_msg,
     execute_raw_update_query,
-    group_unread_messages
+    group_unread_messages,
+    get_pinned_chat_list
 }

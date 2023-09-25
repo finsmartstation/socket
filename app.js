@@ -632,6 +632,7 @@ io.sockets.on('connection',async function (socket) {
       var duration=data.duration ? data.duration : '0';
       var optional_text=data.optional_text ? data.optional_text : '';
       var thumbnail=data.thumbnail ? data.thumbnail : '';
+      var message_limit=1;
       // var room=data.room;
       //entering to group chat
        //check message_type='date' is removed or not
@@ -764,6 +765,7 @@ io.sockets.on('connection',async function (socket) {
             await queries.post_text_message(datetime,s_id,message,data.room,member_json_data,message_id,optional_text)
           }else if(type=='image'){
             let split_path=message.split(',');
+            message_limit=split_path.length;
             //console.log(split_path)
             for(var i=0;i<split_path.length;i++){
               //console.log(split_path[i])
@@ -779,6 +781,7 @@ io.sockets.on('connection',async function (socket) {
             //console.log(message)
             let split_path=message.split(',');
             let split_duration=duration.split(',');
+            message_limit=split_path.length;
             for(var i=0;i<split_path.length;i++){
               let duration_val=split_duration[i] ? split_duration[i] : '0';
               if(i==0){
@@ -790,6 +793,7 @@ io.sockets.on('connection',async function (socket) {
             //await queries.post_voice_message(datetime,s_id,message,data.room,member_json_data,duration,message_id) 
           }else if(type=='doc'){
             let split_path=message.split(',');
+            message_limit=split_path.length;
             for(var i=0;i<split_path.length;i++){
               if(i==0){
                 await queries.post_doc_message(datetime,s_id,split_path[i],data.room,member_json_data,message_id,optional_text) 
@@ -803,6 +807,7 @@ io.sockets.on('connection',async function (socket) {
             let split_path=message.split(',');
             let split_thumbnail=thumbnail.split(',');
             let split_duration=duration.split(',');
+            message_limit=split_path.length;
             for(var i=0;i<split_path.length;i++){
               let thumbnail_path=split_thumbnail[i] ? split_thumbnail[i] : '';
               let duration_val=split_duration[i] ? split_duration[i] : '0';
@@ -889,6 +894,7 @@ io.sockets.on('connection',async function (socket) {
             await queries.post_text_message(datetime,s_id,message,data.room,member_json_data,message_id,optional_text)
           }else if(type=='image'){
             let split_path=message.split(',');
+            message_limit=split_path.length;
             for(var i=0;i<split_path.length;i++){
               if(i==0){
                 await queries.post_image_message(datetime,s_id,split_path[i],data.room,member_json_data,message_id,optional_text)
@@ -900,6 +906,7 @@ io.sockets.on('connection',async function (socket) {
           }else if(type=='voice'){
             let split_path=message.split(',');
             let split_duration=duration.split(',');
+            message_limit=split_path.length;
             for(var i=0;i<split_path.length;i++){
               let duration_val=split_duration[i] ? split_duration[i] : '0';
               if(i==0){
@@ -912,6 +919,7 @@ io.sockets.on('connection',async function (socket) {
             //await queries.post_voice_message(datetime,s_id,message,data.room,member_json_data,duration,message_id) 
           }else if(type=='doc'){
             let split_path=message.split(',');
+            message_limit=split_path.length;
             for(var i=0;i<split_path.length;i++){
               if(i==0){
                 await queries.post_doc_message(datetime,s_id,split_path[i],data.room,member_json_data,message_id,optional_text)
@@ -925,6 +933,7 @@ io.sockets.on('connection',async function (socket) {
             let split_path=message.split(',');
             let split_thumbnail=thumbnail.split(',');
             let split_duration=duration.split(',');
+            message_limit=split_path.length;
             for(var i=0;i<split_path.length;i++){
               let thumbnail_path=split_thumbnail[i] ? split_thumbnail[i] : '';
               let duration_val=split_duration[i] ? split_duration[i] : '0';
@@ -1036,7 +1045,7 @@ io.sockets.on('connection',async function (socket) {
         //                              "list":group_chat_response}}
         //io.sockets.in(data.room).emit('message', set_group_chat_response); 
         //let group_chat_response_data_for_sender=await functions.get_group_chat_list_response(data.sid,data.room);
-        let group_chat_response_data_for_sender=await functions.send_group_message(data.sid,data.room,check_date_entry);
+        let group_chat_response_data_for_sender=await functions.send_group_message(data.sid,data.room,check_date_entry,message_limit);
         io.sockets.in(data.room+'_'+data.sid).emit('message', group_chat_response_data_for_sender);   
         //emit chat_list to the senter
         let get_recent_chat_response_senter=await functions.get_recent_chat_list_response(data.sid);
@@ -1048,7 +1057,7 @@ io.sockets.on('connection',async function (socket) {
             //get group chat list response
             if(group_status_array[emit_user].user_id!=data.sid){
               //let group_chat_response_data=await functions.get_group_chat_list_response(group_status_array[emit_user].user_id,data.room);
-              let group_chat_response_data=await functions.send_group_message(group_status_array[emit_user].user_id,data.room,check_date_entry);
+              let group_chat_response_data=await functions.send_group_message(group_status_array[emit_user].user_id,data.room,check_date_entry,message_limit);
               io.sockets.in(data.room+'_'+group_status_array[emit_user].user_id).emit('message', group_chat_response_data);
               //io.in(data.room+'_'+group_status_array[emit_user].user_id).emit('message', group_chat_response_data);
 
@@ -1288,6 +1297,7 @@ io.sockets.on('connection',async function (socket) {
               var result=await queries.individual_text_msg(datetime,data.sid,data.rid,message,room,group_status_json_data,message_id,optional_text)
             }else if (type == 'image') {
               let split_path=message.split(',');
+              message_limit=split_path.length;
               for(var i=0;i<split_path.length;i++){
                 if(i==0){
                   //insert optional text or caption only to the first entry data
@@ -1300,6 +1310,7 @@ io.sockets.on('connection',async function (socket) {
             }else if (type == "voice") {
               let split_path=message.split(',');
               let split_duration=duration.split(',');
+              message_limit=split_path.length;
               for(var i=0;i<split_path.length;i++){
                 let duration_val=split_duration[i] ? split_duration[i] : '0';
                 if(i==0){
@@ -1311,6 +1322,7 @@ io.sockets.on('connection',async function (socket) {
               //var result=await queries.individual_voice_msg(datetime,data.sid,data.rid,message,room,group_status_json_data,duration,message_id)
             }else if (type == "doc") {
               let split_path=message.split(',');
+              message_limit=split_path.length;
               for(var i=0;i<split_path.length;i++){
                 if(i==0){
                   var result=await queries.individual_doc_msg(datetime,data.sid,data.rid,split_path[i],room,group_status_json_data,duration,message_id,optional_text) 
@@ -1323,6 +1335,7 @@ io.sockets.on('connection',async function (socket) {
               let split_path=message.split(',');
               let split_thumbnail=thumbnail.split(',');
               let split_duration=duration.split(',');
+              message_limit=split_path.length;
               //console.log(split_path)
               for(var i=0;i<split_path.length;i++){
                 let thumbnail_path=split_thumbnail[i] ? split_thumbnail[i] : '';
@@ -1428,6 +1441,7 @@ io.sockets.on('connection',async function (socket) {
             }
             else if (type == 'image') {
               let split_path=message.split(',');
+              message_limit=split_path.length;
               for(var i=0;i<split_path.length;i++){
                 if(i==0){
                   await queries.individual_image_msg(datetime, data.sid, data.rid, split_path[i], room, group_status_json_data,message_id,optional_text)
@@ -1441,6 +1455,7 @@ io.sockets.on('connection',async function (socket) {
             else if (type == "voice") {
               let split_path=message.split(',');
               let split_duration=duration.split(',');
+              message_limit=split_path.length;
               for(var i=0;i<split_path.length;i++){
                 let duration_val=split_duration[i] ? split_duration[i] : '0';
                 if(i==0){
@@ -1454,13 +1469,13 @@ io.sockets.on('connection',async function (socket) {
             }
             else if (type == "doc") {
               let split_path=message.split(',');
+              message_limit=split_path.length;
               for(var i=0;i<split_path.length;i++){
                 if(i==0){
                   await queries.individual_doc_msg(datetime, data.sid, data.rid, split_path[i], room, group_status_json_data,message_id,optional_text)
                 }else{
                   await queries.individual_doc_msg(datetime, data.sid, data.rid, split_path[i], room, group_status_json_data,message_id,'')
                 }
-                
               }
               //await queries.individual_doc_msg(datetime, data.sid, data.rid, message, room, group_status_json_data,message_id)
             }
@@ -1468,6 +1483,7 @@ io.sockets.on('connection',async function (socket) {
               let split_path=message.split(',');
               let split_thumbnail=thumbnail.split(',');
               let split_duration=duration.split(',');
+              message_limit=split_path.length;
               for(var i=0;i<split_path.length;i++){
                 let thumbnail_path=split_thumbnail[i] ? split_thumbnail[i] : '';
                 let duration_val=split_duration[i] ? split_duration[i] : '0';
@@ -1575,18 +1591,18 @@ io.sockets.on('connection',async function (socket) {
 
           //emit message
           //io.sockets.in(room).emit('message', setresponse);
-          
+          console.log('message sent limit', message_limit);
           if(blocked_status){
             console.log('yes blocked')
             //let individual_chat_list_response_sender=await functions.get_individual_chat_list_response(data.sid,data.rid,room);
-            let individual_chat_list_response_sender=await functions.send_individual_message(data.sid,data.rid,room,check_date_entry);
+            let individual_chat_list_response_sender=await functions.send_individual_message(data.sid,data.rid,room,check_date_entry,message_limit);
             io.sockets.in(room+'_'+data.sid).emit('message',individual_chat_list_response_sender);
             let get_recent_chat_response_senter=await functions.get_recent_chat_list_response(data.sid);
             io.sockets.in(data.sid).emit('chat_list', get_recent_chat_response_senter);
           }else{
             console.log('not blocked')
             //let individual_chat_list_response_sender=await functions.get_individual_chat_list_response(data.sid,data.rid,room);
-            let individual_chat_list_response_sender=await functions.send_individual_message(data.sid,data.rid,room,check_date_entry);
+            let individual_chat_list_response_sender=await functions.send_individual_message(data.sid,data.rid,room,check_date_entry,message_limit);
             console.log(individual_chat_list_response_sender)
             // exit ()
             io.sockets.in(room+'_'+data.sid).emit('message',individual_chat_list_response_sender);
@@ -1596,7 +1612,7 @@ io.sockets.on('connection',async function (socket) {
             io.sockets.in(data.sid).emit('chat_list', get_recent_chat_response_senter);
 
             //let individual_chat_list_response_receiver=await functions.get_individual_chat_list_response(data.rid,data.sid,room);
-            let individual_chat_list_response_receiver=await functions.send_individual_message(data.rid,data.sid,room,check_date_entry);
+            let individual_chat_list_response_receiver=await functions.send_individual_message(data.rid,data.sid,room,check_date_entry,message_limit);
             //console.log(sockets,socket.id)
             //io.sockets.sockets[0].emit('message',sender_function_test_data)
             //socket.to(room).emit('message',sender_function_test_data);
@@ -2414,12 +2430,12 @@ io.sockets.on('connection',async function (socket) {
                     //emit to senter 
                     //let individual_chat_list_response_senter=await functions.get_individual_chat_list_response(input.sid,emit_users[k].rid,emit_users[k].room);
                     //send single message only
-                    let individual_chat_list_response_senter=await functions.send_individual_message(input.sid,emit_users[k].rid,emit_users[k].room,false);
+                    let individual_chat_list_response_senter=await functions.send_individual_message(input.sid,emit_users[k].rid,emit_users[k].room,false,1);
                     io.sockets.in(emit_users[k].room+'_'+input.sid).emit('message',individual_chat_list_response_senter);
                     //emit to receiver
                     //let individual_chat_list_response_receiver=await functions.get_individual_chat_list_response(emit_users[k].rid,input.sid,emit_users[k].room);
                     //send single message only
-                    let individual_chat_list_response_receiver=await functions.send_individual_message(emit_users[k].rid,input.sid,emit_users[k].room,false);
+                    let individual_chat_list_response_receiver=await functions.send_individual_message(emit_users[k].rid,input.sid,emit_users[k].room,false,1);
                     io.sockets.in(emit_users[k].room+'_'+emit_users[k].rid).emit('message',individual_chat_list_response_receiver);
       
                     //emit chat list in future
@@ -2443,7 +2459,7 @@ io.sockets.on('connection',async function (socket) {
                     console.log('group emit',emit_users[k].rid,emit_users[k].room)
                     //let group_chat_list_response_receiver=await functions.get_group_chat_list_response(emit_users[k].rid,emit_users[k].room);
                     //send single message
-                    let group_chat_list_response_receiver=await functions.send_group_message(emit_users[k].rid,emit_users[k].room);
+                    let group_chat_list_response_receiver=await functions.send_group_message(emit_users[k].rid,emit_users[k].room,1);
                     io.sockets.in(emit_users[k].room+'_'+emit_users[k].rid).emit('message',group_chat_list_response_receiver);
       
                     //emit chat list in future
@@ -5451,57 +5467,148 @@ io.sockets.on('connection',async function (socket) {
           let datetime=get_datetime();
           //if(user_id!='' && accessToken!='' && receiver_id!='' && room!=''){
             if(user_id!='' && accessToken!='' && room!=''){
-            console.log('not empty',typeof(room))
-           
-            socket.join(user_id+'_pin_chat');
-            let receiver_ids=receiver_id.split(',');
-            let rooms=room.split(',');
-            let pinned_count=0;
-            let already_pinned_count=0;
-            let not_saved_count=0;
-            //console.log(receiver_ids,rooms)
-            //check user data is valid
-            let check_user_data=await queries.check_user_valid(user_id,accessToken);
-            if(check_user_data.length!=0){
-              //check total pin chat count
-              let get_total_pin_chat_count=await queries.total_pin_chat_count(user_id);
-              //already pinned + new pinned chat list
-              let total_pin_chat=get_total_pin_chat_count.length+receiver_ids.length;
-              if(total_pin_chat<=3){
-                //check room user is pinned or not
-                for(var i=0; i<receiver_ids.length; i++){
-                  //console.log(receiver_ids[i])
-                  let check_room_is_pinned=await queries.check_room_is_pinned(user_id,room);
-                  //console.log(check_receiver_is_pinned)
-                  if(check_room_is_pinned.length>0){
-                    already_pinned_count=already_pinned_count+1;
+              console.log('not empty',typeof(room))
+              socket.join(user_id+'_pin_chat');
+              let receiver_ids=receiver_id.split(',');
+              let rooms=room.split(',');
+              let pinned_count=0;
+              let already_pinned_count=0;
+              let not_saved_count=0;
+              //console.log(receiver_ids,rooms)
+              //check user data is valid
+              let check_user_data=await queries.check_user_valid(user_id,accessToken);
+              if(check_user_data.length!=0){
+                if(receiver_ids.length<=3){
+                  //check total pin chat count
+                  let get_total_pin_chat_count=await queries.total_pin_chat_count(user_id);
+                  //check any one user is pinned then we need to pin other chat upto limit 3
+                  let query_rooms=rooms.map(room=>`"${room}"`).join(',');
+                  console.log(query_rooms);
+                  
+                  let check_any_one_pin_chat=await queries.get_pinned_chat_list(user_id,query_rooms);
+                  //console.log('total cout',check_any_one_pin_chat,check_any_one_pin_chat.length,get_total_pin_chat_count.length);
+                  if(check_any_one_pin_chat.length>0 && get_total_pin_chat_count.length<=3){
+                    let total_pin_count=get_total_pin_chat_count.length;
+                    //console.log('total_pin_count',total_pin_count)
+                    let limit_exceed_flag=false;
+                    for(var i=0; i<receiver_ids.length; i++){
+                      //console.log('inner total_pin_count',total_pin_count)
+                      if(total_pin_count<3){
+                        let check_room_exist_in_pin_chat_array=await functions.check_room_exist_in_array(rooms[i],check_any_one_pin_chat);
+                        console.log(check_room_exist_in_pin_chat_array,rooms[i]);
+                        if(!check_room_exist_in_pin_chat_array){
+                          //save to pin chat 
+                          let save_pinchat=await queries.save_pin_chat(user_id,receiver_ids[i],rooms[i],datetime);
+                          if(save_pinchat>0){
+                            total_pin_count=total_pin_count+1;
+                            pinned_count=pinned_count+1;
+                          }else{
+                            not_saved_count=not_saved_count+1;
+                          }
+                        }
+                      }else{
+                        console.log('lmit exceed')
+                        //if needed then show warning limit message to the user
+                        limit_exceed_flag=true;
+                      }
+                    }
+                    if(pinned_count>0){
+                      io.sockets.in(user_id+'_pin_chat').emit('pin_chat', {status: true, statuscode: 200, message: "Pinned"})
+                      //emit recent chat list
+                      let recent_chat_list=await functions.get_recent_chat_list_response(user_id);
+                      io.sockets.in(user_id).emit('chat_list',recent_chat_list)
+                    }
+                    if(not_saved_count>0){
+                      io.sockets.in(user_id+'_pin_chat').emit('pin_chat', {status: false, statuscode: 400, message: "Not saved to db"})
+                    }
+                    if(limit_exceed_flag){
+                      io.sockets.in(user_id+'_pin_chat').emit('pin_chat', {status: false, statuscode: 200, message: "Pin chat limit is three"})
+                    }
                   }else{
-                    //save to pin chat 
-                    let save_pinchat=await queries.save_pin_chat(user_id,receiver_ids[i],rooms[i],datetime);
-                    if(save_pinchat>0){
-                      pinned_count=pinned_count+1;
+                    //already pinned + new pinned chat list
+                    let total_pin_chat=get_total_pin_chat_count.length+receiver_ids.length;
+                    if(total_pin_chat<=3){
+                      //check room user is pinned or not
+                      for(var i=0; i<receiver_ids.length; i++){
+                        //console.log(receiver_ids[i])
+                        let check_room_is_pinned=await queries.check_room_is_pinned(user_id,rooms[i]);
+                        //console.log('check data ',user_id,room,check_room_is_pinned)
+                        if(check_room_is_pinned.length>0){
+                          already_pinned_count=already_pinned_count+1;
+                        }else{
+                          //save to pin chat 
+                          let save_pinchat=await queries.save_pin_chat(user_id,receiver_ids[i],rooms[i],datetime);
+                          if(save_pinchat>0){
+                            pinned_count=pinned_count+1;
+                          }else{
+                            not_saved_count=not_saved_count+1;
+                          }
+                        }
+                      }
+                      // if(already_pinned_count>0){
+                      //   io.sockets.in(user_id+'_pin_chat').emit('pin_chat', {status: false, statuscode: 200, message: "Already pinned"})
+                      // }
+                      if(pinned_count>0){
+                        io.sockets.in(user_id+'_pin_chat').emit('pin_chat', {status: true, statuscode: 200, message: "Pinned"})
+                        //emit recent chat list
+                        let recent_chat_list=await functions.get_recent_chat_list_response(user_id);
+                        io.sockets.in(user_id).emit('chat_list',recent_chat_list)
+                      }else{
+                        if(already_pinned_count>0){
+                          io.sockets.in(user_id+'_pin_chat').emit('pin_chat', {status: false, statuscode: 200, message: "Already pinned"})
+                        }
+                      }
+                      if(not_saved_count>0){
+                        io.sockets.in(user_id+'_pin_chat').emit('pin_chat', {status: false, statuscode: 400, message: "Not saved to db"})
+                      }
                     }else{
-                      not_saved_count=not_saved_count+1;
+                      io.sockets.in(user_id+'_pin_chat').emit('pin_chat', {status: false, statuscode: 200, message: "Pin chat limit is three"})
                     }
                   }
+                  //   //already pinned + new pinned chat list
+                  //   let total_pin_chat=get_total_pin_chat_count.length+receiver_ids.length;
+                  //   if(total_pin_chat<=3){
+                  //     //check room user is pinned or not
+                  //     for(var i=0; i<receiver_ids.length; i++){
+                  //       //console.log(receiver_ids[i])
+                  //       let check_room_is_pinned=await queries.check_room_is_pinned(user_id,rooms[i]);
+                  //       //console.log('check data ',user_id,room,check_room_is_pinned)
+                  //       if(check_room_is_pinned.length>0){
+                  //         already_pinned_count=already_pinned_count+1;
+                  //       }else{
+                  //         //save to pin chat 
+                  //         let save_pinchat=await queries.save_pin_chat(user_id,receiver_ids[i],rooms[i],datetime);
+                  //         if(save_pinchat>0){
+                  //           pinned_count=pinned_count+1;
+                  //         }else{
+                  //           not_saved_count=not_saved_count+1;
+                  //         }
+                  //       }
+                  //     }
+                  //     // if(already_pinned_count>0){
+                  //     //   io.sockets.in(user_id+'_pin_chat').emit('pin_chat', {status: false, statuscode: 200, message: "Already pinned"})
+                  //     // }
+                  //     if(pinned_count>0){
+                  //       io.sockets.in(user_id+'_pin_chat').emit('pin_chat', {status: true, statuscode: 200, message: "Pinned"})
+                  //       //emit recent chat list
+                  //       let recent_chat_list=await functions.get_recent_chat_list_response(user_id);
+                  //       io.sockets.in(user_id).emit('chat_list',recent_chat_list)
+                  //     }else{
+                  //       if(already_pinned_count>0){
+                  //         io.sockets.in(user_id+'_pin_chat').emit('pin_chat', {status: false, statuscode: 200, message: "Already pinned"})
+                  //       }
+                  //     }
+                  //     if(not_saved_count>0){
+                  //       io.sockets.in(user_id+'_pin_chat').emit('pin_chat', {status: false, statuscode: 400, message: "Not saved to db"})
+                  //     }
+                  //   }else{
+                  //     io.sockets.in(user_id+'_pin_chat').emit('pin_chat', {status: false, statuscode: 200, message: "Pin chat limit is three"})
+                  //   }
+                }else{
+                  io.sockets.in(user_id+'_pin_chat').emit('pin_chat', {status: false, statuscode: 200, message: "You can only pin up to 3 chats"})
                 }
-                if(already_pinned_count>0){
-                  io.sockets.in(user_id+'_pin_chat').emit('pin_chat', {status: false, statuscode: 200, message: "Already pinned"})
-                }
-                if(pinned_count>0){
-                  io.sockets.in(user_id+'_pin_chat').emit('pin_chat', {status: true, statuscode: 200, message: "Pinned"})
-                  //emit recent chat list
-                  let recent_chat_list=await functions.get_recent_chat_list_response(user_id);
-                  io.sockets.in(user_id).emit('chat_list',recent_chat_list)
-                }
-                if(not_saved_count>0){
-                  io.sockets.in(user_id+'_pin_chat').emit('pin_chat', {status: false, statuscode: 400, message: "Not saved to db"})
-                }
-              }else{
-                io.sockets.in(user_id+'_pin_chat').emit('pin_chat', {status: false, statuscode: 200, message: "Pin chat limit is three"})
-              }
             }else{
-              io.sockets.in(user_id+'_pin_chat').emit('pin_chat', {status: false, statuscode: 400, message: "No user data found"})
+              io.sockets.in(user_id+'_pin_chat').emit('pin_chat', {status: false, statuscode: 200, message: "No user data found"});
             }
             socket.leave(user_id+'_pin_chat');
           }else{
@@ -7881,7 +7988,7 @@ io.sockets.on('connection',async function (socket) {
     })
     socket.on('test_changes',async function(data){
       socket.join('test_changes');
-      io.sockets.in('test_changes').emit('test_changes',{status: true, statuscode: 200, message: "last changes affected upto 19-09-2023"});
+      io.sockets.in('test_changes').emit('test_changes',{status: true, statuscode: 200, message: "last changes affected upto 25-09-2023 "});
       socket.leave('test_changes');
     });
     socket.on('private_chat_export_data',async function(data){

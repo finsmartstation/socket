@@ -1669,9 +1669,9 @@ async function get_individual_chat_list_response(sid,rid,room){
         return setresponse;
 }
 
-async function send_individual_message(sid,rid,room,date_status){
+async function send_individual_message(sid,rid,room,date_status,message_limit){
   //var result=await queries.individual_room_using_pagination(sid,rid,room,limit,message_id);
-  var result=await queries.get_send_private_message(sid,rid,room);
+  var result=await queries.get_send_private_message(sid,rid,room,message_limit);
   //console.log(result);
   let message_list_response=[];
   let date_array=[];
@@ -1749,8 +1749,7 @@ async function send_individual_message(sid,rid,room,date_status){
       //console.log('testing response', result[0],check_private_chat_read_receipts)
       //exit ()
       let message_length=result[0].length
-      
-      
+      result[0]=result[0].reverse();
       for (var i = 0; i < message_length; i++) {
         // console.log(sid,rid,room,date_status)
         //   exit ()
@@ -5362,7 +5361,7 @@ async function group_message_using_pagination(user_id,group_id,limit,message_id)
 
 
 
-async function send_group_message(user_id,group_id,date_status){
+async function send_group_message(user_id,group_id,date_status,message_limit){
   let group_messages=[];
   let set_user_id='"'+user_id+'"';
   let date_array=[];
@@ -5558,8 +5557,8 @@ async function send_group_message(user_id,group_id,date_status){
     // exit();
     //get group message from db
     //let get_all_group_messages=await queries.group_room_using_pagination(user_id,set_user_id,group_id,limit,message_id);
-    let get_all_group_messages=await queries.get_group_room_message(user_id,group_id);
-    //get_all_group_messages=get_all_group_messages.reverse();
+    let get_all_group_messages=await queries.get_group_room_message(user_id,group_id,message_limit);
+    get_all_group_messages=get_all_group_messages.reverse();
     // if(get_all_group_messages.length>0){
     //   //console.log(get_all_group_messages[0])
     //   let list_small_message_id=get_all_group_messages[0].small_id
@@ -10277,6 +10276,12 @@ function check_user_and_room_exist_in_array_group(user_id, room, user_array, mes
   })
 }
 
+function check_room_exist_in_array(room, array_data){
+  return array_data.some(function(arr){
+    return arr.room == room
+  })
+}
+
 function check_any_one_read_receipt_in_array(array_data,){
 
 }
@@ -10372,5 +10377,6 @@ module.exports={
     send_group_message,
     check_user_and_room_exist_in_array,
     check_user_and_room_exist_in_array_group,
-    get_private_message_read_receipt
+    get_private_message_read_receipt,
+    check_room_exist_in_array
 }
