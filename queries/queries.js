@@ -70,6 +70,14 @@ async function individual_text_msg(datetime, sid, rid, message, room, group_stat
     const results = await db.sequelize.query("INSERT INTO chat_list( date,senter_id,receiver_id,replay_id,message,message_type,optional_text,room,message_status,group_status) VALUES ('" + datetime + "','" + sid + "','" + rid + "','"+message_id+"','" + message + "','text','"+optional_text+"','" + room + "','1','" + group_status_json_data + "')");
     return results;
 }
+async function individual_share_messagge(datetime, sid, rid, message,type, room, group_status_json_data,optional_text,thumbnail,duration) {
+    const results = await db.sequelize.query("INSERT INTO chat_list( date,senter_id,receiver_id,message,message_type,optional_text,thumbnail,room,message_status,group_status,duration) VALUES ('" + datetime + "','" + sid + "','" + rid + "','" + message + "','"+type+"','"+optional_text+"','"+thumbnail+"','" + room + "','1','" + group_status_json_data + "','"+duration+"')");
+    return results;
+}
+async function group_share_message(datetime, s_id, message,type, room, member_json_data, duration, optional_text,thumbnail){
+    const results = await db.sequelize.query("INSERT INTO chat_list(date,senter_id,receiver_id,message,message_type,optional_text,thumbnail,room,message_status,private_group,group_status,duration) VALUES ('" + datetime + "','" + s_id + "','0','" + message + "','"+type+"','"+optional_text+"','"+thumbnail+"','" + room + "','1','1','" + member_json_data + "','" + duration + "')");
+    return results;
+}
 async function individual_image_msg(datetime, sid, rid, message, room, group_status_json_data,message_id,optional_text) {
     const results = await db.sequelize.query("INSERT INTO chat_list( date,senter_id,receiver_id,replay_id,message,message_type,optional_text,room,message_status,group_status) VALUES ('" + datetime + "','" + sid + "','" + rid + "','"+message_id+"','" + message + "','image','"+optional_text+"','" + room + "','1','" + group_status_json_data + "')");
     return results;
@@ -705,6 +713,11 @@ async function archived_and_deleted_chat_list(user_id){
     return results[0];
 }
 
+async function archived_chat_list(user_id){
+    const results=await db.sequelize.query("SELECT *, 'archived' as type FROM `archived_chat_list` where user_id='"+user_id+"'");
+    return results[0];
+}
+
 async function get_user_deleted_chat_list(user_id){
     const results=await db.sequelize.query("select * from deleted_chat_list where user_id='"+user_id+"'");
     return results[0];
@@ -1031,5 +1044,8 @@ module.exports = {
     group_contact_msg,
     execute_raw_update_query,
     group_unread_messages,
-    get_pinned_chat_list
+    get_pinned_chat_list,
+    archived_chat_list,
+    individual_share_messagge,
+    group_share_message
 }

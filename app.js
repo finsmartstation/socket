@@ -2339,7 +2339,7 @@ io.sockets.on('connection',async function (socket) {
                     let room=receiver_id;
                     let get_group_current_users=await queries.get_group_current_users(room);
                     let group_current_users=JSON.parse(get_group_current_users[0].current_members);
-                    console.log(group_current_users);
+                    //console.log(group_current_users);
                     if(group_current_users.length>0){
                       let group_status_data = [];
                       for(var group_user=0; group_user<group_current_users.length; group_user++){
@@ -2459,7 +2459,7 @@ io.sockets.on('connection',async function (socket) {
                     console.log('group emit',emit_users[k].rid,emit_users[k].room)
                     //let group_chat_list_response_receiver=await functions.get_group_chat_list_response(emit_users[k].rid,emit_users[k].room);
                     //send single message
-                    let group_chat_list_response_receiver=await functions.send_group_message(emit_users[k].rid,emit_users[k].room,1);
+                    let group_chat_list_response_receiver=await functions.send_group_message(emit_users[k].rid,emit_users[k].room,false,1);
                     io.sockets.in(emit_users[k].room+'_'+emit_users[k].rid).emit('message',group_chat_list_response_receiver);
       
                     //emit chat list in future
@@ -7988,7 +7988,7 @@ io.sockets.on('connection',async function (socket) {
     })
     socket.on('test_changes',async function(data){
       socket.join('test_changes');
-      io.sockets.in('test_changes').emit('test_changes',{status: true, statuscode: 200, message: "last changes affected upto 25-09-2023 "});
+      io.sockets.in('test_changes').emit('test_changes',{status: true, statuscode: 200, message: "last changes affected upto 06-11-2023 (2)"});
       socket.leave('test_changes');
     });
     socket.on('private_chat_export_data',async function(data){
@@ -8817,6 +8817,233 @@ io.sockets.on('connection',async function (socket) {
             io.sockets.in(user_id+'_save_group_call').emit('save_group_call',{status: false, statuscode: 200, message: "Data is empty","id":""});
             socket.leave(user_id+'_save_group_call');
           }
+        }else{
+          console.error('Input type is string');
+        }
+      }catch(e){
+        console.error(e);
+      }
+    });
+
+    socket.on('share_message',async function(data){
+      try{
+        if(typeof(data)=='object'){
+          //input {"sid": "5","to_users":"1:p,50:p,group_20221221103732:g","message":"path","type":"text","optional_text":"","thumbnail":"","duration":""}
+          socket.join(data.sid+'_share_message');
+          let sid=data.sid ? data.sid : '';
+          let to_users=data.to_users ? data.to_users : '';
+          let message=data.message ? data.message : '';
+          let type=data.type ? data.type : '';
+          let optional_text=data.optional_text ? data.optional_text : '';
+          let thumbnail=data.thumbnail ? data.thumbnail : '';
+          let duration=data.duration ? data.duration : 0;
+          let datetime=get_datetime();
+          if(sid!='' && to_users!='' && message!='' && type!=''){
+            let split_to_users=to_users.split(',');
+            console.log(split_to_users)
+            let send_share_message_status=false;
+            let emit_users=[];
+            for(var i=0;i<split_to_users.length;i++){
+              let split_type=split_to_users[i].split(':');
+              console.log(split_type);
+              let room_type=split_type[1];
+              let receiver_id=split_type[0];
+              console.log(room_type)
+              if(room_type=='p'){
+                console.log('private')
+                //check user read receipt status
+                let senter_read_receipt=1;
+                let receiver_read_receipt=1;
+                let check_private_chat_read_receipts=await queries.check_private_chat_read_receipts(sid,receiver_id);
+                if(check_private_chat_read_receipts.length>0){
+                  //console.log(check_private_chat_read_receipts)
+                  for(var read_receipt_i=0;i<check_private_chat_read_receipts.length;read_receipt_i++){
+                    //console.log(check_private_chat_read_receipts[read_receipt_i],check_private_chat_read_receipts[read_receipt_i].user_id)
+                    //exit ()
+                    if(check_private_chat_read_receipts[read_receipt_i].user_id==sid){
+                      console.log('senter id')
+                      
+                      console.log(check_private_chat_read_receipts[read_receipt_i].options);
+                      if(check_private_chat_read_receipts[read_receipt_i].options==0){
+                        senter_read_receipt=0;
+                      }else{
+                        senter_read_receipt=1;
+                      }
+                    }else if(check_private_chat_read_receipts[read_receipt_i].user_id==receiver_id){
+                      //console.log('receiver id')
+                      //receiver_read_receipt=1;
+                      if(check_private_chat_read_receipts[read_receipt_i].options==0){
+                        receiver_read_receipt=0;
+                      }else{
+                        receiver_read_receipt=1;
+                      }
+                      //console.log(receiver_read_receipt)
+                      //exit ()
+                    }
+                  }
+                }
+                let room='';
+                if(Number(sid)<Number(receiver_id)){
+                  room=sid+receiver_id;
+                }else{
+                  room=receiver_id+sid;
+                }
+                //console.log('room',room)
+                let group_status_data=[];
+                    if(sid==receiver_id){
+                      group_status_data=[{
+                        "user_id": sid,
+                        "username": "",
+                        "datetime": datetime,
+                        "delivered_status": 0,
+                        "delivered_datetime": datetime,
+                        "message_status": 0,
+                        "message_read_datetime": datetime,
+                        "read_receipt": senter_read_receipt,
+                        "status": 1
+                      }];
+                    }else{
+                      group_status_data = [{
+                        "user_id": sid,
+                        "username": "",
+                        "datetime": datetime,
+                        "delivered_status": 0,
+                        "delivered_datetime": datetime,
+                        "message_status": 0,
+                        "message_read_datetime": datetime,
+                        "read_receipt": senter_read_receipt,
+                        "status": 1
+                      }, {
+                        "user_id": receiver_id,
+                        "username": "",
+                        "delivered_status": 1,
+                        "delivered_datetime": "",
+                        "datetime": datetime,
+                        "message_status": 0,
+                        "message_read_datetime": "",
+                        "read_receipt": receiver_read_receipt,
+                        "status": 1
+                      }]
+                    }
+                    var group_status_json_data = JSON.stringify(group_status_data);
+                    console.log(group_status_json_data);
+                    //save message
+                    let save_share_message=await queries.individual_share_messagge(datetime, sid, receiver_id, message,type, room, group_status_json_data,optional_text,thumbnail,duration);
+                    console.log(save_share_message)
+                    if(save_share_message.length>0){
+                      send_share_message_status=true;
+                      emit_users.push({
+                        sid: sid,
+                        rid: receiver_id,
+                        room: room,
+                        type: "private"
+                      });
+                    }
+              }else if(room_type=='g'){
+                console.log('group')
+                let room=receiver_id;
+                    let get_group_current_users=await queries.get_group_current_users(room);
+                    let group_current_users=JSON.parse(get_group_current_users[0].current_members);
+                    //console.log(group_current_users);
+                    if(group_current_users.length>0){
+                      let group_status_data = [];
+                      for(var group_user=0; group_user<group_current_users.length; group_user++){
+                        //console.log('group user id ',group_current_users[group_user].user_id)
+                        
+                        if(group_current_users[group_user].user_id==sid){
+                          group_status_data.push({
+                            "user_id": group_current_users[group_user].user_id,
+                            "username": "",
+                            "datetime": datetime,
+                            "delivered_status": 0,
+                            "delivered_datetime": datetime,
+                            "message_status": 0,
+                            "message_read_datetime": datetime,
+                            "read_receipt": 1,
+                            "status": 1
+                          })
+                          //save forward message for group
+                          //let save_group_forward_message=await queries.save_group_forward_message(message_ids[i],datetime,input.sid,0,forward_message,forward_message_type,room,forward_duration,group_status_json_data);
+                        }else{
+                          group_status_data.push({
+                            "user_id": group_current_users[group_user].user_id,
+                            "username": "",
+                            "datetime": datetime,
+                            "delivered_status": 0,
+                            "delivered_datetime": datetime,
+                            "message_status": 0,
+                            "message_read_datetime": "",
+                            "read_receipt": 1,
+                            "status": 1
+                          })
+                        }
+                        //emit data to user
+                        emit_users.push({
+                          sid: sid,
+                          rid: group_current_users[group_user].user_id,
+                          room: room,
+                          type: "group"
+                        });
+
+                      }
+                      //save group message
+                      group_status_data=JSON.stringify(group_status_data);
+                      let save_shared_message=await queries.group_share_message(datetime, sid, message,type, room, group_status_data, duration, optional_text,thumbnail);
+                      console.log(save_shared_message)
+                      if(save_shared_message.length>0){
+                        send_share_message_status=true;
+                      }
+                    }
+              }
+            }
+
+            if(send_share_message_status){
+              
+              console.log(emit_users);
+              //exit ()
+              
+              for(var k=0; k<emit_users.length; k++){
+                if(emit_users[k].type=='private'){
+                  // console.log(emit_users[k].room+'_'+sid)
+                  // console.log(emit_users[k].room+'_'+emit_users[k].rid)
+                  // console.log(emit_users[k].rid)
+                  //send single message only
+                  let individual_chat_list_response_senter=await functions.send_individual_message(sid,emit_users[k].rid,emit_users[k].room,false,1);
+                  io.sockets.in(emit_users[k].room+'_'+sid).emit('message',individual_chat_list_response_senter);
+                  //emit to receiver
+                  //send single message only
+                  let individual_chat_list_response_receiver=await functions.send_individual_message(emit_users[k].rid,sid,emit_users[k].room,false,1);
+                  io.sockets.in(emit_users[k].room+'_'+emit_users[k].rid).emit('message',individual_chat_list_response_receiver);
+                  //chat list
+                  let receiver_chatlist_response=await functions.get_recent_chat_list_response(emit_users[k].rid);
+                    //console.log('response data ', receiver_chatlist_response);
+                    //emit to receiver
+                    io.sockets.in(emit_users[k].rid).emit('chat_list',receiver_chatlist_response);
+                    
+                }else{
+                  //send single message
+                  let group_chat_list_response_receiver=await functions.send_group_message(emit_users[k].rid,emit_users[k].room,false,1);
+                  io.sockets.in(emit_users[k].room+'_'+emit_users[k].rid).emit('message',group_chat_list_response_receiver);
+    
+                  //emit chat list in future
+                  if(emit_users[k].rid!=sid){
+                    let chatlist_response=await functions.get_recent_chat_list_response(emit_users[k].rid);
+                    io.sockets.in(emit_users[k].rid).emit('chat_list',chatlist_response);
+                  }
+                }
+              }
+              //emit to senter
+              let senter_chatlist_response=await functions.get_recent_chat_list_response(sid);
+              io.sockets.in(sid).emit('chat_list',senter_chatlist_response);
+              io.sockets.in(sid+'_share_message').emit('share_message',{status: true, statuscode: 200, message: "success"});
+            }else{
+              io.sockets.in(data.sid+'_share_message').emit('share_message',{status: false, statuscode: 200, message: "shared message not saved"});
+            }
+            
+          }else{
+            io.sockets.in(data.sid+'_share_message').emit('share_message',{status: false, statuscode: 200, message: "Data is missing"});
+          }
+          socket.leave(data.sid+'_share_message');
         }else{
           console.error('Input type is string');
         }
