@@ -735,9 +735,9 @@ async function get_last_private_message(room_id,message_id,user_id,opponent_prof
                         }else if(last_message_data[i].message_type=='video' || last_message_data[i].message_type=='voice' || last_message_data[i].message_type=='doc' || last_message_data[i].message_type=='image'){
                             //console.log('other message');
                             if(last_message_data[i].senter_id==user_id){
-                                last_message_data[i].message='You: ';
+                                last_message_data[i].message='You: '+last_message_data[i].message;
                             }else{
-                                last_message_data[i].message=await queries.get_username(last_message_data[i].senter_id)+': ';
+                                last_message_data[i].message=await queries.get_username(last_message_data[i].senter_id)+': '+last_message_data[i].message;;
                             }
 
                             last_message_array=[{

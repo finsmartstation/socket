@@ -518,6 +518,12 @@ async function room_chat_list(room){
     return results[0];
 }
 
+async function not_deleted_room_chat_list(user_id,room){
+    let json_object_2='{"user_id":"'+user_id+'","status":2}';
+    const results=await db.sequelize.query("select * from chat_list where room='"+room+"' and (JSON_CONTAINS(group_status, '"+json_object_2+"'))");
+    return results[0];
+}
+
 async function update_clear_chat(id,group_status){
     const results=await db.sequelize.query("update chat_list set group_status='"+group_status+"' where id='"+id+"'");
     return results[0];

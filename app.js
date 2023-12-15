@@ -729,6 +729,7 @@ io.sockets.on('connection',async function (socket) {
         var member_json_data = JSON.stringify(group_status_array);
         //checking  first message or not for the current date
         if ((date == group_created_date && today_message_count > 0) || (date != group_created_date && today_message_count > 0)) {
+          
           // var get_group_users = await queries.get_group_users(data.room);
           // // console.log('get',get_group_users);
           // var group_status_array = [];
@@ -761,12 +762,14 @@ io.sockets.on('connection',async function (socket) {
             }
             let update_user_date_msg_status=await queries.update_user_date_msg_status(check_date_message_is_cleared[0].id,JSON.stringify(date_group_status));
           }
+          //console.log(type)
           if(type=='text'){
             await queries.post_text_message(datetime,s_id,message,data.room,member_json_data,message_id,optional_text)
           }else if(type=='image'){
             let split_path=message.split(',');
             message_limit=split_path.length;
-            //console.log(split_path)
+            console.log(split_path)
+            
             for(var i=0;i<split_path.length;i++){
               //console.log(split_path[i])
               if(i==0){
@@ -1928,6 +1931,7 @@ io.sockets.on('connection',async function (socket) {
         
         soc.splice(input.s_id, 1);
         console.log('available user list ',soc)
+        soc[input.s_id]=undefined;
       }catch(e){
         //console.log(e)
         console.error('error occurs ', e);
@@ -2229,7 +2233,7 @@ io.sockets.on('connection',async function (socket) {
                     let check_private_chat_read_receipts=await queries.check_private_chat_read_receipts(input.sid,receiver_id);
                     if(check_private_chat_read_receipts.length>0){
                       //console.log(check_private_chat_read_receipts)
-                      for(var read_receipt_i=0;i<check_private_chat_read_receipts.length;read_receipt_i++){
+                      for(var read_receipt_i=0;read_receipt_i<check_private_chat_read_receipts.length;read_receipt_i++){
                         console.log(check_private_chat_read_receipts[read_receipt_i],check_private_chat_read_receipts[read_receipt_i].user_id)
                         //exit ()
                         if(check_private_chat_read_receipts[read_receipt_i].user_id==input.sid){
@@ -4853,6 +4857,105 @@ io.sockets.on('connection',async function (socket) {
     //report_and_block_individual_chat
     socket.on('report_and_block_individual_chat',async function (data){
       try{
+        if(typeof(data)=='object'){
+          let user_id=data.user_id ? data.user_id : '';
+          let accessToken=data.accessToken ? data.accessToken : '';
+          let receiver_id=data.receiver_id ? data.receiver_id : '';
+          let clear_status=data.clear_status ? data.clear_status : 0;
+          let datetime=get_datetime();
+          if(user_id!='' && accessToken!='' && receiver_id!=''){
+            socket.join(user_id+'_report_and_block_individual');
+            //check user data
+            let check_user_data=await queries.check_user_valid(user_id,accessToken);
+            if(check_user_data.length>0){
+              //create room
+              let room='';
+              if(Number(user_id)>Number(receiver_id)){
+                room=receiver_id+user_id;
+              }else{
+                room=user_id+receiver_id;
+              }
+              if(clear_status==1){
+                //do report with block and clear chat
+                let check_user_already_blocked=await queries.check_user_already_blocked(user_id,receiver_id);
+                if(check_user_already_blocked.length>0){
+                  console.log('already blocked')
+                  //do clear chat
+                  let do_clear_chat=await functions.do_clear_chat(user_id,room);
+                  console.log('response ', do_clear_chat)
+                }else{
+                  console.log('not blocked')
+                  //do block chat
+                   //console.log(save_block_data)
+                   //do clear chat
+                    let do_clear_chat=await functions.do_clear_chat(user_id,room);
+                    console.log('response ', do_clear_chat)
+                    //save block data to the block_chat table
+                    //console.log(user_id,receiver_id,room,datetime);
+                    let save_block_data=await queries.block_user_chat(user_id,receiver_id,room,datetime);
+                    //save block message to chat_list
+                    //set group status
+                    let group_status=[];
+                    if(user_id==receiver_id){
+                      group_status.push({
+                        user_id: user_id,
+                        username: await queries.get_username(data.user_id),
+                        datetime: datetime,
+                        message_status: 0,
+                        message_read_status: datetime,
+                        status: 1
+                      })
+                    }else{
+                      group_status.push({
+                        user_id: user_id,
+                        username: await queries.get_username(data.user_id),
+                        datetime: datetime,
+                        message_status: 0,
+                        message_read_status: datetime,
+                        status: 1
+                      })
+                      group_status.push({
+                        user_id: receiver_id,
+                        username: await queries.get_username(data.receiver_id),
+                        datetime: datetime,
+                        message_status: 0,
+                        message_read_status: datetime,
+                        status: 1
+                      })
+                    }
+                    //save block message in chat_list
+                    let save_block_message=await queries.save_block_message(datetime,user_id,receiver_id,'block','notification',room,0,1,0,0,JSON.stringify(group_status));
+                    console.log('block save msg to chat list',save_block_message);
+                    
+                }
+                //do report 
+                //add into report_chat table
+                //--message_id also
+                //get last message id
+                
+                let save_report_chat_data=await queries.save_report_chat(user_id,datetime,receiver_id,room,'individual report, block and clear chat');
+              }else{
+                //do report only
+              }
+            }else{
+              io.sockets.in(user_id+'_report_and_block_individual').emit('report_and_block_individual_chat',{status: false, statuscode: 200, message: "No user data found"});
+            }
+            socket.leave(user_id+'_report_and_block_individual');
+          }else{
+            socket.join(user_id+'_report_and_block_individual');
+            io.sockets.in(user_id+'_report_and_block_individual').emit('report_and_block_individual_chat',{status: false, statuscode: 200, message: "No data found"});
+            socket.leave(user_id+'_report_and_block_individual');
+          }
+        }else{
+          console.error('Input type is string');
+        }
+      }catch(e){
+        console.error(e);
+      }
+    });
+
+    socket.on('report_and_block_individual_chat_old',async function (data){
+      try{
         //{"accessToken":"7520ff1679b65593200acf473d159e5f","user_id":"50","receiver_id":"6"}
         console.log('report_and_block_individual_chat')
         if(typeof(data)=='object'){
@@ -5042,15 +5145,15 @@ io.sockets.on('connection',async function (socket) {
                   }
                 }
               }else{
-                io.sockets.in(user_id+'_report_and_block_individual').emit('clear_group_chat',{status: false, statuscode: 400, message: "Not saved to db"});
+                io.sockets.in(user_id+'_report_and_block_individual').emit('report_and_block_individual_chat',{status: false, statuscode: 400, message: "Not saved to db"});
               }
             }else{
-              io.sockets.in(user_id+'_report_and_block_individual').emit('clear_group_chat',{status: false, statuscode: 200, message: "Not user data found"});
+              io.sockets.in(user_id+'_report_and_block_individual').emit('report_and_block_individual_chat',{status: false, statuscode: 200, message: "Not user data found"});
             }
             socket.leave(user_id+'_report_and_block_individual');
           }else{
             socket.join(data.user_id+'_report_and_block_individual');
-            io.sockets.in(data.user_id+'_report_and_block_individual').emit('clear_group_chat',{status: false, statuscode: 200, message: "No data found"});
+            io.sockets.in(data.user_id+'_report_and_block_individual').emit('report_and_block_individual_chat',{status: false, statuscode: 200, message: "No data found"});
             socket.leave(data.user_id+'_report_and_block_individual');
           }
         }else{
@@ -7988,7 +8091,7 @@ io.sockets.on('connection',async function (socket) {
     })
     socket.on('test_changes',async function(data){
       socket.join('test_changes');
-      io.sockets.in('test_changes').emit('test_changes',{status: true, statuscode: 200, message: "last changes affected upto 06-11-2023 (2)"});
+      io.sockets.in('test_changes').emit('test_changes',{status: true, statuscode: 200, message: "last changes affected upto 13-12-2023 "});
       socket.leave('test_changes');
     });
     socket.on('private_chat_export_data',async function(data){
@@ -8854,14 +8957,18 @@ io.sockets.on('connection',async function (socket) {
                 //check user read receipt status
                 let senter_read_receipt=1;
                 let receiver_read_receipt=1;
+                console.log(sid,receiver_id)
                 let check_private_chat_read_receipts=await queries.check_private_chat_read_receipts(sid,receiver_id);
+                console.log('data ',check_private_chat_read_receipts);
                 if(check_private_chat_read_receipts.length>0){
                   //console.log(check_private_chat_read_receipts)
-                  for(var read_receipt_i=0;i<check_private_chat_read_receipts.length;read_receipt_i++){
+                  for(var read_receipt_i=0;read_receipt_i<check_private_chat_read_receipts.length;read_receipt_i++){
                     //console.log(check_private_chat_read_receipts[read_receipt_i],check_private_chat_read_receipts[read_receipt_i].user_id)
                     //exit ()
+                    //console.log(read_receipt_i)
+                    console.log(check_private_chat_read_receipts[read_receipt_i],check_private_chat_read_receipts[read_receipt_i].user_id)
                     if(check_private_chat_read_receipts[read_receipt_i].user_id==sid){
-                      console.log('senter id')
+                      //console.log('senter id')
                       
                       console.log(check_private_chat_read_receipts[read_receipt_i].options);
                       if(check_private_chat_read_receipts[read_receipt_i].options==0){
@@ -8989,7 +9096,6 @@ io.sockets.on('connection',async function (socket) {
                       //save group message
                       group_status_data=JSON.stringify(group_status_data);
                       let save_shared_message=await queries.group_share_message(datetime, sid, message,type, room, group_status_data, duration, optional_text,thumbnail);
-                      console.log(save_shared_message)
                       if(save_shared_message.length>0){
                         send_share_message_status=true;
                       }
@@ -8999,7 +9105,7 @@ io.sockets.on('connection',async function (socket) {
 
             if(send_share_message_status){
               
-              console.log(emit_users);
+              //console.log(emit_users);
               //exit ()
               
               for(var k=0; k<emit_users.length; k++){

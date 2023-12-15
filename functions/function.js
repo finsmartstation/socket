@@ -1749,7 +1749,7 @@ async function send_individual_message(sid,rid,room,date_status,message_limit){
       //console.log('testing response', result[0],check_private_chat_read_receipts)
       //exit ()
       let message_length=result[0].length
-      result[0]=result[0].reverse();
+      //result[0]=result[0].reverse();
       for (var i = 0; i < message_length; i++) {
         // console.log(sid,rid,room,date_status)
         //   exit ()
@@ -2585,7 +2585,7 @@ async function individual_message_using_pagination(sid,rid,room,limit,message_id
     //console.log(result);
     var get_current_datetime=get_datetime()
     console.log(result[0],result[0].length)
-    result[0]=result[0].reverse();
+    //result[0]=result[0].reverse();
     let mute_status="0";
     //let check_private_chat_read_receipts=await queries.check_private_chat_read_receipts(sid,rid);
     let check_mute_chat_list=await queries.get_mute_notification(sid,rid);
@@ -3662,8 +3662,9 @@ async function get_group_chat_list_response(user_id,group_id){
 
     let get_all_group_messages=await queries.group_chat_response(user_id,set_user_id,group_id) || [];
 
-    //console.log(get_all_group_messages);
+    console.log(get_all_group_messages);
     //exit();
+    
     if(get_all_group_messages.length>0){
       for(var i=0; i<get_all_group_messages.length;i++){
         //console.log('message data ',get_all_group_messages[i]);
@@ -4641,32 +4642,38 @@ async function group_message_using_pagination(user_id,group_id,limit,message_id)
     // exit();
     //get group message from db
     let get_all_group_messages=await queries.group_room_using_pagination(user_id,set_user_id,group_id,limit,message_id);
-    get_all_group_messages=get_all_group_messages.reverse();
+    //get_all_group_messages=get_all_group_messages.reverse();
     if(get_all_group_messages.length>0){
       //console.log(get_all_group_messages[0])
-      let list_small_message_id=get_all_group_messages[0].small_id;
+      
       //console.log(list_small_message_id)
       //check small id value exist in message id list
+      // let list_small_message_id=get_all_group_messages[0].small_id;
+      // let check_id_exist_in_message_array=await sub_function.check_id_exist_in_message_array(list_small_message_id,get_all_group_messages);
+      // //console.log(check_id_exist_in_message_array);
+      // //exit ()
+      // if(check_id_exist_in_message_array){
+      //   group_messages.push(group_started_data);
+      //   group_messages.push(group_created_by_data);
+      //   group_profile_history_index=2;
+      // }
+    }else{
+      //check message_id is last_id  
+      // let get_last_message_id=await queries.get_last_message_id(user_id,group_id);
+      // //console.log('val ',get_last_message_id)
+      // if(get_last_message_id!=''){
+      //   if(get_last_message_id==message_id){
+      //     group_messages.push(group_started_data);
+      //     group_messages.push(group_created_by_data);
+      //   }
+      // }
+    }
+    if(get_all_group_messages.length>0){
+      let list_small_message_id=get_all_group_messages[0].small_id;
       let check_id_exist_in_message_array=await sub_function.check_id_exist_in_message_array(list_small_message_id,get_all_group_messages);
       //console.log(check_id_exist_in_message_array);
       //exit ()
-      if(check_id_exist_in_message_array){
-        group_messages.push(group_started_data);
-        group_messages.push(group_created_by_data);
-        group_profile_history_index=2;
-      }
-    }else{
-      //check message_id is last_id  
-      let get_last_message_id=await queries.get_last_message_id(user_id,group_id);
-      //console.log('val ',get_last_message_id)
-      if(get_last_message_id!=''){
-        if(get_last_message_id==message_id){
-          group_messages.push(group_started_data);
-          group_messages.push(group_created_by_data);
-        }
-      }
-    }
-    if(get_all_group_messages.length>0){
+      
       for(var i=0; i<get_all_group_messages.length;i++){
         //console.log('message data ',get_all_group_messages[i]);
         let replay_id;
@@ -5324,10 +5331,17 @@ async function group_message_using_pagination(user_id,group_id,limit,message_id)
           }
         }
       }
+      if(check_id_exist_in_message_array){
+        group_messages.push(group_created_by_data);
+        group_messages.push(group_started_data);
+        
+        //group_profile_history_index=2;
+      }
       //console.log('all data',get_all_group_messages)
     }else{
-      group_messages.push(group_started_data);
       group_messages.push(group_created_by_data);
+      group_messages.push(group_started_data);
+      
     }
     //console.log(date_array); 
     //console.log('yes')
@@ -5362,6 +5376,7 @@ async function group_message_using_pagination(user_id,group_id,limit,message_id)
 
 
 async function send_group_message(user_id,group_id,date_status,message_limit){
+  console.log(message_limit)
   let group_messages=[];
   let set_user_id='"'+user_id+'"';
   let date_array=[];
@@ -5558,7 +5573,7 @@ async function send_group_message(user_id,group_id,date_status,message_limit){
     //get group message from db
     //let get_all_group_messages=await queries.group_room_using_pagination(user_id,set_user_id,group_id,limit,message_id);
     let get_all_group_messages=await queries.get_group_room_message(user_id,group_id,message_limit);
-    get_all_group_messages=get_all_group_messages.reverse();
+    //get_all_group_messages=get_all_group_messages.reverse();
     // if(get_all_group_messages.length>0){
     //   //console.log(get_all_group_messages[0])
     //   let list_small_message_id=get_all_group_messages[0].small_id
@@ -7835,7 +7850,7 @@ async function get_recent_chat_list_response(user_id){
         let get_unread_message_count_for_group=await queries.get_unread_message_count_for_group(user_id,get_recent_chat[i].room);
         let get_last_group_message_history=await sub_function.get_last_group_message_history(user_id,get_recent_chat[i].room,10);
         let get_last_group_message_history_new=await sub_function.get_last_group_message_history1(user_id,get_recent_chat[i].room,10);
-        console.log(get_last_group_message_history);
+        //console.log(get_last_group_message_history);
         unread_count=get_unread_message_count_for_group;
         // if(get_unread_message_count_for_group.length>0){
         //   //console.log('---',get_unread_message_count_for_group[0].group_status,get_recent_chat[i].id);
@@ -8219,9 +8234,9 @@ async function get_recent_chat_list_response(user_id){
                 }
               }else if(get_recent_chat[i].message_type=='image' || get_recent_chat[i].message_type=='voice' || get_recent_chat[i].message_type=='video' || get_recent_chat[i].message_type=='doc'){
                 if(get_recent_chat[i].senter_id==user_id){
-                  get_recent_chat[i].message='You: ';
+                  get_recent_chat[i].message='You: '+get_recent_chat[i].message;
                 }else{
-                  get_recent_chat[i].message=await queries.get_username(get_recent_chat[i].senter_id)+': ';
+                  get_recent_chat[i].message=await queries.get_username(get_recent_chat[i].senter_id)+': '+get_recent_chat[i].message;
                 }
               }else if(get_recent_chat[i].message_type=='contact'){
                 //console.log('group contact')
@@ -8485,7 +8500,8 @@ async function search_chat_list_response(user_id,search){
   let chat_list_data=[];
   //get current datetime
   //let archived_chat_list=await queries.archived_chat_list_details(user_id);
-  let get_archived_and_deleted_chat_list=await queries.archived_and_deleted_chat_list(user_id);
+  //let get_archived_and_deleted_chat_list=await queries.archived_and_deleted_chat_list(user_id);
+  let get_archived_and_deleted_chat_list=await queries.archived_chat_list(user_id);
   // console.log(get_archived_and_deleted_chat_list);
   // exit ();
   let current_datetime=get_datetime();
@@ -10352,6 +10368,44 @@ async function get_private_message_read_receipt1(sid,rid,message_id,group_status
   return read_receipt_value;
 }
 
+async function do_clear_chat(user_id,room){
+  let room_chat_list=await queries.room_chat_list(room);
+  console.log(room_chat_list.length)
+  let affected_rows=0;
+  if(room_chat_list.length>0){
+    let set_query_case_data="";
+    let query_where_id="";
+    for(var i=0; i<room_chat_list.length; i++){
+      let group_status=JSON.parse(room_chat_list[i].group_status);
+      let message_id=room_chat_list[i].id;
+      let not_deleted_status=false;
+      for(var j=0; j<group_status.length; j++){
+        if(user_id==group_status[j].user_id && group_status[j].status!=2){
+          group_status[j].status=2;
+          //console.log('yes')
+          not_deleted_status=true;
+        }
+      }
+      if(not_deleted_status){
+        set_query_case_data=set_query_case_data+"when id='"+message_id+"' then '"+JSON.stringify(group_status)+"'";
+        query_where_id=query_where_id+"'"+message_id+"'"+",";
+      }
+    }
+    if(set_query_case_data!='' && query_where_id!=''){
+      let query_case_data='case '+set_query_case_data+' end'
+      query_where_id=query_where_id.replace(/,(?=[^,]*$)/, '');
+      let query="UPDATE chat_list SET group_status= ("+query_case_data+") where id in ("+query_where_id+")";
+      //console.log(query);
+      let update_clear_chat=await queries.update_clear_chat_with_single_query(query);
+      console.log(update_clear_chat);
+      if(update_clear_chat.affectedRows>0){
+        affected_rows=update_clear_chat.affectedRows;
+      }
+    }
+  }
+  return affected_rows;
+}
+
 
 module.exports={
     get_individual_chat_list_response,
@@ -10378,5 +10432,6 @@ module.exports={
     check_user_and_room_exist_in_array,
     check_user_and_room_exist_in_array_group,
     get_private_message_read_receipt,
-    check_room_exist_in_array
+    check_room_exist_in_array,
+    do_clear_chat
 }
