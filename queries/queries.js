@@ -536,8 +536,8 @@ async function group_chat_list(user_id,room){
     return results[0];
 }
 
-async function save_report_chat(user_id,datetime,receiver_id,room,type){
-    const results=await db.sequelize.query("INSERT INTO `report_chat`(`user_id`, `datetime`, `receiver_id`, `room`, `type`) VALUES ('"+user_id+"','"+datetime+"','"+receiver_id+"','"+room+"','"+type+"')");
+async function save_report_chat(user_id,datetime,receiver_id,room,type,message_id){
+    const results=await db.sequelize.query("INSERT INTO `report_chat`(`user_id`, `datetime`, `receiver_id`, `message_id`,`room`, `type`) VALUES ('"+user_id+"','"+datetime+"','"+receiver_id+"','"+message_id+"','"+room+"','"+type+"')");
     return results[1];
 }
 
@@ -687,6 +687,12 @@ async function room_unread_messages(rooms){
     const results=await db.sequelize.query("select * from `chat_list` where room in ("+rooms+") and message_status='1'");
     return results[0];
 }
+
+// async function room_unread_messages_using_json(user_id,room){
+//     let json_object='{"user_id":"'+user_id+'","message_status":1}';
+//     const results=await db.sequelize.query("select * from `chat_list` where JSON_CONTAINS(group_status, '"+json_object+"') and room='"+room+"' and message_status='1'");
+//     return results[0];
+// }
 
 async function execute_update_query(query){
     const results=await db.sequelize.query(query);
@@ -898,6 +904,27 @@ async function execute_raw_update_query(query){
     return results[0];
 }
 
+async function get_room_last_id(room){
+    const results=await db.sequelize.query("select * from `chat_list` where room='"+room+"' order by id desc limit 1");
+    return results[0];
+}
+
+async function get_group_last_message(user_id,room){
+    let json_object='{"user_id":"'+user_id+'"}';
+    const results=await db.sequelize.query("select * from `chat_list` where room='"+room+"' and JSON_CONTAINS(group_status,'"+json_object+"') order by id desc limit 1");
+    return results[0];
+}
+
+async function get_user_already_deleted_group_chat_list(user_id,room){
+    const results=await db.sequelize.query("select * from deleted_chat_list where user_id='"+user_id+"' and room='"+room+"'");
+    return results[0];
+}
+
+async function execute_raw_insert_query(query){
+    const results=await db.sequelize.query(query);
+    return results[0];
+}
+
 module.exports = {
     update_online_status,
     select_online_status,
@@ -1053,5 +1080,9 @@ module.exports = {
     get_pinned_chat_list,
     archived_chat_list,
     individual_share_messagge,
-    group_share_message
+    group_share_message,
+    get_room_last_id,
+    get_group_last_message,
+    get_user_already_deleted_group_chat_list,
+    execute_raw_insert_query
 }

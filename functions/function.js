@@ -5433,9 +5433,15 @@ async function send_group_message(user_id,group_id,date_status,message_limit){
     //console.log('users ',group_users);
     //check read receipt for all group users
     group_users=group_users.replace(/(^,)|(,$)/g, "");
-    let set_query="select *,DATE_FORMAT(updated_datetime,'%Y-%m-%d %H:%i:%s') as updated_datetime from `user_chat_privacy` where user_id in ("+group_users+") and type='read_receipts' and options='1'";
+    let check_group_read_receipt=[];
+    let set_query='';
+    if(group_users!=''){
+      set_query="select *,DATE_FORMAT(updated_datetime,'%Y-%m-%d %H:%i:%s') as updated_datetime from `user_chat_privacy` where user_id in ("+group_users+") and type='read_receipts' and options='1'";
+      check_group_read_receipt=await queries.check_group_chat_read_receipts(set_query);
+    }
+    
     //console.log(set_query)
-    let check_group_read_receipt=await queries.check_group_chat_read_receipts(set_query);
+    
     //console.log(check_group_read_receipt)
     let default_read_receipt=0;
     let read_receipt_datetime='';
@@ -9812,6 +9818,10 @@ async function get_group_info(user_id,accessToken,group_id){
         let get_user_profile_data=await queries.get_user_profile(group_user_id)
         //console.log(get_user_profile_data[0].profile_pic)
         let name=get_user_profile_data[0].name;
+        console.log(group_user_id)
+        if(user_id==group_user_id){
+          name='You';
+        }
         let device_token=get_user_profile_data[0].deviceToken;
         let online_status=get_user_profile_data[0].online_status;
         //check who can see my profile pic
@@ -9960,6 +9970,25 @@ async function get_group_info(user_id,accessToken,group_id){
           device_token: device_token,
           online_status: online_status.toString()
         })
+      }
+
+      if(group_users.length>0){
+        group_users.sort(function(a,b){
+          if(a.user_id==user_id){
+            return -1;
+          }else if(b.user_id==user_id){
+            return 1;
+          }else if(a.type=="admin" && b.type!="admin"){
+            return -1;
+          }else if(a.type!="admin" && b.type=="admin"){
+            return 1;
+          }else{
+            return a.username.localeCompare(b.username);
+          }
+          // else{
+          //   return a.user_id - b.user_id;
+          // }
+        });
       }
       //console.log(group_users)
       //get media, doc, files, audio, link count
@@ -10364,7 +10393,7 @@ async function get_private_message_read_receipt1(sid,rid,message_id,group_status
     }
   }
   console.log('read receipt value ',read_receipt_value);
-  exit ()
+  
   return read_receipt_value;
 }
 
@@ -10406,6 +10435,42 @@ async function do_clear_chat(user_id,room){
   return affected_rows;
 }
 
+async function create_room(sid,rid){
+  let room='';
+  if(Number(sid)<Number(rid)){
+    room=sid+rid;
+  }else{
+    room=rid+sid;
+  }
+  return room;
+}
+
+async function group_array_room_data(data){
+  const groupedConversations = data.reduce((groups, conversation) => {
+    const key = `${conversation.room}_${conversation.user_id}_${conversation.receiver_id}`;
+    
+    if (!groups[key]) {
+      groups[key] = {
+        user_id: conversation.user_id,
+        receiver_id: conversation.receiver_id,
+        room: conversation.room,
+        type: conversation.type,
+        data: [],
+        ids: []
+        //all_read_status: conversation.all_read_status
+      };
+    }
+    groups[key].ids.push(conversation.id);
+    groups[key].data.push({id:conversation.id, delivered_datetime: conversation.delivered_datetime, all_read_status: conversation.all_read_status});
+  
+    return groups;
+  }, {});
+  
+  // Convert the grouped object back to an array
+  const resultArray = Object.values(groupedConversations);
+  return resultArray
+}
+
 
 module.exports={
     get_individual_chat_list_response,
@@ -10433,5 +10498,7 @@ module.exports={
     check_user_and_room_exist_in_array_group,
     get_private_message_read_receipt,
     check_room_exist_in_array,
-    do_clear_chat
+    do_clear_chat,
+    create_room,
+    group_array_room_data
 }
