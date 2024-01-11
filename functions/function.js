@@ -10447,7 +10447,7 @@ async function create_room(sid,rid){
 
 async function group_array_room_data(data){
   const groupedConversations = data.reduce((groups, conversation) => {
-    const key = `${conversation.room}_${conversation.user_id}_${conversation.receiver_id}`;
+    const key = `${conversation.room}_${conversation.user_id}_${conversation.receiver_id}_${conversation.all_read_status}`;
     
     if (!groups[key]) {
       groups[key] = {
