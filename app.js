@@ -6407,6 +6407,7 @@ io.sockets.on('connection',async function (socket) {
           let current_datetime=get_datetime();
           let message_sender_id=[];
           let message_ids=[];
+          let emit_users=[];
           //console.log('not empty')
           if(room!=''){
             console.log('group');
@@ -6459,12 +6460,24 @@ io.sockets.on('connection',async function (socket) {
                   group_status_case=group_status_case+"when id='"+id+"' then '"+JSON.stringify(group_status)+"' ";
                   id_case=id_case+"'"+id+"',";
                   console.log(group_status_case,id_case)
+                  let all_read_status=false;
                   if(unread_message==1){
                     console.log('unread user message is 1')
                     update_message_read_status=true;
                     message_status_case=message_status_case+"when id='"+id+"' then '0'";
                     console.log(message_status_case)
+                    all_read_status=true;
                   }
+
+                  emit_users.push({
+                    user_id: get_all_group_messages[i].senter_id.toString(),
+                    receiver_id: user_id,
+                    room: room,
+                    type: 'group',
+                    id: get_all_group_messages[i].id,
+                    delivered_datetime: '',
+                    all_read_status: all_read_status
+                  });
                 }
               }
             }
@@ -6485,23 +6498,51 @@ io.sockets.on('connection',async function (socket) {
               let execute_query=await queries.execute_raw_update_query(query);
               console.log(execute_query);
               if(execute_query.affectedRows>0){
-                console.log(message_sender_id,'ids',message_ids)
-
-                // for(var k=0; k<message_ids.length; k++){
-                //   let split_hypen=message_ids[k].split('-');
-                //   let msg_id=split_hypen[0];
-                //   let msg_senter_id=split_hypen[1];
-                //   //emit to read message data to group_message_info 
-                //   let group_message_info=await functions.group_message_info(msg_senter_id,room,msg_id);
-                //   io.sockets.in(msg_senter_id+'_'+room+'_'+msg_id+'_group_message_info').emit('group_message_info', group_message_info);
-                // }
-                // for(var l=0; l<message_sender_id.length; l++){
-                //   //emit chat_list and room_message to message senter
-                //   let room_chat_list=await functions.get_group_chat_list_response(message_sender_id,room);
-                //   io.sockets.in(room+'_'+message_sender_id).emit('message',room_chat_list);
-                //   let recent_chat_list=await functions.get_recent_chat_list_response(message_sender_id);
-                //   io.sockets.in(message_sender_id.toString()).emit('chat_list',recent_chat_list);
-                // }
+                console.log(emit_users)
+                if(emit_users.length>0){
+                  //group the emited user data
+                  let grouped_data=await functions.group_array_room_data(emit_users);
+                  console.log(grouped_data);
+                  let sender_ids=[];
+                  for(var k=0; k<grouped_data.length; k++){
+                    console.log(grouped_data[k].data)
+                    let grouped_id_data=grouped_data[k].data;
+                    //emit group message info
+                    for(var m=0; m<grouped_id_data.length; m++){
+                      //emit to group_message_info
+                      let group_message_info=await functions.group_message_info(grouped_data[k].user_id,grouped_data[k].room,grouped_id_data[m].id);
+                      //console.log(group_message_info);
+                      io.sockets.in(grouped_data[k].user_id+'_'+grouped_data[k].room+'_'+grouped_id_data[m].id+'_group_message_info').emit('group_message_info',group_message_info);
+                      if(grouped_id_data[m].all_read_status){
+                        if(!sender_ids.includes(grouped_data[k].user_id) && grouped_data[k].user_id!=user_id){
+                          sender_ids.push(grouped_data[k].user_id);
+                          console.log('yes')
+                        }
+                        //emit to read_listener
+                        let group_read_listener={
+                          status: true,
+                          statuscode: 200,
+                          message: 'success',
+                          room: grouped_data[k].room,
+                          type: 'group',
+                          datetime: current_datetime,
+                          ids: grouped_data[k].ids
+                        }
+                        console.log(group_read_listener)
+                        console.log(grouped_data[k].user_id,typeof(grouped_data[k].user_id));
+                        io.sockets.in(grouped_data[k].user_id).emit('read_listener',group_read_listener);
+                      }
+                    }
+                  }
+                  //emit chat_list to message sender
+                  console.log(sender_ids)
+                  for(var n=0; n<sender_ids.length; n++){
+                    let user_chat_list=await functions.get_recent_chat_list_response(sender_ids[n]);
+                    io.sockets.in(sender_ids[n]).emit('chat_list',user_chat_list);
+                  }
+                  let chat_list_data=await functions.get_recent_chat_list_response(user_id);
+                  io.sockets.in(user_id.toString()).emit('chat_list',chat_list_data);
+                }
               }
             }
           }else{
@@ -6530,7 +6571,7 @@ io.sockets.on('connection',async function (socket) {
               let message_senter_id=[];
               let message_receiver_id=[];
               let message_group_status=[];
-              let emit_users=[];
+              
               //UPDATE chat_list SET status = (case when id = '1' then '622057' when id = '2' then '2913659' when id = '3' then '6160230' end) WHERE id in ('1', '2', '3')
               for(var i=0; i<get_room_messages.length; i++){
                 //console.log(get_room_messages[i].id)
@@ -6600,6 +6641,7 @@ io.sockets.on('connection',async function (socket) {
                 if(emit_users.length>0){
                   let grouped_data=await functions.group_array_room_data(emit_users);
                   console.log(grouped_data)
+                  
                   for(var m=0; m<grouped_data.length; m++){
                     let grouped_ids_data=grouped_data[m].data;
                     console.log(grouped_ids_data)
@@ -6636,6 +6678,8 @@ io.sockets.on('connection',async function (socket) {
                     let user_chat_list=await functions.get_recent_chat_list_response(grouped_data[m].user_id);
                     io.sockets.in(grouped_data[m].user_id).emit('chat_list',user_chat_list);
                   }
+                  let chat_list_data=await functions.get_recent_chat_list_response(user_id);
+                  io.sockets.in(user_id.toString()).emit('chat_list',chat_list_data);
                 }
               }else{
                 console.log('not updated')
@@ -8719,6 +8763,296 @@ io.sockets.on('connection',async function (socket) {
                           io.sockets.in(deliverd_room_user_data[k].senter_id.toString()).emit('chat_list',recent_chat_list);
                         }
                       }
+                    }else{
+                      io.sockets.in(user_id+'_message_delivered').emit('message_delivered',{status: true, statuscode: 200, message: "Not updated"});
+                    }
+                  }else{
+                    //no message to update
+                    io.sockets.in(user_id+'_message_delivered').emit('message_delivered',{status: true, statuscode: 200, message: "No message to update"});
+                  }
+                  
+                // if(message_delivered_status){
+                //   io.sockets.in(user_id+'_message_delivered').emit('message_delivered',{status: true, statuscode: 200, message: "success"});
+                // }else{
+                //   io.sockets.in(user_id+'_message_delivered').emit('message_delivered',{status: true, statuscode: 200, message: "Not updated"});
+                // }
+              }else{
+                io.sockets.in(user_id+'_message_delivered').emit('message_delivered',{status: true, statuscode: 200, message: "No message to update"});
+              }
+            }else{
+              io.sockets.in(user_id+'_message_delivered').emit('message_delivered',{status: false, statuscode: 200, message: "No user data found"});
+            }
+            socket.leave(user_id+'_message_delivered');
+          }else{
+            socket.join(data.user_id+'_message_delivered');
+            io.sockets.in(data.user_id+'_message_delivered').emit('message_delivered',{status: false, statuscode: 200, message: "Data is empty"});
+            socket.leave(data.user_id+'_message_delivered');
+          }
+        }else{
+          console.error('Input type is string');
+        }
+      }catch(e){
+        console.error(e);
+      }
+    });
+
+    socket.on('message_delivered_option',async function(data){
+      //console.log('message delivered ',data);
+      //input -- {"user_id":"50","accessToken":""}
+      try{
+        if(typeof(data)=='object'){
+          let user_id=data.user_id ? data.user_id : '';
+          let accessToken=data.accessToken ? data.accessToken : '';
+          let datetime=get_datetime();
+          let room_data=[];
+          let message_delivered_status=false;
+          let deliverd_room_user_data=[];
+          let delivered_room_user_data_message_id=[];
+          let group_message_id='';
+          let emit_users=[];
+          if(user_id!='' && accessToken!=''){
+            socket.join(user_id+'_message_delivered');
+            //check user data is valid
+            let check_user_data=await queries.check_user_valid(user_id,accessToken);
+            if(check_user_data.length>0){
+              //console.log('user data is valid');
+              let get_undelivered_message=await queries.get_user_undelivered_messages(user_id);
+              console.log(get_undelivered_message);
+              if(get_undelivered_message.length>0){
+                let group_status_case='';
+                let delivererd_status_case='';
+                let ids='';
+                for(var i=0; i<get_undelivered_message.length; i++){
+                  //console.log(get_undelivered_message[i])
+                  let room=get_undelivered_message[i].room;
+                  let private_group=get_undelivered_message[i].private_group;
+                  let group_status=get_undelivered_message[i].group_status;
+                  if(group_status!=''){
+                    group_status=JSON.parse(get_undelivered_message[i].group_status);
+                  }else{
+                    group_status=[];
+                  }
+                  let message_id=get_undelivered_message[i].id;
+                  
+                  let receiver_status=false;
+                  console.log(get_undelivered_message[i].senter_id,user_id)
+                  let senter_id=get_undelivered_message[i].senter_id;
+                  let receiver_id=get_undelivered_message[i].receiver_id;
+                  
+                  //console.log(group_status,private_group)
+                  if(private_group==0){
+                    //private
+                    console.log('private');
+                    console.log(receiver_id,user_id)
+                    if(receiver_id==user_id){
+                      let delivered_status_flag=false;
+                      for(var j=0; j<group_status.length; j++){
+                        if(group_status[j].user_id==user_id){
+                          //add delivered_status
+                          if('delivered_status' in group_status[j]){
+                            if(group_status[j].delivered_status==1){
+                              //console.log('value is one')
+                              group_status[j].delivered_status=0;
+                              group_status[j].delivered_datetime=datetime;
+                              delivered_status_flag=true;
+                            }
+                          }else{
+                            //console.log('no')
+                            group_status[j].delivered_status=0;
+                            group_status[j].delivered_datetime=datetime;
+                            delivered_status_flag=true;
+                          }
+                          //emit data to info page -- private_message_info
+                          //console.log(receiver_id+'_'+message_id+'_private_message_info',{read_datetime:"",delivered_datetime:group_status[j].delivered_datetime})
+                          io.sockets.in(senter_id+'_'+message_id+'_private_message_info').emit('private_message_info',{status: true, statuscode: 200, message: "success", data: {read_datetime:"",delivered_datetime:group_status[j].delivered_datetime}});
+                        }
+                      }
+                      if(delivered_status_flag){
+                        //exit ()
+                        //update to db
+                        // let update_private_message_delivered_status=await queries.update_private_message_delivered_status(message_id,JSON.stringify(group_status));
+                        // if(update_private_message_delivered_status.affectedRows>0){
+                        //   message_delivered_status=true;
+                        //   //emit data to receiver side
+                        //   let room_chat_list=await functions.get_individual_chat_list_response(senter_id,user_id,room);
+                        //   io.sockets.in(room+'_'+senter_id).emit('message',room_chat_list);
+                        //   let recent_chat_list=await functions.get_recent_chat_list_response(senter_id);
+                        //   io.sockets.in(senter_id.toString()).emit('chat_list',recent_chat_list);
+                        // }
+                        //make single query
+                        group_status_case=group_status_case+" when id='"+message_id+"' then '"+JSON.stringify(group_status)+"'";
+                        delivererd_status_case=delivererd_status_case+" when id='"+message_id+"' then '0'";
+                        ids=ids+"'"+message_id+"',";
+                        //check same senter_id and room already exist
+                        let check_user_and_room_exist_in_array=await functions.check_user_and_room_exist_in_array(senter_id,room,deliverd_room_user_data);
+                        console.log(check_user_and_room_exist_in_array,senter_id,room,deliverd_room_user_data);
+                        if(check_user_and_room_exist_in_array==false){  
+                          deliverd_room_user_data.push({
+                            senter_id: senter_id,
+                            room: room,
+                            type: 'private',
+                            message_id: message_id
+                          });
+                        }
+
+                        //set data for emit_users
+                        emit_users.push({
+                          user_id: senter_id.toString(),
+                          receiver_id: user_id,
+                          room: room,
+                          type: 'private',
+                          id: message_id,
+                          all_read_status: true
+                        })
+                      }
+                      //console.log(group_status_case,delivererd_status_case);
+                      //console.log(ids)
+                    }
+                  }else{ 
+                    
+                    //group
+                    if(senter_id!=user_id){
+                      let undelivered_message_count=0;
+                      for(var undelivered=0; undelivered<group_status.length; undelivered++){
+                        if('delivered_status' in group_status[undelivered]){
+                          //console.log('yes',group_status[undelivered].user_id,senter_id,group_status[undelivered].delivered_status)
+                          if(group_status[undelivered].user_id!=senter_id && group_status[undelivered].delivered_status==1){
+                            undelivered_message_count=undelivered_message_count+1;
+                          }
+                        }
+                      }
+                      let delivered_status_flag=false;
+                      for(var j=0; j<group_status.length; j++){
+                        if(group_status[j].user_id==user_id){
+                          //add delivered_status
+                          if('delivered_status' in group_status[j]){
+                            if(group_status[j].delivered_status==1){
+                              //console.log('value is one')
+                              group_status[j].delivered_status=0;
+                              group_status[j].delivered_datetime=datetime;
+                              delivered_status_flag=true;
+                            }else{
+                              // group_status[j].delivered_status=0;
+                              // group_status[j].delivered_datetime=datetime;
+                            }
+                          }else{
+                            //console.log('no')
+                            group_status[j].delivered_status=0;
+                            group_status[j].delivered_datetime=datetime;
+                            delivered_status_flag=true;
+                          }
+                        }
+                      }
+                      //console.log(undelivered_message_count,delivered_status_flag,message_id)
+                      // console.log(message_id)
+                      if(undelivered_message_count==1 && delivered_status_flag==true){
+                        //update group_status json and delivered_status
+                        // let update_group_message_delivered_status=await queries.update_group_message_delivered_status(message_id,JSON.stringify(group_status),true);
+                        // if(update_group_message_delivered_status.affectedRows>0){
+                        //   message_delivered_status=true;
+                        // }
+
+                        //make single query
+                        group_status_case=group_status_case+" when id='"+message_id+"' then '"+JSON.stringify(group_status)+"'";
+                        delivererd_status_case=delivererd_status_case+" when id='"+message_id+"' then '0'";
+                        ids=ids+"'"+message_id+"',";
+                      }else{
+                        //update only delivers_status
+                        //  let update_group_message_delivered_status=await queries.update_group_message_delivered_status(message_id,JSON.stringify(group_status),false);
+                        // if(update_group_message_delivered_status.affectedRows>0){
+                        //   message_delivered_status=true;
+                        // }
+                        //make as single query
+                        group_status_case=group_status_case+" when id='"+message_id+"' then '"+JSON.stringify(group_status)+"'";
+                        //delivererd_status_case=delivererd_status_case+" when id='"+message_id+"' then '0'";
+                        ids=ids+"'"+message_id+"',";
+                        group_message_id=group_message_id+message_id+',';
+                      }
+                      //check same senter_id and room already exist
+                      let check_user_and_room_exist_in_array=await functions.check_user_and_room_exist_in_array(senter_id,room,deliverd_room_user_data);
+                      console.log(check_user_and_room_exist_in_array);
+                      if(check_user_and_room_exist_in_array==false){
+                        deliverd_room_user_data.push({
+                          senter_id: senter_id,
+                          room: room,
+                          type: 'group',
+                          message_id: message_id
+                        });
+                      }
+                      let check_user_and_room_exist_in_array_group=await functions.check_user_and_room_exist_in_array_group(senter_id,room,deliverd_room_user_data,message_id);
+                      console.log(check_user_and_room_exist_in_array_group)
+                      //exit ()
+                      if(check_user_and_room_exist_in_array_group==false){
+                        delivered_room_user_data_message_id.push({
+                          senter_id: senter_id,
+                          room: room,
+                          type: 'group',
+                          message_id: message_id
+                        });
+                      }
+                      // if(delivered_status_flag){
+                      //   let group_message_info=await functions.group_message_info(senter_id,room,message_id);
+                      //   io.sockets.in(senter_id+'_'+room+'_'+message_id+'_group_message_info').emit('group_message_info', group_message_info)
+                      //   //emit to message senter room
+                      //   let sender_group_room_chat_list=await functions.get_group_chat_list_response(senter_id,room);
+                      //   io.sockets.in(room+'_'+senter_id).emit('message',sender_group_room_chat_list);
+                      //   let recent_chat_list=await functions.get_recent_chat_list_response(senter_id);
+                      //   io.sockets.in(senter_id.toString()).emit('chat_list',recent_chat_list);
+                      // }
+                    }
+
+                  }
+                  //exit ()
+                }
+
+                ids=ids.replace(/(^,)|(,$)/g, "");
+                  // console.log('group case ',group_status_case);
+                  // console.log('delivererd status case',delivererd_status_case)
+                  // console.log('ids',ids)
+                  let query='';
+                  if(ids!=''){
+                    if(delivererd_status_case!=''){
+                      query="UPDATE chat_list set group_status=(case "+group_status_case+" end), delivered_status=(case "+delivererd_status_case+" end) where id in ("+ids+")";
+                      console.log(delivererd_status_case);
+                    }else{
+                      query="UPDATE chat_list set group_status=(case "+group_status_case+" end) where id in ("+ids+")";
+                    }
+                    console.log(query);
+                    let update_data=await queries.update_group_delivered_message(query);
+                    console.log(update_data)
+                    if(update_data.affectedRows>0){
+                      message_delivered_status=true;
+                      io.sockets.in(user_id+'_message_delivered').emit('message_delivered',{status: true, statuscode: 200, message: "success"});
+                      console.log('sss',deliverd_room_user_data)
+                      for(var k=0; k<deliverd_room_user_data.length; k++){
+                        if(deliverd_room_user_data[k].type=='private'){
+                          //console.log('emit to private room')
+                          //emit data to receiver side
+                          let room_chat_list=await functions.get_individual_chat_list_response(deliverd_room_user_data[k].senter_id,user_id,deliverd_room_user_data[k].room);
+                          io.sockets.in(deliverd_room_user_data[k].room+'_'+deliverd_room_user_data[k].senter_id).emit('message',room_chat_list);
+                          let recent_chat_list=await functions.get_recent_chat_list_response(deliverd_room_user_data[k].senter_id);
+                          io.sockets.in(deliverd_room_user_data[k].senter_id.toString()).emit('chat_list',recent_chat_list);
+                        }else{
+                          //console.log('emit to group',group_message_id)
+                          //console.log(delivered_room_user_data_message_id)
+                          //exit ()
+                          for(var l=0; l<delivered_room_user_data_message_id.length; l++){
+                            if(deliverd_room_user_data[k].senter_id==delivered_room_user_data_message_id[l].senter_id && deliverd_room_user_data[k].room==delivered_room_user_data_message_id[l].room){
+                              let group_message_info=await functions.group_message_info(delivered_room_user_data_message_id[l].senter_id,delivered_room_user_data_message_id[l].room,delivered_room_user_data_message_id[l].message_id);
+                              io.sockets.in(delivered_room_user_data_message_id[l].senter_id+'_'+delivered_room_user_data_message_id[l].room+'_'+delivered_room_user_data_message_id[l].message_id+'_group_message_info').emit('group_message_info', group_message_info);
+                            } 
+                          }
+                          //let group_message_info=await functions.group_message_info(deliverd_room_user_data[k].senter_id,deliverd_room_user_data[k].room,deliverd_room_user_data[k].message_id);
+                          //console.log(deliverd_room_user_data[k].senter_id+'_'+deliverd_room_user_data[k].room+'_'+deliverd_room_user_data[k].message_id+'_group_message_info')
+                          //io.sockets.in(deliverd_room_user_data[k].senter_id+'_'+deliverd_room_user_data[k].room+'_'+deliverd_room_user_data[k].message_id+'_group_message_info').emit('group_message_info', group_message_info)
+                          //emit to message senter room
+                          let sender_group_room_chat_list=await functions.get_group_chat_list_response(deliverd_room_user_data[k].senter_id,deliverd_room_user_data[k].room);
+                          io.sockets.in(deliverd_room_user_data[k].room+'_'+deliverd_room_user_data[k].senter_id).emit('message',sender_group_room_chat_list);
+                          let recent_chat_list=await functions.get_recent_chat_list_response(deliverd_room_user_data[k].senter_id);
+                          io.sockets.in(deliverd_room_user_data[k].senter_id.toString()).emit('chat_list',recent_chat_list);
+                        }
+                      }
+                      console.log(emit_users)
                     }else{
                       io.sockets.in(user_id+'_message_delivered').emit('message_delivered',{status: true, statuscode: 200, message: "Not updated"});
                     }
