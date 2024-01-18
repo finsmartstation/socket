@@ -10445,7 +10445,7 @@ async function create_room(sid,rid){
   return room;
 }
 
-async function group_array_room_data(data){
+async function grouped_array_room_data(data){
   const groupedConversations = data.reduce((groups, conversation) => {
     const key = `${conversation.room}_${conversation.user_id}_${conversation.receiver_id}_${conversation.all_read_status}`;
     
@@ -10468,7 +10468,28 @@ async function group_array_room_data(data){
   
   // Convert the grouped object back to an array
   const resultArray = Object.values(groupedConversations);
-  return resultArray
+  return resultArray;
+}
+
+async function grouped_delivered_room_data(data){
+  const groupedConversations=data.reduce((groups, conversation)=>{
+    const key = `${conversation.room}_${conversation.user_id}_${conversation.receiver_id}_${conversation.all_read_status}`;
+    if (!groups[key]) {
+      groups[key] = {
+        user_id: conversation.user_id,
+        receiver_id: conversation.receiver_id,
+        room: conversation.room,
+        type: conversation.type,
+        data: [],
+        ids: []
+      };
+    }
+    groups[key].data.push({id: conversation.id, all_read_status: conversation.all_read_status});
+    groups[key].ids.push(conversation.id);
+    return groups;
+  },{});
+  const resultArray = Object.values(groupedConversations);
+  return resultArray;
 }
 
 
@@ -10500,5 +10521,6 @@ module.exports={
     check_room_exist_in_array,
     do_clear_chat,
     create_room,
-    group_array_room_data
+    grouped_array_room_data,
+    grouped_delivered_room_data
 }
