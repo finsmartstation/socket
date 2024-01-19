@@ -4826,7 +4826,7 @@ async function group_message_using_pagination(user_id,group_id,limit,message_id)
                 get_all_group_messages.splice(i, 1);
                 i--;
                 console.log('after removed index ', i)
-                console.log(get_all_group_messages[i].id)
+                //console.log(get_all_group_messages[i].id)
                 
                 // console.log('balance ',get_all_group_messages.length,get_all_group_messages)
                 // console.log(get_all_group_messages[i],admin_notification_msg_status)
@@ -5785,7 +5785,7 @@ async function send_group_message(user_id,group_id,date_status,message_limit){
                     get_all_group_messages.splice(i, 1);
                     i--;
                     console.log('after removed index ', i)
-                    console.log(get_all_group_messages[i].id)
+                    //console.log(get_all_group_messages[i].id)
                     
                     // console.log('balance ',get_all_group_messages.length,get_all_group_messages)
                     // console.log(get_all_group_messages[i],admin_notification_msg_status)

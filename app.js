@@ -3331,21 +3331,21 @@ io.sockets.on('connection',async function (socket) {
                         left_update_status=true;
                         io.sockets.in(group_id+'_'+user_id+'_left').emit('exit_group_member',{ status: true, statuscode: 200, message: "success"});
                         //emit message to the user
-                        let sender_group_chat_response=await functions.get_group_chat_list_response(user_id,group_id);
+                        //let sender_group_chat_response=await functions.get_group_chat_list_response(user_id,group_id);
+                        let sender_group_chat_response=await functions.send_group_message(user_id,group_id,false,1);
                         io.sockets.in(group_id+'_'+user_id).emit('message',sender_group_chat_response);
+                        //emit chat_list to the senter
+                        let get_senter_chat_list_response=await functions.get_recent_chat_list_response(user_id);
+                        io.sockets.in(user_id).emit('chat_list', get_senter_chat_list_response)
                         //emit message to chat_list
                         for(var group_user=0; group_user<new_group_members.length; group_user++){
                           //console.log('group other users ',new_group_members[group_user].user_id)
-                          let receiver_group_chat_response=await functions.get_group_chat_list_response(new_group_members[group_user].user_id,group_id);
+                          //let receiver_group_chat_response=await functions.get_group_chat_list_response(new_group_members[group_user].user_id,group_id);
+                          let receiver_group_chat_response=await functions.send_group_message(new_group_members[group_user].user_id,group_id,false,1)
                           io.sockets.in(group_id+'_'+new_group_members[group_user].user_id).emit('message',receiver_group_chat_response);
                           let get_chat_list_response=await functions.get_recent_chat_list_response(new_group_members[group_user].user_id);
                           io.sockets.in(new_group_members[group_user].user_id).emit('chat_list',get_chat_list_response);
                         }
-
-                        //emit chat_list to the senter
-                        let get_senter_chat_list_response=await functions.get_recent_chat_list_response(user_id);
-                        io.sockets.in(user_id).emit('chat_list', get_senter_chat_list_response)
-                        
                       }else{
                         io.sockets.in(group_id+'_'+user_id+'_left').emit('exit_group_member',{ status: false, statuscode: 400, message: "Not saved to db"});
                       }
@@ -3536,8 +3536,6 @@ io.sockets.on('connection',async function (socket) {
                                     let get_chat_list_response=await functions.get_recent_chat_list_response(new_group_members[group_user].user_id);
                                     io.sockets.in(new_group_members[group_user].user_id).emit('chat_list',get_chat_list_response);
                                   }
-
-                                  
                                 }else{
                                   io.sockets.in(group_id+'_'+user_id+'_left').emit('exit_group_member',{ status: false, statuscode: 400, message: "Admin message not saved to db"});
                                 }
@@ -3851,21 +3849,27 @@ io.sockets.on('connection',async function (socket) {
                           if(save_group_user_add_message>0){
                             io.sockets.in(user_id+'_add_group_member').emit('add_group_member',{ status: true, statuscode: 200, message: "success"});
                             //emit message and chat_list response to the user
-                            let senter_group_chat_response=await functions.get_group_chat_list_response(user_id,group_id);
+                            //let senter_group_chat_response=await functions.get_group_chat_list_response(user_id,group_id);
+                            let senter_group_chat_response=await functions.send_group_message(user_id,group_id,false,1);
+                            //console.log(sender_chat_list_response)
+                            console.log(senter_group_chat_response.data['list'])
                             io.sockets.in(group_id+'_'+user_id).emit('message',senter_group_chat_response);
+
+                            let sender_chat_list_response=await functions.get_recent_chat_list_response(user_id);
+                            io.sockets.in(user_id).emit('chat_list',sender_chat_list_response);
+
                             //emit to other user in the group
                             for(var k=0; k<current_members.length; k++){
                               //console.log(current_members,current_members[k].user_id)
                               //exit ()
                               if(current_members[k].user_id!=user_id){
-                                let receiver_group_chat_response=await functions.get_group_chat_list_response(current_members[k].user_id,group_id);
+                                //let receiver_group_chat_response=await functions.get_group_chat_list_response(current_members[k].user_id,group_id);
+                                let receiver_group_chat_response=await functions.send_group_message(current_members[k].user_id,group_id,false,1);
                                 io.sockets.in(group_id+'_'+current_members[k].user_id).emit('message',receiver_group_chat_response);
                                 let receiver_chat_list_response=await functions.get_recent_chat_list_response(current_members[k].user_id);
                                 io.sockets.in(current_members[k].user_id).emit('chat_list',receiver_chat_list_response);
                               }
                             }
-                            let sender_chat_list_response=await functions.get_recent_chat_list_response(user_id);
-                            io.sockets.in(user_id).emit('chat_list',sender_chat_list_response);
                           }else{
                             io.sockets.in(user_id+'_add_group_member').emit('add_group_member',{ status: false, statuscode: 400, message: "Not saved in chat list db"});
                           }
@@ -4015,17 +4019,18 @@ io.sockets.on('connection',async function (socket) {
                           let get_group_info_and_user_details=await functions.get_group_info(user_id,accessToken,group_id);
                           io.sockets.in(group_id+'_'+user_id+'_user_list').emit('get_group_user_list',get_group_info_and_user_details);
                           //emit message and chat_list to the user
-                          let sender_group_chat_list=await functions.get_group_chat_list_response(user_id,group_id);
-                          io.sockets.in(group_id+'_'+user_id).emit('message',sender_group_chat_list);
+                          //let sender_group_chat_list=await functions.get_group_chat_list_response(user_id,group_id);
+                          //let sender_group_chat_list=await functions.send_group_message(user_id,group_id,false,1);
+                          //io.sockets.in(group_id+'_'+user_id).emit('message',sender_group_chat_list);
+                          //sender chat_list
+                          //let sender_chat_list_response=await functions.get_recent_chat_list_response(user_id);
+                          //io.sockets.in(user_id).emit('chat_list',sender_chat_list_response);
                           //emit to receiver side
-                          let receiver_group_chat_list=await functions.get_group_chat_list_response(new_admin_user_id,group_id);
+                          //let receiver_group_chat_list=await functions.get_group_chat_list_response(new_admin_user_id,group_id);
+                          let receiver_group_chat_list=await functions.send_group_message(new_admin_user_id,group_id,false,1);
                           io.sockets.in(group_id+'_'+new_admin_user_id).emit('message',receiver_group_chat_list);
                           let receiver_chat_list_response=await functions.get_recent_chat_list_response(new_admin_user_id);
                           io.sockets.in(new_admin_user_id).emit('chat_list',receiver_chat_list_response);
-
-                          //sender chat_list
-                          let sender_chat_list_response=await functions.get_recent_chat_list_response(user_id);
-                          io.sockets.in(user_id).emit('chat_list',sender_chat_list_response);
                         }else{
                           io.sockets.in(data.user_id+'_group_admin').emit('make_group_admin',{status: false, statuscode: 400, message: "Not saved to chat list"})
                         }
@@ -9205,7 +9210,7 @@ io.sockets.on('connection',async function (socket) {
     });
     socket.on('test_changes',async function(data){
       socket.join('test_changes');
-      io.sockets.in('test_changes').emit('test_changes',{status: true, statuscode: 200, message: "last changes affected upto 05-01-2023 "});
+      io.sockets.in('test_changes').emit('test_changes',{status: true, statuscode: 200, message: "last changes affected upto 19-01-2024 "});
       socket.leave('test_changes');
     });
     socket.on('private_chat_export_data',async function(data){
