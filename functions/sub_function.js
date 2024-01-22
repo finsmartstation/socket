@@ -2152,7 +2152,7 @@ async function get_last_private_message(room_id,message_id,user_id,opponent_prof
                         get_all_group_messages.splice(i, 1);
                         i--;
                         console.log('after removed index ', i)
-                        console.log(get_all_group_messages[i].id)
+                        //console.log(get_all_group_messages[i].id)
                         
                         // console.log('balance ',get_all_group_messages.length,get_all_group_messages)
                         // console.log(get_all_group_messages[i],admin_notification_msg_status)
@@ -2781,14 +2781,14 @@ async function get_last_private_message(room_id,message_id,user_id,opponent_prof
         //console.log('current user ',current_group_members,current_group_members.length)
         let user_left_status='1';
         if(current_group_members.length>0){ 
-        for(var member_i=0; member_i<current_group_members.length; member_i++){
-            //console.log('member',current_group_members[member_i].user_id)
-            if(current_group_members[member_i].user_id==user_id){
-            //console.log('ssss user exist')
-            user_left_status='0';
-            break;
+            for(var member_i=0; member_i<current_group_members.length; member_i++){
+                //console.log('member',current_group_members[member_i].user_id)
+                if(current_group_members[member_i].user_id==user_id){
+                    //console.log('ssss user exist')
+                    user_left_status='0';
+                    break;
+                }
             }
-        }
         }
 
         
@@ -3045,7 +3045,7 @@ async function get_last_private_message(room_id,message_id,user_id,opponent_prof
                         get_all_group_messages.splice(i, 1);
                         i--;
                         console.log('after removed index ', i)
-                        console.log(get_all_group_messages[i].id)
+                        //console.log(get_all_group_messages[i].id)
                         
                         // console.log('balance ',get_all_group_messages.length,get_all_group_messages)
                         // console.log(get_all_group_messages[i],admin_notification_msg_status)

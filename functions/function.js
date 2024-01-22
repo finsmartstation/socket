@@ -4389,9 +4389,13 @@ async function get_group_chat_list_response(user_id,group_id){
                   //  console.log(group_messages[i])
                   // exit ()
                   //add two index for group_created_date and group_name
+                  console.log(group_messages,group_messages.length)
+                  console.log(user_id,i,group_profile_history_index)
                   let index_i=i+group_profile_history_index;
-                  group_messages[index_i].new_profile_pic=get_all_group_messages[i].new_profile_pic;
-                  group_messages[index_i].previous_profile_pic=get_all_group_messages[i].previous_profile_pic;
+                  console.log('index count',index_i)
+                  //console.log(group_messages[index_i])
+                  group_messages[index_i].new_profile_pic=get_all_group_messages[i].new_profile_pic ? get_all_group_messages[i].new_profile_pic : '';
+                  group_messages[index_i].previous_profile_pic=get_all_group_messages[i].previous_profile_pic ? get_all_group_messages[i].previous_profile_pic : '';
                 }
 
                 //console.log('previous pic',get_all_group_messages[i].previous_profile_pic)
