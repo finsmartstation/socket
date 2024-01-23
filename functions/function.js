@@ -4380,7 +4380,7 @@ async function get_group_chat_list_response(user_id,group_id){
                   //console.log('date is not exist')
                 }
 
-                //console.log(get_all_group_messages[i].new_profile_pic,get_all_group_messages[i].previous_profile_pic)
+                console.log('---',get_all_group_messages[i].new_profile_pic,get_all_group_messages[i].previous_profile_pic)
                 if(get_all_group_messages[i].new_profile_pic!='' && get_all_group_messages[i].new_profile_pic!=undefined && get_all_group_messages[i].previous_profile_pic!='' && get_all_group_messages[i].previous_profile_pic!=undefined){
                   //let last_index=group_messages.length;
                   // console.log(i)
@@ -4389,7 +4389,7 @@ async function get_group_chat_list_response(user_id,group_id){
                   //  console.log(group_messages[i])
                   // exit ()
                   //add two index for group_created_date and group_name
-                  console.log(group_messages,group_messages.length)
+                  //console.log(group_messages,group_messages.length)
                   console.log(user_id,i,group_profile_history_index)
                   let index_i=i+group_profile_history_index;
                   console.log('index count',index_i)
@@ -5542,7 +5542,7 @@ async function send_group_message(user_id,group_id,date_status,message_limit){
     //split group created_date
     let split_created_date=group_created_date.split(" ");
     //date_array.push(split_created_date[0]);
-    let group_profile_history_index=2;
+    let group_profile_history_index=0;
     //set group created by data
     //created message
     let created_message='';
@@ -6276,12 +6276,13 @@ async function send_group_message(user_id,group_id,date_status,message_limit){
                 if(get_all_group_messages[i].new_profile_pic!='' && get_all_group_messages[i].new_profile_pic!=undefined && get_all_group_messages[i].previous_profile_pic!='' && get_all_group_messages[i].previous_profile_pic!=undefined){
                   //let last_index=group_messages.length;
                   // console.log(i)
-                  // console.log(get_all_group_messages[i].id)
+                   console.log('id',get_all_group_messages[i].id)
                   // console.log(group_messages,i)
                   //  console.log(group_messages[i])
                   // exit ()
                   //add two index for group_created_date and group_name
                   let index_i=i+group_profile_history_index;
+                  console.log(group_profile_history_index,index_i)
                   group_messages[index_i].new_profile_pic=get_all_group_messages[i].new_profile_pic;
                   group_messages[index_i].previous_profile_pic=get_all_group_messages[i].previous_profile_pic;
                 }

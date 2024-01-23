@@ -2663,9 +2663,11 @@ io.sockets.on('connection',async function (socket) {
                 }
                 //send emit message to receiver
                 console.log('emit_user ',emit_user)
+                
                 for(var emit_user_i=0; emit_user_i<emit_user.length;emit_user_i++){
                   console.log(emit_user[emit_user_i])
                   if(emit_user[emit_user_i].type==0){
+                    console.log('private')
                     //private
                     let message_response_for_receiver=await functions.get_individual_chat_list_response(emit_user[emit_user_i].rid,data.user_id,sender_room);
                     //emit to normal room
@@ -3675,11 +3677,11 @@ io.sockets.on('connection',async function (socket) {
               
               //save group basic information to group_list
               let profile_pic_history=[];
-              if(data.group_profile!=''){
+              if(data.group_profile!='' && data.group_profile!=undefined){
                 profile_pic_history.push({
                   user_id: user_id,
                   datetime: datetime,
-                  profile_pic: data.group_profile
+                  profile_pic: group_profile
                 });
               }
               let group_subject=[];
@@ -3717,7 +3719,9 @@ io.sockets.on('connection',async function (socket) {
                   //save user added in group message to chat_list
                   let save_group_user_add_message=await queries.save_group_user_add_message(datetime,user_id,'added','notification',room,1,1,0,1,JSON.stringify(group_status));
                   //save change group icon message
-                  if(data.group_profile!=''){
+                  //console.log(data.group_profile,profile_pic_history,group_profile)
+                  
+                  if(data.group_profile!='' && data.group_profile!=undefined){
                     let save_group_icon_mesage=await queries.save_group_user_add_message(datetime,user_id,'changed_group_icon','notification',room,1,1,0,1,JSON.stringify(group_status));
                   }
                   
@@ -4308,11 +4312,13 @@ io.sockets.on('connection',async function (socket) {
                     let save_group_icon_mesage=await queries.save_group_user_add_message(date_time,user_id,'changed_group_icon','notification',group_id,1,1,0,1,JSON.stringify(group_status));
                     if(save_group_icon_mesage>0){
                       io.sockets.in(user_id+'_group_profile_pic').emit('change_group_profile_pic',{ status: true, statuscode: 200, message: "success"});
-                      let sender_group_chat_data=await functions.get_group_chat_list_response(user_id,group_id);
+                      //let sender_group_chat_data=await functions.get_group_chat_list_response(user_id,group_id);
+                      let sender_group_chat_data=await functions.send_group_message(user_id,group_id,false,1);
                       io.sockets.in(group_id+'_'+user_id).emit('message',sender_group_chat_data);
                       for(let i=0; i<group_current_members.length; i++){
                         if(group_current_members[i].user_id!=user_id){
-                          let receiver_group_chat_data=await functions.get_group_chat_list_response(group_current_members[i].user_id,group_id);
+                          //let receiver_group_chat_data=await functions.get_group_chat_list_response(group_current_members[i].user_id,group_id);
+                          let receiver_group_chat_data=await functions.send_group_message(group_current_members[i].user_id,group_id,false,1)
                           io.sockets.in(group_id+'_'+group_current_members[i].user_id).emit('message',receiver_group_chat_data);
                           let receiver_chat_list_data=await functions.get_recent_chat_list_response(group_current_members[i].user_id);
                           io.sockets.in(group_current_members[i].user_id).emit('chat_list',receiver_chat_list_data);
@@ -4488,19 +4494,22 @@ io.sockets.on('connection',async function (socket) {
                     if(save_group_description_mesage>0){
                       io.sockets.in(user_id+'_group_description').emit('update_group_description',{ status: true, statuscode: 200, message: "success"});
                       //emit to all the user in the group
-                      let sender_group_chat_list_response=await functions.get_group_chat_list_response(user_id,group_id);
+                      //let sender_group_chat_list_response=await functions.get_group_chat_list_response(user_id,group_id);
+                      let sender_group_chat_list_response=await functions.send_group_message(user_id,group_id,false,1);
                       io.sockets.in(group_id+'_'+user_id).emit('message',sender_group_chat_list_response);
+                      let sender_recent_chat_list_response=await functions.get_recent_chat_list_response(user_id);
+                      io.sockets.in(user_id).emit('chat_list',sender_recent_chat_list_response);
                       //emit to receiver 
                       for(var j=0; j<group_members.length; j++){
                         if(group_members[j].user_id!=user_id){
-                          let receiver_group_chat_list_response=await functions.get_group_chat_list_response(group_members[j].user_id,group_id);
+                          //let receiver_group_chat_list_response=await functions.get_group_chat_list_response(group_members[j].user_id,group_id);
+                          let receiver_group_chat_list_response=await functions.send_group_message(group_members[j].user_id,group_id,false,1);
                           io.sockets.in(group_id+'_'+group_members[j].user_id).emit('message',receiver_group_chat_list_response);
                           let receiver_recent_chat_list_response=await functions.get_recent_chat_list_response(group_members[j].user_id);
                           io.sockets.in(group_members[j].user_id).emit('chat_list',receiver_recent_chat_list_response);
                         }
                       }
-                      let sender_recent_chat_list_response=await functions.get_recent_chat_list_response(user_id);
-                      io.sockets.in(user_id).emit('chat_list',sender_recent_chat_list_response);
+                      
                     }else{
                       io.sockets.in(user_id+'_group_description').emit('update_group_description',{ status: false, statuscode: 400, message: "Not saved to chat list"});
                     }
@@ -4600,19 +4609,21 @@ io.sockets.on('connection',async function (socket) {
                         io.sockets.in(user_id+'_group_name').emit('update_group_name',{ status: true, statuscode: 200, message: "success"});
 
                         //emit to all the user in the group
-                        let sender_group_chat_list_response=await functions.get_group_chat_list_response(user_id,group_id);
+                        //let sender_group_chat_list_response=await functions.get_group_chat_list_response(user_id,group_id);
+                        let sender_group_chat_list_response=await functions.send_group_message(user_id,group_id,false,1);
                         io.sockets.in(group_id+'_'+user_id).emit('message',sender_group_chat_list_response);
+                        let sender_recent_chat_list_response=await functions.get_recent_chat_list_response(user_id);
+                        io.sockets.in(user_id).emit('chat_list',sender_recent_chat_list_response);
                         //emit to receiver 
                         for(var j=0; j<group_members.length; j++){
                           if(group_members[j].user_id!=user_id){
-                            let receiver_group_chat_list_response=await functions.get_group_chat_list_response(group_members[j].user_id,group_id);
+                            //let receiver_group_chat_list_response=await functions.get_group_chat_list_response(group_members[j].user_id,group_id);
+                            let receiver_group_chat_list_response=await functions.send_group_message(group_members[j].user_id,group_id,false,1);
                             io.sockets.in(group_id+'_'+group_members[j].user_id).emit('message',receiver_group_chat_list_response);
                             let receiver_recent_chat_list_response=await functions.get_recent_chat_list_response(group_members[j].user_id);
                             io.sockets.in(group_members[j].user_id).emit('chat_list',receiver_recent_chat_list_response);
                           }
                         }
-                        let sender_recent_chat_list_response=await functions.get_recent_chat_list_response(user_id);
-                        io.sockets.in(user_id).emit('chat_list',sender_recent_chat_list_response);
                         
                       }else{
                         io.sockets.in(user_id+'_group_name').emit('update_group_name',{ status: false, statuscode: 400, message: "Not saved to chat list"});
@@ -9917,12 +9928,15 @@ io.sockets.on('connection',async function (socket) {
                 if(save_private_missed_call>0){
                   io.sockets.in(user_id+'_save_private_missed_call').emit('save_private_missed_call',{status: true, statuscode: 200, message: "success"});
                   //emit chat_list and room message
-                  let senter_room_chat_list=await functions.get_individual_chat_list_response(senter_id,receiver_id,room);
-                  io.sockets.in(room+'_'+senter_id).emit('message',senter_room_chat_list);
+                  //let senter_room_chat_list=await functions.get_individual_chat_list_response(senter_id,receiver_id,room);
+                  //no need to send missed 
+                  //let senter_room_chat_list=await functions.send_individual_message(senter_id,receiver_id,room,false,1);
+                  //io.sockets.in(room+'_'+senter_id).emit('message',senter_room_chat_list);
                   let sender_chat_list=await functions.get_recent_chat_list_response(senter_id);
                   io.sockets.in(senter_id).emit('chat_list',sender_chat_list);
 
-                  let receiver_room_chat_list=await functions.get_individual_chat_list_response(receiver_id,senter_id,room);
+                  //let receiver_room_chat_list=await functions.get_individual_chat_list_response(receiver_id,senter_id,room);
+                  let receiver_room_chat_list=await functions.send_individual_message(receiver_id,senter_id,room,false,1);
                   io.sockets.in(room+'_'+receiver_id).emit('message',receiver_room_chat_list);
                   let receiver_chat_list=await functions.get_recent_chat_list_response(receiver_id);
                   io.sockets.in(receiver_id).emit('chat_list',receiver_chat_list);
@@ -10019,13 +10033,15 @@ io.sockets.on('connection',async function (socket) {
                     //console.log(typeof(save_group_call))
                     io.sockets.in(user_id+'_save_group_call').emit('save_group_call',{status: true, statuscode: 200, message: "success","id":save_group_call.toString()});
                     //emit message
-                    let sender_chat_room=await functions.get_group_chat_list_response(user_id,room);
+                    //let sender_chat_room=await functions.get_group_chat_list_response(user_id,room);
+                    let sender_chat_room=await functions.send_group_message(user_id,room,false,1);
                     io.sockets.in(room+'_'+user_id).emit('message',sender_chat_room);
                     let sender_chat_list=await functions.get_recent_chat_list_response(user_id);
                     io.sockets.in(user_id).emit('chat_list',sender_chat_list);
                     //emit message to receiver
                     for(var j=0; j<split_receiver_id.length; j++){
-                      let receiver_chat_room=await functions.get_group_chat_list_response(split_receiver_id[j],room);
+                      //let receiver_chat_room=await functions.get_group_chat_list_response(split_receiver_id[j],room);
+                      let receiver_chat_room=await functions.send_group_message(split_receiver_id[j],room,false,1);
                       io.sockets.in(room+'_'+split_receiver_id[j]).emit('message',receiver_chat_room);
                       let receiver_chat_list=await functions.get_recent_chat_list_response(split_receiver_id[j]);
                       io.sockets.in(split_receiver_id[j]).emit('chat_list',receiver_chat_list);
