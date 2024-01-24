@@ -2540,8 +2540,11 @@ io.sockets.on('connection',async function (socket) {
       let sender_room;
       let update_delete_message;
       let set_emit_users=0;
-      let private_group;
+      let private_group='';
       let first_receiver_id;
+      let update_flag=false;
+      let id_exist_flag=false;
+      let deleted_message_ids=[];
       try{
         if(typeof(data)=='object'){
         let check_user_valid=await queries.check_user_valid(data.user_id, data.accessToken);
@@ -2552,6 +2555,7 @@ io.sockets.on('connection',async function (socket) {
             console.log('message id'.message_ids)
             if(message_ids.length>0){
               for(var i=0; i<message_ids.length; i++){
+                deleted_message_ids.push(message_ids[i]);
                 //console.log(message_ids[i])
                 let message_id=message_ids[i];
                 //check message id exist in chat_list
@@ -2611,27 +2615,45 @@ io.sockets.on('connection',async function (socket) {
                     //console.log('for every one group deleted ',group_status)
                     //update to db
                     update_delete_message=await queries.update_delete_message_for_everyone(0,JSON.stringify(group_status),message_id);
+                    if(update_delete_message.affectedRows>0){
+                      update_flag=true;
+                    }
                   }else if(data.type=="for_one"){
                     //console.log('for one group deleted ',group_status)
                     update_delete_message=await queries.update_delete_message_for_one(JSON.stringify(group_status),message_id);
+                    if(update_delete_message.affectedRows>0){
+                      update_flag=true;
+                    }
                   }
                   set_emit_users++;
+                  id_exist_flag=true;
                 }else{
+                  id_exist_flag=false;
                   //else no message exist
-                  let delete_message_response={
-                    status: false,
-                    statuscode: 200,
-                    message: "Message id not found"
-                  }
+                  // let delete_message_response={
+                  //   status: false,
+                  //   statuscode: 200,
+                  //   message: "Message id not found"
+                  // }
                   
-                  io.sockets.in(data.user_id+'_delete_message').emit('delete_message', delete_message_response); 
+                  // io.sockets.in(data.user_id+'_delete_message').emit('delete_message', delete_message_response); 
                   //console.log(emit_user)
                 }
                 
                 //update to the db
               }
+              if(!id_exist_flag){
+                let delete_message_response={
+                  status: false,
+                  statuscode: 200,
+                  message: "Message id not found"
+                }
+                
+                io.sockets.in(data.user_id+'_delete_message').emit('delete_message', delete_message_response);
+              }
               //console.log('update response',update_delete_message, update_delete_message.affectedRows)
-              if(update_delete_message.affectedRows>0){
+              //if(update_delete_message.affectedRows>0){
+              if(update_flag){
                 //emit success to to 
                 let delete_message_response={
                   status: true,
@@ -2641,7 +2663,96 @@ io.sockets.on('connection',async function (socket) {
                 
                 io.sockets.in(data.user_id+'_delete_message').emit('delete_message', delete_message_response); 
                 console.log(emit_user)
-                
+                if(private_group==0){
+                  //private
+                  console.log('private');
+                  //check message delete type
+                  if(data.type=='for_everyone'){
+                    let user_message_data=[];
+                    let receiver_message_data=[];
+                    //emit to both users
+                    
+                    for(var m=0; m<deleted_message_ids.length; m++){
+                      user_message_data.push({
+                        id: deleted_message_ids[m],
+                        message: 'You deleted this message',
+                        type: 'for_everyone'
+                      });
+
+                      receiver_message_data.push({
+                        id: deleted_message_ids[m],
+                        message: 'This message was deleted',
+                        type: 'for_everyone'
+                      });
+                    }
+                    console.log(deleted_message_ids)
+                    let deleted_user_response={
+                      status: true,
+                      statuscode: 200,
+                      message: "success",
+                      room: sender_room,
+                      type: data.type,
+                      data: user_message_data
+                    }
+                    let deleted_receiver_response={
+                      status: true,
+                      statuscode: 200,
+                      message: "success",
+                      room: sender_room,
+                      type: data.type,
+                      data: receiver_message_data
+                    }
+                    console.log(deleted_user_response,deleted_receiver_response)
+                    for(var n=0; n<emit_user.length; n++){
+                      io.sockets.in(emit_user[n].rid).emit('delete_message_listener',deleted_receiver_response);
+                    }
+                    console.log(typeof(data.user_id))
+                    io.sockets.in(data.user_id).emit('delete_message_listener',deleted_user_response);
+                  }else if(data.type=='for_one'){
+                    //emit to message deleted user only 
+                    let user_message_data=[];
+                    let receiver_message_data=[];
+                    for(var m=0; m<deleted_message_ids.length; m++){
+                      user_message_data.push({
+                        id: deleted_message_ids[m],
+                        message: '',
+                        type: 'for_one'
+                      });
+
+                      receiver_message_data.push({
+                        id: deleted_message_ids[m],
+                        message: '',
+                        type: 'for_one'
+                      });
+                    }
+
+                    let deleted_user_response={
+                      status: true,
+                      statuscode: 200,
+                      message: "success",
+                      room: sender_room,
+                      type: data.type,
+                      data: user_message_data
+                    }
+                    // let deleted_receiver_response={
+                    //   status: true,
+                    //   statuscode: 200,
+                    //   message: "success",
+                    //   room: sender_room,
+                    //   type: data.type,
+                    //   data: receiver_message_data
+                    // }
+                    console.log(deleted_user_response)
+                    // for(var n=0; n<emit_user.length; n++){
+                    //   io.sockets.in(emit_user[n].rid).emit('delete_message_listener',deleted_receiver_response);
+                    // }
+                    io.sockets.in(data.user_id).emit('delete_message_listener',deleted_user_response);
+                  }
+                }else{
+                  //group
+                  console.log('group');
+                }
+                //exit ()
                 
                 console.log('private_group',private_group)
                 if(private_group==0){
